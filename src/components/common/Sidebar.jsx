@@ -10,56 +10,33 @@ import {
     MenuList,
     MenuItem,
     Button,
-    Collapse,
     Tooltip,
     useColorMode,
-    color,
 } from "@chakra-ui/react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
-    Home,
-    List,
-    LayoutGrid,
-    Boxes,
-    Settings,
-    LogOut,
     ChevronLeft,
     ChevronRight,
     LucideLogOut,
     Globe,
     SunMoon,
-    LogInIcon,
-    LogOutIcon,
+    UserCog2,
 } from "lucide-react";
 
 
 import { useAuth } from "../../hooks/useAuth";
 import { useAuthStore } from "../../store/authStore";
 import { useUIStore } from "../../store/useUIStore";
-import { changeLanguage } from "i18next";
 import { useTranslation } from "react-i18next";
 import LogoutModal from "./LogoutModal";
 
-const links = [
-    { label: "Home", to: "/", icon: Home },
-    { label: "Categories", to: "/categories", icon: List },
-    { label: "Subcategories", to: "/subcategories", icon: LayoutGrid },
-    { label: "Minicategories", to: "/minisubcategories", icon: Settings },
-    { label: "Products", to: "/products", icon: Boxes },
-];
 
-
-export default function Sidebar({ collapsed }) {
+export default function Sidebar({ collapsed, links=[], role}) {
     const { toggleColorMode } = useColorMode()
     const setCollapsed = useUIStore((s) => s.toggleSidebar);
     const { logout } = useAuth();
     const { user } = useAuthStore();
-    const { i18n } = useTranslation()
-    const selectLanguage = (lang) => {
-        changeLanguage(lang);
-        localStorage.setItem("lang", lang);
-    }
-
+    const navigate = useNavigate()
     return (
         <Flex
             position="fixed"
@@ -91,11 +68,11 @@ export default function Sidebar({ collapsed }) {
             >
                 {collapsed ? <ChevronRight /> : <ChevronLeft />}
             </Button>
-
+            
             {/* TOP LINKS */}
             <VStack align="stretch" spacing={1} mt={10}>
                 {links.map((item) => (
-                    <NavLink key={item.to} to={item.to} style={{ textDecoration: "none" }}>
+                    <NavLink key={item.to} to={item.to}  style={{ textDecoration: "none" }} end={true}>
                         {({ isActive }) => (
                             <Tooltip label={collapsed ? item.label : ""} placement="right">
                                 <Flex
@@ -134,14 +111,20 @@ export default function Sidebar({ collapsed }) {
                                 p={2}
                                 borderRadius="md"
                             >
-                                <Globe size={20} />
-                                {!collapsed && <Text>Language</Text>}
+                                <UserCog2 size={20} />
+                                {!collapsed && <Text>Role</Text>}
                             </Flex>
                         </MenuButton>
                         <MenuList bg="surface" borderColor="gray.700">
-                            <MenuItem color={i18n.language === "uz" ? "green" : "text"} onClick={() => selectLanguage("uz")}>Uzbek</MenuItem>
-                            <MenuItem onClick={() => selectLanguage("ru")}>Russian</MenuItem>
-                            <MenuItem onClick={() => selectLanguage("en")}>English</MenuItem>
+                            <MenuItem color={role === "ombor" ? "green" : "text"} onClick={() => {
+                              navigate('/ombor')
+                            }}>Ombor</MenuItem>
+                            <MenuItem  color={role === "cafe" ? "green" : "text"} onClick={()=> {
+                              navigate('/cafe')
+                            }}>Cafe</MenuItem>
+                            <MenuItem color={role === "admin" ? "green" : "text"} onClick={()=>{
+                              navigate('/')
+                            }}>Admin</MenuItem>
                         </MenuList>
                     </Menu>
 
