@@ -6,6 +6,8 @@ import AdminLayout from './layouts/AdminLayout'
 import adminRoutes from './utils/routes/adminRoutes'
 import { Toaster } from 'react-hot-toast'
 import ErrorPage from './pages/ErrorPage'
+import OmborLayout from './layouts/OmborLayout'
+import omborRoutes from './utils/routes/omborRoutes'
 
 function App() {
 
@@ -14,8 +16,17 @@ function App() {
       <Routes>
         <Route path='/login' element={<Login/>}/>
         <Route element={<RequireAuth/>}>
-          <Route element={<AdminLayout/>}>
+          <Route path='/' element={<AdminLayout/>}>
             {adminRoutes.map((r)=> {
+              return (
+                <Route key={r.name} path={r.path} element={r.element}/>
+              )
+            })}
+          </Route>
+        </Route>
+        <Route element={<RequireAuth/>}>
+          <Route path='/ombor' element={<OmborLayout/>}>
+            {omborRoutes.map((r)=> {
               return (
                 <Route key={r.name} path={r.path} element={r.element}/>
               )
