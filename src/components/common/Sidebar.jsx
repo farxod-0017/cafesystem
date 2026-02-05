@@ -31,7 +31,7 @@ import { useTranslation } from "react-i18next";
 import LogoutModal from "./LogoutModal";
 
 
-export default function Sidebar({ collapsed, links=[], role}) {
+export default function Sidebar({ collapsed, links = [], role }) {
     const { toggleColorMode } = useColorMode()
     const setCollapsed = useUIStore((s) => s.toggleSidebar);
     const { logout } = useAuth();
@@ -68,11 +68,11 @@ export default function Sidebar({ collapsed, links=[], role}) {
             >
                 {collapsed ? <ChevronRight /> : <ChevronLeft />}
             </Button>
-            
+
             {/* TOP LINKS */}
             <VStack align="stretch" spacing={1} mt={10}>
                 {links.map((item) => (
-                    <NavLink key={item.to} to={item.to}  style={{ textDecoration: "none" }} end={true}>
+                    <NavLink key={item.to} to={item.to} style={{ textDecoration: "none" }} end={true}>
                         {({ isActive }) => (
                             <Tooltip label={collapsed ? item.label : ""} placement="right">
                                 <Flex
@@ -99,34 +99,35 @@ export default function Sidebar({ collapsed, links=[], role}) {
             <VStack align="stretch">
                 <VStack spacing={1} py={3} align="stretch">
                     {/* Language Switch */}
-                    <Menu>
-                        <MenuButton
-                            color={"text"}
-                            borderRadius={"md"}
-                            _hover={{ bg: "secondary", color: "white" }}
-                        >
-                            <Flex
-                                align="center"
-                                gap={collapsed ? 0 : 2}
-                                p={2}
-                                borderRadius="md"
+                    {(role !== "SUPER_ADMIN") &&
+                        <Menu>
+                            <MenuButton
+                                color={"text"}
+                                borderRadius={"md"}
+                                _hover={{ bg: "secondary", color: "white" }}
                             >
-                                <UserCog2 size={20} />
-                                {!collapsed && <Text>Role</Text>}
-                            </Flex>
-                        </MenuButton>
-                        <MenuList bg="surface" borderColor="gray.700">
-                            <MenuItem color={role === "ombor" ? "green" : "text"} onClick={() => {
-                              navigate('/ombor')
-                            }}>Ombor</MenuItem>
-                            <MenuItem  color={role === "cafe" ? "green" : "text"} onClick={()=> {
-                              navigate('/cafe')
-                            }}>Cafe</MenuItem>
-                            <MenuItem color={role === "admin" ? "green" : "text"} onClick={()=>{
-                              navigate('/')
-                            }}>Admin</MenuItem>
-                        </MenuList>
-                    </Menu>
+                                <Flex
+                                    align="center"
+                                    gap={collapsed ? 0 : 2}
+                                    p={2}
+                                    borderRadius="md"
+                                >
+                                    <UserCog2 size={20} />
+                                    {!collapsed && <Text>Role</Text>}
+                                </Flex>
+                            </MenuButton>
+                            <MenuList bg="surface" borderColor="gray.700">
+                                <MenuItem color={role === "ombor" ? "green" : "text"} onClick={() => {
+                                    navigate('/ombor')
+                                }}>Ombor</MenuItem>
+                                <MenuItem color={role === "seller" ? "green" : "text"} onClick={() => {
+                                    navigate('/cafe')
+                                }}>Cafe</MenuItem>
+                                <MenuItem color={role === "admin" ? "green" : "text"} onClick={() => {
+                                    navigate('/')
+                                }}>Admin</MenuItem>
+                            </MenuList>
+                        </Menu>}
 
                     {/* Theme Switch */}
                     <Flex
@@ -150,7 +151,7 @@ export default function Sidebar({ collapsed, links=[], role}) {
                         openDelay={200}
                     >
                         <Flex alignItems={"center"}>
-                            <MenuButton w="100%" cursor={collapsed ? "pointer" :"default"}>
+                            <MenuButton w="100%" cursor={collapsed ? "pointer" : "default"}>
                                 <Flex
                                     align="center"
                                     gap={3}
@@ -181,7 +182,7 @@ export default function Sidebar({ collapsed, links=[], role}) {
                                 </Flex>
                             </MenuButton>
                             {!collapsed ?
-                                <LogoutModal/>
+                                <LogoutModal />
                                 : <noscript></noscript>
                             }
                         </Flex>
@@ -193,7 +194,7 @@ export default function Sidebar({ collapsed, links=[], role}) {
                             <MenuItem
                                 icon={<LucideLogOut />}
                                 bg="surface"
-                                _hover={{ bg: "red.300", color:"red"}}
+                                _hover={{ bg: "red.300", color: "red" }}
                                 onClick={logout}
                             >
                                 Logout

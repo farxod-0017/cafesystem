@@ -2,19 +2,17 @@ import { Outlet } from "react-router";
 import Sidebar from "../components/common/Sidebar";
 import { Box } from "@chakra-ui/react";
 import { useUIStore } from "../store/useUIStore";
-import { CreditCard, Home,  LayoutGridIcon } from "lucide-react";
+import { Home, icons, Users } from "lucide-react";
 
 const links = [
-    { label: "Home", to: "/", icon: Home },
-    { label: "To'lov usullari", to: "/tolov-usullari", icon: CreditCard },
-    { label: "Kategoriyalar", to: "/kategoriyalar", icon: LayoutGridIcon },
+    { label: "Admins", to: "/superadmin/admins", icon: Users },
 ]
 
-export default function AdminLayout() {
+export default function SuperAdminLayout() {
     const { collapsed } = useUIStore();
     return (
         <Box>
-            <Sidebar collapsed={collapsed} links={links} role={"admin"} />
+            <Sidebar collapsed={collapsed} links={links} role={"SUPER_ADMIN"} />
             <Box
                 pl={collapsed ? "80px" : "250px"}
                 transition="0.25s ease"

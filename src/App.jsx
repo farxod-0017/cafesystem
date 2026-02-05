@@ -8,37 +8,59 @@ import { Toaster } from 'react-hot-toast'
 import ErrorPage from './pages/ErrorPage'
 import OmborLayout from './layouts/OmborLayout'
 import omborRoutes from './utils/routes/omborRoutes'
+import SuperAdminLayout from './layouts/SuperAdminLayout'
+import superAdminRoutes from './utils/routes/superAdminRoutes'
+import CafeLayout from './layouts/CafeLayout'
+import cafeRoutes from './utils/routes/cafeRoutes'
 
 function App() {
 
   return (
     <>
       <Routes>
-        <Route path='/login' element={<Login/>}/>
-        <Route element={<RequireAuth/>}>
-          <Route path='/' element={<AdminLayout/>}>
-            {adminRoutes.map((r)=> {
+        <Route path='/login' element={<Login />} />
+        <Route element={<RequireAuth />}>
+          <Route path='/superadmin' element={<SuperAdminLayout />}>
+            {superAdminRoutes.map((r) => {
               return (
-                <Route key={r.name} path={r.path} element={r.element}/>
+                <Route key={r.name} path={r.path} element={r.element} />
               )
             })}
           </Route>
         </Route>
-        <Route element={<RequireAuth/>}>
-          <Route path='/ombor' element={<OmborLayout/>}>
-            {omborRoutes.map((r)=> {
+        <Route element={<RequireAuth />}>
+          <Route path='/' element={<AdminLayout />}>
+            {adminRoutes.map((r) => {
               return (
-                <Route key={r.name} path={r.path} element={r.element}/>
+                <Route key={r.name} path={r.path} element={r.element} />
               )
             })}
           </Route>
         </Route>
-        <Route path='*' element={<ErrorPage/>}/>
+        <Route element={<RequireAuth />}>
+          <Route path='/ombor' element={<OmborLayout />}>
+            {omborRoutes.map((r) => {
+              return (
+                <Route key={r.name} path={r.path} element={r.element} />
+              )
+            })}
+          </Route>
+        </Route>
+         <Route element={<RequireAuth />}>
+          <Route path='/cafe' element={<CafeLayout />}>
+            {cafeRoutes.map((r) => {
+              return (
+                <Route key={r.name} path={r.path} element={r.element} />
+              )
+            })}
+          </Route>
+        </Route>
+        <Route path='*' element={<ErrorPage />} />
       </Routes>
       <Toaster
         position='top-center'
         toastOptions={{
-          duration:3000,
+          duration: 3000,
         }}
       />
     </>

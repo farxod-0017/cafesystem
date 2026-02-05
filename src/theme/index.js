@@ -16,7 +16,7 @@ const theme = extendTheme({
     semanticTokens,
     components: {
         Button,
-        Select
+        Select,
     },
     styles: {
         global: {
