@@ -23,9 +23,10 @@ import {
     useColorModeValue,
 } from "@chakra-ui/react";
 import { EditIcon } from "@chakra-ui/icons";
-import { Warehouse } from "lucide-react";
+import { Boxes, CoffeeIcon, Warehouse } from "lucide-react";
 import { useEffect, useState } from "react";
 import { apiLocations } from "../../../utils/Controllers/apiLocations";
+import { toastService } from "../../../utils/toast";
 
 // import axios from "axios";
 
@@ -33,7 +34,7 @@ export default function WarehousesPage() {
     const cardBg = useColorModeValue("surface", "surface");
     const pageBg = useColorModeValue("bg", "bg");
     const [warehouses, setWarehouses] = useState([])
-
+    const [loading, setLoading] = useState(false);
     // === MOCK DATA (API o‘rniga) ===
 
 
@@ -43,9 +44,9 @@ export default function WarehousesPage() {
             setWarehouses(res.data)
         } finally { }
     };
-    useEffect(()=> {
+    useEffect(() => {
         fetchWarehouses()
-    },[])
+    }, [])
 
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [editingWarehouse, setEditingWarehouse] = useState(null);
@@ -54,6 +55,25 @@ export default function WarehousesPage() {
         setEditingWarehouse(warehouse);
         onOpen();
     };
+
+    const handleSave = async () => {
+        if (!editingWarehouse) return;
+        const payload = {name: editingWarehouse.name, phone: editingWarehouse.phone, address: editingWarehouse.address};
+        if(!payload.name || !payload.phone || !payload.address) {
+            toastService.error("Iltimos, barcha maydonlarni to'ldiring");
+            return;
+        }
+        setLoading(true);
+        try {
+            await apiLocations.Update(payload, editingWarehouse.id);
+            fetchWarehouses();
+            setEditingWarehouse(null);
+            onClose();
+        }finally {
+            setLoading(false);
+        }
+        
+    }
 
     return (
         <Box bg={pageBg} minH="100vh" px={{ base: 4, md: 8 }} py={{ base: 6, md: 10 }}>
@@ -98,7 +118,7 @@ export default function WarehousesPage() {
                                 <CardBody>
                                     <VStack align="start" spacing={3}>
                                         <Text fontWeight="600" fontSize="lg">
-                                            {wh.name}
+                                            <Badge mr={2} p={2} borderRadius={"6px"} colorScheme="blue">{wh.isCafe ? <CoffeeIcon /> : <Boxes />}</Badge>  {wh.name}
                                         </Text>
 
                                         <Text fontSize="sm" color="neutral.500">
@@ -130,17 +150,17 @@ export default function WarehousesPage() {
                             <VStack spacing={4}>
                                 <FormControl>
                                     <FormLabel>Nomi</FormLabel>
-                                    <Input defaultValue={editingWarehouse.name} />
+                                    <Input defaultValue={editingWarehouse.name} onChange={(e)=> setEditingWarehouse((prev)=> ({...prev, name:e.target.value}))} />
                                 </FormControl>
 
                                 <FormControl>
                                     <FormLabel>Telefon</FormLabel>
-                                    <Input defaultValue={editingWarehouse.phone} />
+                                    <Input defaultValue={editingWarehouse.phone} onChange={(e)=> setEditingWarehouse((prev)=> ({...prev, phone:e.target.value}))} />
                                 </FormControl>
 
                                 <FormControl>
                                     <FormLabel>Manzil</FormLabel>
-                                    <Input defaultValue={editingWarehouse.address} />
+                                    <Input defaultValue={editingWarehouse.address} onChange={(e)=> setEditingWarehouse((prev)=> ({...prev, address:e.target.value}))} />
                                 </FormControl>
                             </VStack>
                         )}
@@ -149,7 +169,7 @@ export default function WarehousesPage() {
                         <Button variant="ghost" mr={3} onClick={onClose}>
                             Bekor qilish
                         </Button>
-                        <Button colorScheme="blue">
+                        <Button isLoading={loading} loadingText="Saqlanmoqda..." colorScheme="blue" onClick={handleSave}>
                             Saqlash
                         </Button>
                     </ModalFooter>

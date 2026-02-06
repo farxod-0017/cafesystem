@@ -3,6 +3,7 @@ import CategoriesPage from "../../pages/Admin/Categories/Categories";
 import AdminHome from "../../pages/Admin/Home/Home";
 import MenuProducts from "../../pages/Admin/MenuProducts/MenuProducts";
 import PayMethodsPage from "../../pages/Admin/PayMethods/PayMethods";
+import Products from "../../pages/Admin/Products/Products";
 
 const adminRoutes = [
   {
@@ -27,8 +28,13 @@ const adminRoutes = [
   },
   {
     name:"admin menu products",
-    path:'menu-mahsulotlar',
+    path:'menu',
     element:<MenuProducts/>
+  },
+  {
+    name:"admin products",
+    path:'mahsulotlar',
+    element:<Products/>
   }
 ];
 
