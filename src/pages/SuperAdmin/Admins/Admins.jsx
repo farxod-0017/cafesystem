@@ -5,7 +5,7 @@ import { apiManagers } from "../../../utils/Controllers/Managers";
 import ManagerModal from "./_components/ManagerModal";
 import ConfirmDelModal from "../../../components/common/ConfirmDelModal";
 import ResetPassModal from "../../../components/common/ResetPassModal";
-import CopyUsername from "../../../components/common/CopyUserName";
+import CopyUsername from "../../../components/common/CopyUsername";
 import { formatDateTime } from "../../../utils/tools/formatDateTime";
 
 export default function SPmanagers() {
