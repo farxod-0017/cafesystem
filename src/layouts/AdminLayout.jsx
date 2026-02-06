@@ -2,21 +2,22 @@ import { Outlet } from "react-router";
 import Sidebar from "../components/common/Sidebar";
 import { Box } from "@chakra-ui/react";
 import { useUIStore } from "../store/useUIStore";
-import { CreditCard, Home,  LayoutGridIcon, Menu, Package } from "lucide-react";
+import { BanknoteArrowDown, BanknoteIcon, CreditCard, Home,  LayoutGridIcon, Menu, Package } from "lucide-react";
 
 const links = [
     { label: "Home", to: "/", icon: Home },
     { label: "To'lov usullari", to: "/tolov-usullari", icon: CreditCard },
+    { label: "Kassalar", to: "/kassalar", icon: BanknoteIcon },
+    { label: "Mahsulotlar", to: "/mahsulotlar", icon: Package },
     { label: "Kategoriyalar", to: "/kategoriyalar", icon: LayoutGridIcon },
     { label: "Menu", to: "/menu", icon: Menu },
-    { label: "Mahsulotlar", to: "/mahsulotlar", icon: Package },
 ]
 
 export default function AdminLayout() {
     const { collapsed } = useUIStore();
     return (
         <Box>
-            <Sidebar collapsed={collapsed} links={links} role={"admin"} />
+            <Sidebar collapsed={collapsed} links={links} role={"admin"} end={false} />
             <Box
                 pl={collapsed ? "80px" : "250px"}
                 transition="0.25s ease"

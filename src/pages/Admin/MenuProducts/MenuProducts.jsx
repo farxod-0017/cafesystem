@@ -25,7 +25,7 @@ import {
 } from "@chakra-ui/react";
 import { EditIcon, AddIcon } from "@chakra-ui/icons";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Trash2 } from "lucide-react";
 
 import useDebounce from "/src/hooks/useDebounce";
@@ -35,13 +35,15 @@ import { apiCategories } from "../../../utils/Controllers/apiCategories";
 import { IMAGE_URL } from "../../../constants/imageUrl";
 import ConfirmDelModal from "../../../components/common/ConfirmDelModal";
 import { toastService } from "../../../utils/toast";
+import { apiLocations } from "../../../utils/Controllers/apiLocations";
 
 export default function MenuProducts() {
     const cardBg = useColorModeValue("surface", "surface");
     const [searchParams, setSearchParams] = useSearchParams();
     const detailedImageModal = useDisclosure();
     const [detailedImage, setDetailedImage] = useState(null);
-
+    const navigate = useNavigate();
+    const [cafeId, setCafeId] = useState(null);
     // ---------------- FILTER STATE (URL) ----------------
     const [filters, setFilters] = useState(() => ({
         search: searchParams.get("search") || "all",
@@ -61,6 +63,7 @@ export default function MenuProducts() {
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(true);
     const [delLoading, setDelLoading] = useState(false);
+    const [formLoading, setFormLoading] = useState(false);
     const [categories, setCategories] = useState([]);
 
     // ---------------- MODALS ----------------
@@ -87,7 +90,20 @@ export default function MenuProducts() {
         });
     }, []);
 
+    // -------------FETCH Warehouse for CAFE ID (for future use)----------------
+    const fetchWarehouse = async () => {
+        try {
+            const res = await apiLocations.getWarehouses();
+            const cafeWarehouse = res.data.find(w => w.isCafe === true);
+            if(cafeWarehouse) setCafeId(cafeWarehouse.id);
+        } finally { }
+    };
+    useEffect(() => {
+       fetchWarehouse();
+    }, [])
+
     // ---------------- FETCH PRODUCTS ----------------
+
     const fetchProducts = async () => {
         setLoading(true);
         try {
@@ -155,7 +171,7 @@ export default function MenuProducts() {
     };
 
     const saveForm = async () => {
-        if(!form.name || !form.price || !form.unit || !form.categoryId) {
+        if (!form.name || !form.price || !form.unit || !form.categoryId) {
             toastService.error("Iltimos, zarur maydonlarni to'ldiring");
             return;
         }
@@ -164,9 +180,19 @@ export default function MenuProducts() {
         for (const k in rest) if (rest[k] !== null) data.append(k, rest[k]);
 
         if (editingItem) {
-            await apiMenuProducts.Update(data, editingItem.id);
+            setFormLoading(true);
+            try {
+                await apiMenuProducts.Update(data, editingItem.id);
+            } finally {
+                setFormLoading(false);
+            }
         } else {
-            await apiMenuProducts.Add(data);
+            try {
+                setFormLoading(true);
+                await apiMenuProducts.Add(data);
+            } finally {
+                setFormLoading(false);
+            }
         }
         fetchProducts();
         onClose();
@@ -232,7 +258,9 @@ export default function MenuProducts() {
             ) : (
                 <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
                     {items.map((item) => (
-                        <Card key={item.id} bg={cardBg} rounded="xl" position="relative">
+                        <Card onClick={()=> {                            
+                            if(cafeId) navigate(`/menu/${cafeId}/products/${item.id}`);
+                        }} key={item.id} bg={cardBg} rounded="xl" position="relative" cursor={"pointer"}>
                             <IconButton
                                 icon={<EditIcon />}
                                 colorScheme="blue"
@@ -240,7 +268,8 @@ export default function MenuProducts() {
                                 position="absolute"
                                 top="10px"
                                 right="50px"
-                                onClick={() => {
+                                onClick={(e) => {
+                                    e.stopPropagation();
                                     setEditingItem(item);
                                     setForm({
                                         name: item.name,
@@ -261,7 +290,8 @@ export default function MenuProducts() {
                                 position="absolute"
                                 top="10px"
                                 right="10px"
-                                onClick={() => {
+                                onClick={(e) => {
+                                    e.stopPropagation();
                                     setDeletingItem(item);
                                     confirmDelModal.onOpen();
                                 }}
@@ -285,7 +315,8 @@ export default function MenuProducts() {
                                 >
                                     {item.image ? (
                                         <Image
-                                            onClick={() => {
+                                            onClick={(e) => {
+                                                e.stopPropagation();
                                                 setDetailedImage(item.image);
                                                 detailedImageModal.onOpen();
                                             }}
@@ -352,12 +383,12 @@ export default function MenuProducts() {
                             onChange={(e) => setForm({ ...form, price: e.target.value })} mb={3} />
                         <Select value={form.unit}
                             onChange={(e) => setForm({ ...form, unit: e.target.value })} mb={3}>
-                                <option value="">O'lchov birligi</option>
+                            <option value="">O'lchov birligi</option>
                             {CAFE_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
                         </Select>
                         <Select value={form.categoryId}
                             onChange={(e) => setForm({ ...form, categoryId: e.target.value })} mb={3}>
-                            <option  color="text" value="">Kategoriya tanlang</option>
+                            <option color="text" value="">Kategoriya tanlang</option>
                             {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </Select>
                         <Textarea placeholder="Izoh" value={form.note}
@@ -373,7 +404,7 @@ export default function MenuProducts() {
                     </ModalBody>
                     <ModalFooter>
                         <Button variant="ghost" mr={3} onClick={onClose}>Bekor</Button>
-                        <Button onClick={saveForm}>Saqlash</Button>
+                        <Button isLoading={formLoading} loadingText="Saqlanmoqda..." onClick={saveForm}>Saqlash</Button>
                     </ModalFooter>
                 </ModalContent>
             </Modal>

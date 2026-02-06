@@ -15,7 +15,7 @@ export default function OmborLayout() {
     const { collapsed } = useUIStore();
     return (
         <Box>
-            <Sidebar collapsed={collapsed} links={links} role={"ombor"} />
+            <Sidebar collapsed={collapsed} links={links} role={"ombor"} end={true} />
             <Box
                 pl={collapsed ? "80px" : "250px"}
                 transition="0.25s ease"
