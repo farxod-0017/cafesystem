@@ -1,6 +1,8 @@
+import UserAccountPage from "../../pages/Admin/Account/Acccount";
 import CategoriesPage from "../../pages/Admin/Categories/Categories";
 import AdminHome from "../../pages/Admin/Home/Home";
-import PayMethodsPage from "../../pages/Cafe/PayMethods/PayMethods";
+import MenuProducts from "../../pages/Admin/MenuProducts/MenuProducts";
+import PayMethodsPage from "../../pages/Admin/PayMethods/PayMethods";
 
 const adminRoutes = [
   {
@@ -17,6 +19,16 @@ const adminRoutes = [
     name:"admin categories",
     path:'kategoriyalar',
     element:<CategoriesPage/>
+  },
+  {
+    name:"ad user acc page",
+    path:'account',
+    element:<UserAccountPage/>
+  },
+  {
+    name:"admin menu products",
+    path:'menu-mahsulotlar',
+    element:<MenuProducts/>
   }
 ];
 

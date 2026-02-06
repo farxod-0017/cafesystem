@@ -29,6 +29,7 @@ import {
 import { EditIcon, DeleteIcon, AddIcon } from "@chakra-ui/icons";
 import { useEffect, useRef, useState } from "react";
 import { apiPayMethods } from "../../../utils/Controllers/apiPayMethods";
+import { apiLocations } from "../../../utils/Controllers/apiLocations";
 
 // ==================================================
 // Axios so‘rovlarini bu joyga ulaysiz
@@ -39,8 +40,8 @@ import { apiPayMethods } from "../../../utils/Controllers/apiPayMethods";
 // axios.delete(`/pay-methods/${id}`)
 
 export default function PayMethodsPage() {
-    const cardBg = useColorModeValue("surface", "surface");
-
+    const [selectedLocation, setSelectedLocation] = useState(null);
+    const [locations, setLocations] = useState([])
     // -------------------- PAGE STATE --------------------
     const [items, setItems] = useState([]);
     const [pageLoading, setPageLoading] = useState(true);
@@ -61,6 +62,16 @@ export default function PayMethodsPage() {
     const [deleting, setDeleting] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState(null);
 
+    const fetchWarehouses = async () => {
+        try {
+            // const res = await axios.get('/locations');
+            const res = await apiLocations.getWarehouses()
+            setLocations(res.data);
+            setSelectedLocation(res.data?.[0] || null);
+        }finally {
+        }
+    };  
+
     // -------------------- FETCH LIST --------------------
     const fetchPayMethods = async () => {
         try {
@@ -69,32 +80,36 @@ export default function PayMethodsPage() {
             // const res = await axios.get('/pay-methods');
             // setItems(res.data);
             const res = await apiPayMethods.getAll();
-            setItems(res.data.payMethods)
+            const filtered = res.data.payMethods.filter(pm => pm.locationId === selectedLocation?.id);
+            setItems(filtered);
 
         } finally {
             setPageLoading(false);
         }
     };
-
+    
     useEffect(() => {
-        fetchPayMethods();
+        fetchWarehouses();
     }, []);
+    useEffect(() => {
+        if(selectedLocation) fetchPayMethods();
+    }, [selectedLocation]);
 
     // -------------------- CREATE / UPDATE --------------------
     const handleSubmit = async () => {
-        if (!name) return;
+        if (name.trim() === "" ) return;
 
         try {
             setSubmitting(true);
 
             if (editingItem) {
+
                 // await axios.put(`/pay-methods/${editingItem.id}`, { name });
-                await apiPayMethods.Update({name}, editingItem.id);
+                await apiPayMethods.Update({ name }, editingItem.id);
                 fetchPayMethods();
             } else {
-                // const res = await axios.post('/pay-methods', { name });
-                // setItems((prev) => [...prev, res.data]);
-                await apiPayMethods.Add({name});
+                if(!selectedLocation) return;
+                await apiPayMethods.Add({ name, locationId: selectedLocation.id });
                 fetchPayMethods()
             }
 
@@ -124,14 +139,27 @@ export default function PayMethodsPage() {
         <Box p={6}>
             <Flex justify="space-between" align="center" mb={6}>
                 <Heading size="md">To'lov usullari</Heading>
-                <Button leftIcon={<AddIcon />} onClick={()=>{
+                <Button variant={"solidPrimary"} leftIcon={<AddIcon />} onClick={() => {
                     setName("")
                     setEditingItem(null);
                     onOpen();
-                    }}>
+                }}>
                     Yangi qo‘shish
                 </Button>
             </Flex>
+            {/* Location selector */}
+            <Flex mb={4} gap={"16px"}>
+                {locations.map((location) => (
+                    <Button
+                        key={location.id}
+                        variant={selectedLocation?.id === location.id ? "solidPrimary" : "outlinePrimary"}
+                        onClick={() => setSelectedLocation(location)}
+                    >
+                        {location.name}
+                    </Button>
+                ))}
+            </Flex>
+
 
             {/* -------------------- LIST -------------------- */}
             {pageLoading ? (
@@ -147,7 +175,7 @@ export default function PayMethodsPage() {
                     {items.map((item) => (
                         <Card
                             key={item.id}
-                            bg={cardBg}
+                            bg={"surface"}
                             rounded="xl"
                             role="group"
                         >

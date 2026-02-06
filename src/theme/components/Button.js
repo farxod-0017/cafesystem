@@ -1,3 +1,5 @@
+import { border } from "@chakra-ui/react";
+
 const Button = {
     baseStyle: {
         borderRadius: "xl",
@@ -21,6 +23,7 @@ const Button = {
         },
 
         outlinePrimary: {
+            borderWidth: "2px",
             borderColor: "border",
             color: "text",
             _hover: {

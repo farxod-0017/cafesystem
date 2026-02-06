@@ -1,3 +1,5 @@
+import { border } from "@chakra-ui/react";
+
 const Select = {
   parts: ["field", "icon"],
 
@@ -8,7 +10,6 @@ const Select = {
       _placeholder: {
         color: "neutral.500",
       },
-      maxW: "350px",
     },
     icon: {
       color: "neutral.600",
@@ -33,6 +34,7 @@ const Select = {
     filledPrimary: {
       field: {
         borderColor: "neutral.200",
+        borderWidth: "1px",
         _hover: {
           borderColor: "neutral.400",
         },
@@ -45,6 +47,7 @@ const Select = {
 
     outlinePrimary: {
       field: {
+        borderWidth: "1px",
         borderColor: "neutral.300",
         _hover: {
           borderColor: "neutral.400",

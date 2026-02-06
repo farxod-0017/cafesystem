@@ -2,10 +2,11 @@ import { Outlet } from "react-router";
 import Sidebar from "../components/common/Sidebar";
 import { Box } from "@chakra-ui/react";
 import { useUIStore } from "../store/useUIStore";
-import { Home, icons, Users } from "lucide-react";
+import { Home, icons, LocationEdit, Users } from "lucide-react";
 
 const links = [
     { label: "Admins", to: "/superadmin/admins", icon: Users },
+    { label: "Locations", to: "/superadmin/locations", icon: LocationEdit },
 ]
 
 export default function SuperAdminLayout() {

@@ -2,12 +2,13 @@ import { Outlet } from "react-router";
 import Sidebar from "../components/common/Sidebar";
 import { Box } from "@chakra-ui/react";
 import { useUIStore } from "../store/useUIStore";
-import { CreditCard, Home,  LayoutGridIcon } from "lucide-react";
+import { CreditCard, Home,  LayoutGridIcon, Menu } from "lucide-react";
 
 const links = [
     { label: "Home", to: "/", icon: Home },
     { label: "To'lov usullari", to: "/tolov-usullari", icon: CreditCard },
     { label: "Kategoriyalar", to: "/kategoriyalar", icon: LayoutGridIcon },
+    { label: "Mahsulotlar", to: "/menu-mahsulotlar", icon: Menu },
 ]
 
 export default function AdminLayout() {
