@@ -18,7 +18,7 @@ export default function ConfirmDelModal({ isOpen, onClose, onConfirm, itemName, 
                 <ModalHeader>Confirm Delete</ModalHeader>
 
                 <ModalBody>
-                    <Text>Are you sure you want to delete this {typeItem}?</Text>
+                    <Text>Haqiqatda bu {typeItem} o'chirmoqchimisiz?</Text>
                     <Text color={"red.400"}>{itemName}</Text>
                 </ModalBody>
 

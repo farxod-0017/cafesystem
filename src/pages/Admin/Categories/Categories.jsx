@@ -59,7 +59,6 @@ export default function CategoriesPage() {
     const [submitting, setSubmitting] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
 
-    const [type, setType] = useState("");
     const [name, setName] = useState("");
     const [note, setNote] = useState("");
 
@@ -110,7 +109,6 @@ export default function CategoriesPage() {
 
     // -------------------- RESET FORM --------------------
     const resetForm = () => {
-        setType("");
         setName("");
         setNote("");
         setImageFile(null);
@@ -120,17 +118,15 @@ export default function CategoriesPage() {
 
     // -------------------- SUBMIT --------------------
     const handleSubmit = async () => {
-        if (!type || !name) return;
+        if (!name) return;
 
         const formData = new FormData();
-        formData.append("type", type);
         formData.append("name", name);
         if (note) formData.append("note", note);
         if (imageFile) formData.append("image", imageFile);
 
         try {
             setSubmitting(true);
-
             if (editingItem) {
                 // await axios.put(`/categories/${editingItem.id}`, formData);
                 await apiCategories.Update(formData, editingItem.id)
@@ -164,7 +160,10 @@ export default function CategoriesPage() {
         <Box p={6}>
             <Flex justify="space-between" align="center" mb={6}>
                 <Heading size="md">Kategoriyalar</Heading>
-                <Button leftIcon={<AddIcon />} onClick={onOpen}>
+                <Button leftIcon={<AddIcon />} onClick={() => {
+                    resetForm();
+                    onOpen();
+                }}>
                     Yangi qo‘shish
                 </Button>
             </Flex>
@@ -226,7 +225,6 @@ export default function CategoriesPage() {
                                         icon={<EditIcon />}
                                         onClick={() => {
                                             setEditingItem(item);
-                                            setType(item.type);
                                             setName(item.name);
                                             setNote(item.note || "");
                                             setImagePreview(item.image || null);
@@ -290,14 +288,6 @@ export default function CategoriesPage() {
                                             </Text>
                                         )}
                                     </Box>
-
-                                    <Badge>
-                                        <Text fontSize="xs" color="brand.500" mb={1}>
-                                            {item.type}
-                                        </Text>
-                                    </Badge>
-
-
                                     <Text fontWeight="600" mb={1}>
                                         {item.name}
                                     </Text>
@@ -323,16 +313,6 @@ export default function CategoriesPage() {
                         {editingItem ? "Category tahrirlash" : "Category yaratish"}
                     </ModalHeader>
                     <ModalBody>
-                        <Select
-                            placeholder="Type tanlang"
-                            value={type}
-                            onChange={(e) => setType(e.target.value)}
-                            mb={3}
-                        >
-                            <option value="material">Xomashyo</option>
-                            <option value="product">Mahsulot</option>
-                        </Select>
-
                         <Input
                             placeholder="Nomi"
                             value={name}

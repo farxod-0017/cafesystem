@@ -60,7 +60,7 @@ $api.interceptors.response.use(
                 }
 
                 // ---- Refresh request ----
-                const res = await axios.post(`${BASE_URL}/api/auth/refresh`, {
+                const res = await axios.post(`${BASE_URL}/auth/refresh`, {
                     refreshToken,
                     userId,
                 });
@@ -79,7 +79,7 @@ $api.interceptors.response.use(
                 return $api(originalRequest);
             } catch (err) {
                 // Clear auth + redirect
-                toastService.error("Sessiya tugadi. Iltimos qayta kiring.")
+                toastService.error("Sessiya tugadi. Iltimos qayta kiring.");
                 store.logout();
                 window.location.href = "/login";
                 return Promise.reject(err);

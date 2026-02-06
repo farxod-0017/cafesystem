@@ -4,6 +4,7 @@ export default function AdminHome() {
     return (
         <Box>
             <Center><Text>Admin Home Page</Text></Center>
+            
         </Box>
     )
 }

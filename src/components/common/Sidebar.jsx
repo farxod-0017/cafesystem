@@ -151,7 +151,9 @@ export default function Sidebar({ collapsed, links = [], role }) {
                         openDelay={200}
                     >
                         <Flex alignItems={"center"}>
-                            <MenuButton w="100%" cursor={collapsed ? "pointer" : "default"}>
+                            <MenuButton onClick={()=> {
+                                navigate("/account")
+                            }} w="100%" cursor={collapsed ? "pointer" : "default"} >
                                 <Flex
                                     align="center"
                                     gap={3}
