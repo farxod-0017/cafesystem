@@ -5,6 +5,10 @@ class apiMenuProducts {
         const response = await $api.get(`${BASE_URL}/menu-products`)
         return response;
     }
+    static getDetails = async (id) => {
+        const response = await $api.get(`${BASE_URL}/menu-products/${id}`)
+        return response;
+    }
     static getFilteredProducts = async (categoryId, search, page, limit) => {
         const response = await $api.get(`${BASE_URL}/menu-products/category?categoryId=${categoryId}&search=${search}&page=${page}&limit=${limit}`);
         return response;

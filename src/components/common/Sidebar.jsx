@@ -31,7 +31,7 @@ import { useTranslation } from "react-i18next";
 import LogoutModal from "./LogoutModal";
 
 
-export default function Sidebar({ collapsed, links = [], role }) {
+export default function Sidebar({ collapsed, links = [], role, end = false }) {
     const { toggleColorMode } = useColorMode()
     const setCollapsed = useUIStore((s) => s.toggleSidebar);
     const { logout } = useAuth();
@@ -72,7 +72,7 @@ export default function Sidebar({ collapsed, links = [], role }) {
             {/* TOP LINKS */}
             <VStack align="stretch" spacing={1} mt={10}>
                 {links.map((item) => (
-                    <NavLink key={item.to} to={item.to} style={{ textDecoration: "none" }} end={true}>
+                    <NavLink key={item.to} to={item.to} style={{ textDecoration: "none" }} end={end}>
                         {({ isActive }) => (
                             <Tooltip label={collapsed ? item.label : ""} placement="right">
                                 <Flex

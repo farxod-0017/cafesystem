@@ -29,7 +29,7 @@ const semanticTokens = {
             _dark: "brand.600",
         },
         border: {
-            default: "neutral.700",
+            default: "neutral.300",
             _dark: "neutral.700",
         },
     },

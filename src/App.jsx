@@ -19,7 +19,7 @@ function App() {
     <>
       <Routes>
         <Route path='/login' element={<Login />} />
-        <Route element={<RequireAuth />}>
+        <Route element={<RequireAuth role="SUPER_ADMIN" />}>
           <Route path='/superadmin' element={<SuperAdminLayout />}>
             {superAdminRoutes.map((r) => {
               return (
@@ -28,7 +28,7 @@ function App() {
             })}
           </Route>
         </Route>
-        <Route element={<RequireAuth />}>
+        <Route element={<RequireAuth role="ADMIN" />}>
           <Route path='/' element={<AdminLayout />}>
             {adminRoutes.map((r) => {
               return (
@@ -37,7 +37,7 @@ function App() {
             })}
           </Route>
         </Route>
-        <Route element={<RequireAuth />}>
+        <Route element={<RequireAuth role={"ADMIN"} />}>
           <Route path='/ombor' element={<OmborLayout />}>
             {omborRoutes.map((r) => {
               return (
@@ -46,7 +46,7 @@ function App() {
             })}
           </Route>
         </Route>
-         <Route element={<RequireAuth />}>
+         <Route element={<RequireAuth role={"ADMIN"} />}>
           <Route path='/cafe' element={<CafeLayout />}>
             {cafeRoutes.map((r) => {
               return (

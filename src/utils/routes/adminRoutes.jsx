@@ -1,8 +1,10 @@
 import UserAccountPage from "../../pages/Admin/Account/Acccount";
+import CashsPage from "../../pages/Admin/Cashs/Cashs";
 import CategoriesPage from "../../pages/Admin/Categories/Categories";
 import AdminHome from "../../pages/Admin/Home/Home";
 import MenuProducts from "../../pages/Admin/MenuProducts/MenuProducts";
 import PayMethodsPage from "../../pages/Admin/PayMethods/PayMethods";
+import ProductMaterialsPage from "../../pages/Admin/ProductMaterialPair/ProductMaterialPair";
 import Products from "../../pages/Admin/Products/Products";
 
 const adminRoutes = [
@@ -35,6 +37,16 @@ const adminRoutes = [
     name:"admin products",
     path:'mahsulotlar',
     element:<Products/>
+  },
+  {
+    name:"admin menu product details",
+    path:'menu/:cafeId/products/:menuProductId',
+    element:<ProductMaterialsPage/>
+  },
+  {
+    name:"admin cashs", 
+    path:'cashs',
+    element:<CashsPage/>
   }
 ];
 
