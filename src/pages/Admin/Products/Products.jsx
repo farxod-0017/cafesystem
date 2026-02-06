@@ -20,7 +20,6 @@ import {
     useDisclosure,
     Skeleton,
     Select,
-    Image,
     HStack,
 } from "@chakra-ui/react";
 import { EditIcon, AddIcon } from "@chakra-ui/icons";
@@ -30,22 +29,20 @@ import { Trash2 } from "lucide-react";
 
 import useDebounce from "/src/hooks/useDebounce";
 import { CAFE_UNITS } from "/src/constants/units";
-import { apiMenuProducts } from "../../../utils/Controllers/apiMenuProducts";
-import { apiCategories } from "../../../utils/Controllers/apiCategories";
-import { IMAGE_URL } from "../../../constants/imageUrl";
 import ConfirmDelModal from "../../../components/common/ConfirmDelModal";
+import { apiProducts } from "../../../utils/Controllers/apiProducts";
+import { apiLocations } from "../../../utils/Controllers/apiLocations";
 import { toastService } from "../../../utils/toast";
+import { UNITS } from "../../../constants/units";
 
-export default function MenuProducts() {
+export default function Products() {
     const cardBg = useColorModeValue("surface", "surface");
     const [searchParams, setSearchParams] = useSearchParams();
-    const detailedImageModal = useDisclosure();
-    const [detailedImage, setDetailedImage] = useState(null);
 
     // ---------------- FILTER STATE (URL) ----------------
     const [filters, setFilters] = useState(() => ({
         search: searchParams.get("search") || "all",
-        categoryId: searchParams.get("categoryId") || "all",
+        locationId: searchParams.get("locationId") || "all",
         page: Number(searchParams.get("page")) || 1,
         limit: Number(searchParams.get("limit")) || 20,
     }));
@@ -60,8 +57,9 @@ export default function MenuProducts() {
     const [items, setItems] = useState([]);
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(true);
+    const [formLoading, setFormLoading] = useState(false);
     const [delLoading, setDelLoading] = useState(false);
-    const [categories, setCategories] = useState([]);
+    const [locations, setLocations] = useState([]);
 
     // ---------------- MODALS ----------------
     const { isOpen, onOpen, onClose } = useDisclosure();
@@ -72,27 +70,30 @@ export default function MenuProducts() {
     // ---------------- FORM ----------------
     const [form, setForm] = useState({
         name: "",
-        price: "",
         unit: "",
-        categoryId: "",
-        note: "",
-        image: null,
-        imagePreview: null,
+        locationId: "",
     });
 
-    // ---------------- FETCH CATEGORIES ----------------
+    // UNITS
+    const isCafe = locations.find((loc) => loc.id === filters.locationId)?.isCafe;
+    const PAGE_UNITS =  isCafe ? CAFE_UNITS : UNITS;
+
+
+    // ---------------- FETCH LOCATIONS ----------------
     useEffect(() => {
-        apiCategories.All().then((res) => {
-            setCategories(res.data.categories);
+        apiLocations.getWarehouses().then((res) => {
+            setLocations(res.data);
+            updateFilter("locationId", res.data[0]?.id);
         });
     }, []);
 
     // ---------------- FETCH PRODUCTS ----------------
     const fetchProducts = async () => {
+        if (filters.locationId === "all") return;
         setLoading(true);
         try {
-            const res = await apiMenuProducts.getFilteredProducts(
-                filters.categoryId,
+            const res = await apiProducts.getFilteredProducts(
+                filters.locationId,
                 filters.search,
                 filters.page,
                 filters.limit
@@ -124,7 +125,7 @@ export default function MenuProducts() {
         const s = searchParams.get("search") || "all";
         setFilters({
             search: s,
-            categoryId: searchParams.get("categoryId") || "all",
+            locationId: searchParams.get("locationId") || "all",
             page: Number(searchParams.get("page")) || 1,
             limit: Number(searchParams.get("limit")) || 20,
         });
@@ -144,29 +145,36 @@ export default function MenuProducts() {
     const resetForm = () => {
         setForm({
             name: "",
-            price: "",
             unit: "",
-            categoryId: "",
-            note: "",
-            image: null,
-            imagePreview: null,
+            locationId: "",
         });
         setEditingItem(null);
     };
 
     const saveForm = async () => {
-        if(!form.name || !form.price || !form.unit || !form.categoryId) {
+        if (!form.name || !form.unit) {
             toastService.error("Iltimos, zarur maydonlarni to'ldiring");
             return;
         }
-        const data = new FormData();
-        const { imagePreview, ...rest } = form;
-        for (const k in rest) if (rest[k] !== null) data.append(k, rest[k]);
-
         if (editingItem) {
-            await apiMenuProducts.Update(data, editingItem.id);
+            setFormLoading(true);
+            try {
+                const { locationId, ...data } = form;
+                await apiProducts.Update(data, editingItem.id);
+            }
+            finally {
+                setFormLoading(false);
+            }
         } else {
-            await apiMenuProducts.Add(data);
+            const data = { ...form, locationId: filters.locationId };
+            if (!data.locationId) return;
+            try {
+                setFormLoading(true);
+                await apiProducts.Add(data);
+            }
+            finally {
+                setFormLoading(false);
+            }
         }
         fetchProducts();
         onClose();
@@ -175,7 +183,7 @@ export default function MenuProducts() {
     const deleteItem = async () => {
         setDelLoading(true);
         try {
-            await apiMenuProducts.Delete(deletingItem.id);
+            await apiProducts.Delete(deletingItem.id);
             fetchProducts();
             confirmDelModal.onClose();
         } finally {
@@ -192,7 +200,18 @@ export default function MenuProducts() {
                     Yangi mahsulot
                 </Button>
             </Flex>
-
+            {/* Location selector */}
+            <Flex mb={4} gap={"16px"}>
+                {locations?.map((location) => (
+                    <Button
+                        key={location.id}
+                        variant={filters.locationId === location.id ? "solidPrimary" : "outlinePrimary"}
+                        onClick={() => updateFilter("locationId", location.id)}
+                    >
+                        {location.name}
+                    </Button>
+                ))}
+            </Flex>
             {/* FILTERS */}
             <HStack mb={4} spacing={3} flexWrap="wrap">
                 <Input
@@ -201,16 +220,16 @@ export default function MenuProducts() {
                     onChange={(e) => setSearchValue(e.target.value)}
                     maxW="240px"
                 />
-                <Select
-                    value={filters.categoryId}
-                    onChange={(e) => updateFilter("categoryId", e.target.value)}
+                {/* <Select
+                    value={filters.locationId}
+                    onChange={(e) => updateFilter("locationId", e.target.value)}
                     maxW="200px"
                 >
                     <option value="all">Barcha kategoriyalar</option>
                     {categories.map((c) => (
                         <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
-                </Select>
+                </Select> */}
                 <Select
                     value={filters.limit}
                     onChange={(e) => updateFilter("limit", Number(e.target.value))}
@@ -244,12 +263,8 @@ export default function MenuProducts() {
                                     setEditingItem(item);
                                     setForm({
                                         name: item.name,
-                                        price: item.price,
                                         unit: item.unit,
-                                        categoryId: item.categoryId,
-                                        note: item.note,
-                                        image: null,
-                                        imagePreview: IMAGE_URL + item.image,
+                                        locationId: item.locationId,
                                     });
                                     onOpen();
                                 }}
@@ -267,52 +282,8 @@ export default function MenuProducts() {
                                 }}
                             />
                             <CardBody>
-                                <Box
-                                    mb={3}
-                                    w="100%"
-                                    maxW="280px"
-                                    h="120px"
-                                    rounded="md"
-                                    overflow="hidden"
-                                    display="flex"
-                                    alignItems="center"
-                                    justifyContent="center"
-                                    bg={
-                                        item.image
-                                            ? "transparent"
-                                            : "linear-gradient(135deg, #667eea, #764ba2)"
-                                    }
-                                >
-                                    {item.image ? (
-                                        <Image
-                                            onClick={() => {
-                                                setDetailedImage(item.image);
-                                                detailedImageModal.onOpen();
-                                            }}
-                                            src={IMAGE_URL + item.image}
-                                            alt={item.name}
-                                            objectFit="cover"
-                                            w="100%"
-                                            h="100%"
-                                            cursor="pointer"
-                                        />
-                                    ) : (
-                                        <Text
-                                            fontSize="sm"
-                                            color="whiteAlpha.900"
-                                            fontWeight="500"
-                                            textAlign="center"
-                                            px={2}
-                                        >
-                                            Rasm yuklanmagan
-                                        </Text>
-                                    )}
-                                </Box>
-
                                 <Text fontWeight="600">{item.name}</Text>
-                                <Text fontSize="sm" color="neutral.500">
-                                    {item.price} / {item.unit}
-                                </Text>
+                                <Text >{item.unit}</Text>
                             </CardBody>
                         </Card>
                     ))}
@@ -348,32 +319,17 @@ export default function MenuProducts() {
                     <ModalBody>
                         <Input placeholder="Nomi" value={form.name}
                             onChange={(e) => setForm({ ...form, name: e.target.value })} mb={3} />
-                        <Input type="number" placeholder="Narxi" value={form.price}
-                            onChange={(e) => setForm({ ...form, price: e.target.value })} mb={3} />
+
                         <Select value={form.unit}
                             onChange={(e) => setForm({ ...form, unit: e.target.value })} mb={3}>
-                                <option value="">O'lchov birligi</option>
-                            {CAFE_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+                            <option value="">O'lchov birligi</option>
+                            {PAGE_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
                         </Select>
-                        <Select value={form.categoryId}
-                            onChange={(e) => setForm({ ...form, categoryId: e.target.value })} mb={3}>
-                            <option  color="text" value="">Kategoriya tanlang</option>
-                            {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </Select>
-                        <Textarea placeholder="Izoh" value={form.note}
-                            onChange={(e) => setForm({ ...form, note: e.target.value })} />
-                        {form.imagePreview && (
-                            <Image src={form.imagePreview} h="150px" w="100%" objectFit="cover" mt={3} />
-                        )}
-                        <Input type="file" accept="image/*" mt={3}
-                            onChange={(e) => {
-                                const f = e.target.files[0];
-                                setForm({ ...form, image: f, imagePreview: URL.createObjectURL(f) });
-                            }} />
+
                     </ModalBody>
                     <ModalFooter>
                         <Button variant="ghost" mr={3} onClick={onClose}>Bekor</Button>
-                        <Button onClick={saveForm}>Saqlash</Button>
+                        <Button isLoading={formLoading} loadingText="Saqlanmoqda..." onClick={saveForm}>Saqlash</Button>
                     </ModalFooter>
                 </ModalContent>
             </Modal>
@@ -386,14 +342,7 @@ export default function MenuProducts() {
                 loading={delLoading}
                 typeItem="mahsulot"
             />
-            <Modal isOpen={detailedImageModal.isOpen} onClose={detailedImageModal.onClose} isCentered>
-                <ModalOverlay />
-                <ModalContent>
-                    <Flex maxW={"92vw"} maxH={"92vh"} alignItems={"center"} justifyContent={"center"} boxSizing="border-box">
-                        <Image maxW={"92vw"} maxH={"92vh"} src={IMAGE_URL + detailedImage} />
-                    </Flex>
-                </ModalContent>
-            </Modal>
+
         </Box>
     );
 }
