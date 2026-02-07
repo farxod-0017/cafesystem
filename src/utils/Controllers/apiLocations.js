@@ -9,6 +9,10 @@ class apiLocations {
         const response = await $api.get(`${BASE_URL}/locations`);
         return response;
     }
+    static getLocalLocationsByType = async (type, locationId) => {
+        const response = await $api.get(`${BASE_URL}/locations/type/${type}/${locationId}`);
+        return response;
+    }
     static Add = async (data) => {
         const response = await $api.post(`${BASE_URL}/locations`, data, {showSuccessToast:"Location yaratildi"})
         return response;

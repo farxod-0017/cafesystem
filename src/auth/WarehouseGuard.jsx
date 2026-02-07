@@ -14,70 +14,74 @@ export default function WarehouseGuard({ isCafe, children }) {
         cafeWarehouseId,
         setMainWarehouseId,
         setCafeWarehouseId,
+        setLocationName,
     } = useWarehouseStore();
 
+    const checkAndSetWarehouse = async () => {
+        // Store'da mavjudmi tekshirish
+        const currentWarehouseId = isCafe ? cafeWarehouseId : mainWarehouseId;
+
+        if (currentWarehouseId) {
+            setIsLoading(false);
+            return;
+        }
+
+        try {
+            setIsLoading(true);
+            setError(null);
+
+            // API'dan warehouse'larni olish
+            const warehouses = await apiLocations.getWarehouses();
+
+            if (!warehouses || !warehouses.data || warehouses.data.length === 0) {
+                throw new Error("Ombor topilmadi");
+            }
+
+            // isCafe qiymatiga qarab kerakli warehouse'ni topish
+            const targetWarehouse = warehouses.data.find(
+                (w) => w.isCafe === isCafe
+            );
+
+            if (!targetWarehouse) {
+                throw new Error(
+                    isCafe
+                        ? "Kafe ombori topilmadi"
+                        : "Asosiy ombor topilmadi"
+                );
+            }
+
+            // Store'ga saqlash
+            if (isCafe) {
+                setCafeWarehouseId(targetWarehouse.id);
+                setLocationName(targetWarehouse.name);
+            } else {
+                setMainWarehouseId(targetWarehouse.id);
+                setLocationName(targetWarehouse.name);
+            }
+
+            setIsLoading(false);
+        } catch (err) {
+            console.error("Warehouse yuklashda xatolik:", err);
+            setError(err.message || "Ombor ma'lumotlari yuklanmadi");
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const checkAndSetWarehouse = async () => {
-            // Store'da mavjudmi tekshirish
-            const currentWarehouseId = isCafe ? cafeWarehouseId : mainWarehouseId;
-
-            if (currentWarehouseId) {
-                setIsLoading(false);                
-                return;
-            }
-
-            try {
-                setIsLoading(true);
-                setError(null);
-
-                // API'dan warehouse'larni olish
-                const warehouses = await apiLocations.getWarehouses();
-
-                if (!warehouses || !warehouses.data || warehouses.data.length === 0) {
-                    throw new Error("Ombor topilmadi");
-                }
-
-                // isCafe qiymatiga qarab kerakli warehouse'ni topish
-                const targetWarehouse = warehouses.data.find(
-                    (w) => w.isCafe === isCafe
-                );
-
-                if (!targetWarehouse) {
-                    throw new Error(
-                        isCafe
-                            ? "Kafe ombori topilmadi"
-                            : "Asosiy ombor topilmadi"
-                    );
-                }
-
-                // Store'ga saqlash
-                if (isCafe) {
-                    setCafeWarehouseId(targetWarehouse.id);
-                } else {
-                    setMainWarehouseId(targetWarehouse.id);
-                }
-
-                setIsLoading(false);
-            } catch (err) {
-                console.error("Warehouse yuklashda xatolik:", err);
-                setError(err.message || "Ombor ma'lumotlari yuklanmadi");
-                setIsLoading(false);
-            }
-        };
-
         checkAndSetWarehouse();
     }, [isCafe, mainWarehouseId, cafeWarehouseId, setMainWarehouseId, setCafeWarehouseId]);
 
     // Retry funksiyasi
     const handleRetry = () => {
+        setLocationName(null);
+        setIsLoading(true);
         if (isCafe) {
             setCafeWarehouseId(null);
+            checkAndSetWarehouse();
         } else {
             setMainWarehouseId(null);
+            checkAndSetWarehouse();
         }
-        setIsLoading(true);
-        setError(null);
     };
 
     // Loading holati
