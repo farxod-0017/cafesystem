@@ -14,7 +14,6 @@ import CafeLayout from './layouts/CafeLayout'
 import cafeRoutes from './utils/routes/cafeRoutes'
 
 function App() {
-
   return (
     <>
       <Routes>
