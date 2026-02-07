@@ -5,6 +5,10 @@ class apiStock {
         const response = await $api.get(`${BASE_URL}/stocks`)
         return response;
     }
+    static StockByLocation = async (id) => {
+        const response = await $api.get(`${BASE_URL}/stocks/location/${id}`)
+        return response;
+    }
     static getStocksForOperationById = async (locId, search, type) => {
         const response = await $api.get(`${BASE_URL}/stocks/inv?locationId=${locId}&parentId=${locId}&type=${type}&searchText=${search}`);
         return response;

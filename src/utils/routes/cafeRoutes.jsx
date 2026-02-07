@@ -1,6 +1,7 @@
 import Home from "../../pages/Cafe/Home/Home";
 import OrderCreate from "../../pages/Cafe/Order-Create/OrderCreate";
 import Orders from "../../pages/Cafe/Orders/Orders";
+import Return from "../../pages/Cafe/Return/Return";
 
 const cafeRoutes = [
     {
@@ -17,6 +18,11 @@ const cafeRoutes = [
         name: "cf orders",
         path: "orders",
         element: <Orders />
-    }
+    },
+    {
+        name: "cf orders return",
+        path: "return/:id",
+        element: <Return />
+    },
 ];
 export default cafeRoutes

@@ -16,23 +16,19 @@ import {
     InputGroup,
     InputLeftElement,
     HStack,
-    VStack,
     useDisclosure,
     useColorModeValue,
     useToast,
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter,
-    ModalCloseButton,
     Skeleton,
     IconButton,
     Tooltip,
 } from "@chakra-ui/react";
-import { SearchIcon, ViewIcon, ChevronDownIcon } from "@chakra-ui/icons";
+import { SearchIcon, ViewIcon, ChevronDownIcon, EditIcon } from "@chakra-ui/icons";
 import { apiPayment } from "../../../utils/Controllers/apiPayment";
+import OrderDetailModal from "./__components/OrderDetailModal";
+import OrderStatusModal from "./__components/OrderStatusModal";
+import { ReceiptRussianRuble, Undo2 } from "lucide-react";
+import { NavLink } from "react-router-dom";
 
 // ─── Helpers ───
 const formatPrice = (price) =>
@@ -52,9 +48,10 @@ const formatDate = (dateStr) => {
 const StatusBadge = ({ status }) => {
     const map = {
         pending: { color: "yellow", label: "Kutilmoqda" },
-        paid: { color: "green", label: "To'langan" },
+        preparing: { color: "blue", label: "Tayyorlanmoqda" },
+        ready: { color: "green", label: "Tayyor" },
+        completed: { color: "teal", label: "Yakunlangan" },
         cancelled: { color: "red", label: "Bekor qilingan" },
-        debt: { color: "orange", label: "Nasiya" },
     };
     const s = map[status] || { color: "gray", label: status };
     return (
@@ -72,146 +69,9 @@ const TypeBadge = ({ type }) => (
         py={0.5}
         fontSize="xs"
     >
-        {type === "debt" ? "Nasiya" : "Naqd"}
+        {type === "debt" ? "Utiliziatsiya" : "Sotuv"}
     </Badge>
 );
-
-// ══════════════════════════════════
-// INFO ROW (modal ichida)
-// ══════════════════════════════════
-function InfoRow({ label, value, bold, accent }) {
-    const textMuted = useColorModeValue("gray.500", "gray.400");
-    const textPrimary = useColorModeValue("gray.800", "gray.100");
-    const accentColor = useColorModeValue("blue.600", "blue.300");
-    const divider = useColorModeValue("gray.100", "gray.600");
-
-    return (
-        <Flex
-            justify="space-between"
-            align="center"
-            py={2}
-            borderBottomWidth="1px"
-            borderColor={divider}
-            _last={{ borderBottomWidth: 0 }}
-        >
-            <Text fontSize="sm" color={textMuted}>
-                {label}
-            </Text>
-            <Text
-                fontSize="sm"
-                color={accent ? accentColor : textPrimary}
-                fontWeight={bold ? "bold" : "medium"}
-            >
-                {value}
-            </Text>
-        </Flex>
-    );
-}
-
-// ══════════════════════════════════
-// DETAIL MODAL
-// ══════════════════════════════════
-function OrderDetailModal({ isOpen, onClose, order }) {
-    const bgCard = useColorModeValue("white", "gray.800");
-    const borderColor = useColorModeValue("gray.200", "gray.600");
-    const textMuted = useColorModeValue("gray.500", "gray.400");
-    const textPrimary = useColorModeValue("gray.800", "gray.100");
-    const accentColor = useColorModeValue("blue.600", "blue.300");
-    const bgTableHead = useColorModeValue("gray.50", "gray.700");
-    const bgSubtle = useColorModeValue("gray.50", "gray.700");
-
-    if (!order) return null;
-
-    return (
-        <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
-            <ModalOverlay bg="blackAlpha.600" />
-            <ModalContent bg={bgCard} borderRadius="xl" mx={3}>
-                <ModalHeader pb={2} borderBottomWidth="1px" borderColor={borderColor}>
-                    <VStack align="flex-start" spacing={1}>
-                        <HStack flexWrap="wrap" gap={2}>
-                            <Text fontSize="lg" fontWeight="bold" color={textPrimary}>
-                                {order.payNumber}
-                            </Text>
-                            <StatusBadge status={order.status} />
-                            <TypeBadge type={order.type} />
-                        </HStack>
-                        <Text fontSize="xs" color={textMuted}>
-                            {formatDate(order.createdAt)}
-                        </Text>
-                    </VStack>
-                </ModalHeader>
-                <ModalCloseButton color={textPrimary} />
-
-                <ModalBody py={4}>
-                    {/* Umumiy ma'lumot */}
-                    <Box
-                        bg={bgSubtle}
-                        borderRadius="lg"
-                        p={4}
-                        mb={5}
-                        border="1px solid"
-                        borderColor={borderColor}
-                    >
-                        <InfoRow label="Yaratgan" value={order.created?.full_name || "—"} />
-                        <InfoRow label="To'lov usuli" value={order.payMethod?.name || "—"} />
-                        <InfoRow label="Kassa" value={order.cash?.name || "Tanlanmagan"} />
-                        <InfoRow label="Umumiy summa" value={formatPrice(order.totalSum)} bold accent />
-                        <InfoRow label="Qabul qilingan" value={formatPrice(order.receivedSum)} />
-                        <InfoRow label="Qaytim" value={formatPrice(order.changeSum)} />
-                    </Box>
-
-                    {/* Mahsulotlar jadvali */}
-                    <Text fontWeight="bold" color={textPrimary} mb={3} fontSize="sm">
-                        Mahsulotlar ({order.paymentItems?.length || 0})
-                    </Text>
-                    <Box
-                        borderRadius="lg"
-                        border="1px solid"
-                        borderColor={borderColor}
-                        overflow="hidden"
-                    >
-                        <Table size="sm" variant="simple">
-                            <Thead bg={bgTableHead}>
-                                <Tr>
-                                    <Th color={textMuted}>#</Th>
-                                    <Th color={textMuted}>Mahsulot ID</Th>
-                                    <Th color={textMuted} isNumeric>Narx</Th>
-                                    <Th color={textMuted} isNumeric>Soni</Th>
-                                    <Th color={textMuted} isNumeric>Jami</Th>
-                                </Tr>
-                            </Thead>
-                            <Tbody>
-                                {order.paymentItems?.map((item, idx) => (
-                                    <Tr key={item.id}>
-                                        <Td color={textPrimary} fontSize="sm">{idx + 1}</Td>
-                                        <Td color={textPrimary} fontSize="xs" fontFamily="mono">
-                                            {item.productId?.slice(0, 8)}...
-                                        </Td>
-                                        <Td isNumeric color={textPrimary} fontSize="sm">
-                                            {formatPrice(item.price)}
-                                        </Td>
-                                        <Td isNumeric color={textPrimary} fontSize="sm">
-                                            {item.count}
-                                        </Td>
-                                        <Td isNumeric fontWeight="semibold" color={accentColor} fontSize="sm">
-                                            {formatPrice(item.price * item.count)}
-                                        </Td>
-                                    </Tr>
-                                ))}
-                            </Tbody>
-                        </Table>
-                    </Box>
-                </ModalBody>
-
-                <ModalFooter borderTopWidth="1px" borderColor={borderColor}>
-                    <Button onClick={onClose} variant="ghost" color={textPrimary}>
-                        Yopish
-                    </Button>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
-    );
-}
 
 // ══════════════════════════════════
 // MAIN COMPONENT
@@ -225,8 +85,10 @@ export default function Orders() {
     const [loading, setLoading] = useState(false);
     const [loadingMore, setLoadingMore] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
+    const [orderForStatus, setOrderForStatus] = useState(null);
 
-    const modal = useDisclosure();
+    const detailModal = useDisclosure();
+    const statusModal = useDisclosure();
     const toast = useToast();
     const LIMIT = 20;
 
@@ -296,10 +158,21 @@ export default function Orders() {
         GetAllPayment(page + 1, true);
     };
 
-    // ─── Modal ───
+    // ─── Detail modal ───
     const openDetail = (order) => {
         setSelectedOrder(order);
-        modal.onOpen();
+        detailModal.onOpen();
+    };
+
+    // ─── Status modal ───
+    const openStatusModal = (order) => {
+        setOrderForStatus(order);
+        statusModal.onOpen();
+    };
+
+    // ─── Status yangilanganda ───
+    const handleStatusUpdated = () => {
+        GetAllPayment(page, false); // Yangilash
     };
 
     return (
@@ -412,7 +285,7 @@ export default function Orders() {
                                         {formatPrice(order.totalSum)}
                                     </Td>
                                     <Td>
-                                        <StatusBadge status={order.status} />
+                                        <StatusBadge status={order.orderStatus} />
                                     </Td>
                                     <Td color={textPrimary} fontSize="sm">
                                         {order.created?.full_name || "—"}
@@ -420,20 +293,40 @@ export default function Orders() {
                                     <Td color={textMuted} fontSize="xs">
                                         {formatDate(order.createdAt)}
                                     </Td>
-                                    <Td>
-                                        <Tooltip label="Batafsil" hasArrow>
-                                            <IconButton
-                                                size="sm"
-                                                icon={<ViewIcon />}
-                                                variant="ghost"
-                                                colorScheme="blue"
-                                                aria-label="Batafsil"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    openDetail(order);
-                                                }}
-                                            />
-                                        </Tooltip>
+                                    <Td onClick={(e) => e.stopPropagation()}>
+                                        <HStack spacing={1}>
+                                            <Tooltip label="Batafsil" hasArrow>
+                                                <IconButton
+                                                    size="sm"
+                                                    icon={<ViewIcon />}
+                                                    variant="ghost"
+                                                    colorScheme="blue"
+                                                    aria-label="Batafsil"
+                                                    onClick={() => openDetail(order)}
+                                                />
+                                            </Tooltip>
+                                            <NavLink to={`/cafe/return/${order?.id}`}>
+                                                <Tooltip label="Utilizatsiya qilish" hasArrow>
+                                                    <IconButton
+                                                        size="sm"
+                                                        icon={<Undo2 />}
+                                                        variant="ghost"
+                                                        colorScheme="orange"
+                                                        aria-label="Utilizatsiya qilish"
+                                                    />
+                                                </Tooltip>
+                                            </NavLink>
+                                            <Tooltip label="Statusni o'zgartirish" hasArrow>
+                                                <IconButton
+                                                    size="sm"
+                                                    icon={<EditIcon />}
+                                                    variant="ghost"
+                                                    colorScheme="orange"
+                                                    aria-label="Statusni o'zgartirish"
+                                                    onClick={() => openStatusModal(order)}
+                                                />
+                                            </Tooltip>
+                                        </HStack>
                                     </Td>
                                 </Tr>
                             ))}
@@ -467,9 +360,17 @@ export default function Orders() {
 
             {/* DETAIL MODAL */}
             <OrderDetailModal
-                isOpen={modal.isOpen}
-                onClose={modal.onClose}
+                isOpen={detailModal.isOpen}
+                onClose={detailModal.onClose}
                 order={selectedOrder}
+            />
+
+            {/* STATUS MODAL */}
+            <OrderStatusModal
+                isOpen={statusModal.isOpen}
+                onClose={statusModal.onClose}
+                order={orderForStatus}
+                onStatusUpdated={handleStatusUpdated}
             />
         </Box>
     );

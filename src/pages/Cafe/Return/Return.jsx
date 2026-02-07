@@ -4,9 +4,7 @@ import {
     Flex,
     Heading,
     Button,
-    Select,
     Input,
-    Stack,
     Table,
     Thead,
     Tbody,
@@ -23,37 +21,20 @@ import {
     NumberInput,
     NumberInputField,
     useColorModeValue,
-    ButtonGroup,
 } from "@chakra-ui/react";
 import { AddIcon, DeleteIcon, MinusIcon } from "@chakra-ui/icons";
-import { apiCashs } from "../../../utils/Controllers/apiCashs";
-import { apiPayMethods } from "../../../utils/Controllers/apiPayMethods";
 import { apiPayment } from "../../../utils/Controllers/apiPayment";
 import Cookies from "js-cookie";
 import ProductModal from "./__components/ProductModal";
-import ReceiptModal from "./__components/Receiptmodal";
-import EditSumModal from "./__components/EditSumModal";
-import { useWarehouseStore } from "../../../store/useWarehouseStore";
+import { useParams } from "react-router";
 
 export default function OrderCreate() {
-    const locationId = 'f848a70b-3d67-4db7-a4fd-ede488e79ed4'
-    const [cashs, setCashs] = useState([]);
-    const [payMethods, setPayMethods] = useState([]);
     const [orderItems, setOrderItems] = useState([]);
-    const [selectedCash, setSelectedCash] = useState("");
-    const [selectedPayMethod, setSelectedPayMethod] = useState("");
-    const [orderType, setOrderType] = useState("sale");
     const [loading, setLoading] = useState(false);
-    const [paymentData, setPaymentData] = useState(null);
-    const [savedOrderItems, setSavedOrderItems] = useState([]);
-    const [currentPaymentId, setCurrentPaymentId] = useState(null);
-    const {
-        cafeWarehouseId,
-    } = useWarehouseStore();
-
+    const [originalPaymentId, setOriginalPaymentId] = useState("");
+    const [reason, setReason] = useState("");
+    const {id} = useParams()
     const sidebar = useDisclosure();
-    const receipt = useDisclosure();
-    const editSumModal = useDisclosure();
     const toast = useToast();
 
     // ─── Dark mode ranglar ───
@@ -65,30 +46,6 @@ export default function OrderCreate() {
     const textPrimary = useColorModeValue("gray.800", "gray.100");
     const accentColor = useColorModeValue("blue.600", "blue.300");
     const inputBg = useColorModeValue("white", "gray.700");
-
-    // ─── API calls ───
-    const GetCash = async () => {
-        try {
-            const response = await apiCashs.getAll();
-            setCashs(response.data || response);
-        } catch (error) {
-            console.log(error);
-        }
-    };
-
-    const GetPaymentMethod = async () => {
-        try {
-            const response = await apiPayMethods.getAll();
-            setPayMethods(response.data?.payMethods || response.payMethods || []);
-        } catch (error) {
-            console.log(error);
-        }
-    };
-
-    useEffect(() => {
-        GetCash();
-        GetPaymentMethod();
-    }, []);
 
     // ─── Mahsulotni buyurtmaga qo'shish ───
     const addItem = (product) => {
@@ -121,24 +78,6 @@ export default function OrderCreate() {
         });
     };
 
-    // ─── Summani tahrirlash ───
-    const handleEditSum = async (paymentId, sum) => {
-        try {
-            const data = { receivedSum: sum };
-            const response = await apiPayment.EditSum(paymentId, data);
-
-            // Yangilangan payment ma'lumotlarini saqlash
-            if (response.data?.payment) {
-                setPaymentData(response.data.payment);
-            }
-
-            return response;
-        } catch (error) {
-            console.log(error);
-            throw error;
-        }
-    };
-
     // ─── Sonini o'zgartirish ───
     const updateCount = (productId, newCount) => {
         if (newCount < 1) {
@@ -165,20 +104,8 @@ export default function OrderCreate() {
         0
     );
 
-    // ─── Buyurtma yaratish ───
-    const createOrder = async () => {
-        if (!selectedCash) {
-            toast({ title: "Kassani tanlang", status: "warning", duration: 2000 });
-            return;
-        }
-        if (!selectedPayMethod) {
-            toast({
-                title: "To'lov usulini tanlang",
-                status: "warning",
-                duration: 2000,
-            });
-            return;
-        }
+    // ─── Qaytarish yaratish ───
+    const createReturn = async () => {
         if (orderItems.length === 0) {
             toast({
                 title: "Kamida bitta mahsulot qo'shing",
@@ -188,12 +115,10 @@ export default function OrderCreate() {
             return;
         }
 
-        const orderData = {
-            type: orderType,
-            locationId: cafeWarehouseId,
-            cashId: selectedCash,
-            payMethodId: selectedPayMethod,
+        const returnData = {
+            originalPaymentId: id,
             createdBy: Cookies.get("user_id"),
+            reason: reason || "Customer changed mind",
             items: orderItems.map((item) => ({
                 productId: item.productId,
                 count: item.count,
@@ -203,34 +128,26 @@ export default function OrderCreate() {
 
         try {
             setLoading(true);
-            const response = await apiPayment.Create(orderData);
-
-            const payment = response.data?.payment || response.payment;
-            const paymentId = payment?.id || response.data?.id || response.id;
-
-            // Saqlash payment ma'lumotlarini
-            setPaymentData(payment);
-            setCurrentPaymentId(paymentId);
-            setSavedOrderItems([...orderItems]);
+            const response = await apiPayment.CreateReturn(returnData); // Yangi endpoint kerak bo'ladi
 
             toast({
-                title: "Buyurtma yaratildi!",
+                title: "Qaytarish yaratildi!",
                 status: "success",
                 duration: 3000,
             });
 
             // Tozalash
             setOrderItems([]);
-            setSelectedCash("");
-            setSelectedPayMethod("");
-            setOrderType("sale");
-
-            // Chekni ochish
-            receipt.onOpen();
+            setOriginalPaymentId("");
+            setReason("");
 
         } catch (error) {
             console.log(error);
-            toast({ title: "Xatolik yuz berdi", status: "error", duration: 3000 });
+            toast({
+                title: "Xatolik yuz berdi",
+                status: "error",
+                duration: 3000
+            });
         } finally {
             setLoading(false);
         }
@@ -245,7 +162,7 @@ export default function OrderCreate() {
             {/* HEADER */}
             <Flex justify="space-between" align="center" mb={6}>
                 <Heading size="lg" color={textPrimary}>
-                    Yangi buyurtma
+                    Buyurtmani qaytarish
                 </Heading>
                 <Button
                     colorScheme="blue"
@@ -256,73 +173,30 @@ export default function OrderCreate() {
                 </Button>
             </Flex>
 
-            {/* TYPE TANLASH */}
-            <Box mb={5}>
-                <Text fontSize="sm" color={textMuted} mb={2}>
-                    Buyurtma turi
-                </Text>
-                <ButtonGroup isAttached variant="outline" size="sm">
-                    <Button
-                        colorScheme="blue"
-                        variant={orderType === "sale" ? "solid" : "outline"}
-                        onClick={() => setOrderType("sale")}
-                    >
-                        Sotuv
-                    </Button>
-                    <Button
-                        colorScheme="orange"
-                        variant={orderType === "disposal" ? "solid" : "outline"}
-                        onClick={() => setOrderType("disposal")}
-                    >
-                        Utilizatsiya
-                    </Button>
-                </ButtonGroup>
+            {/* PAYMENT ID VA SABAB */}
+            <Box
+                bg={bgCard}
+                borderRadius="xl"
+                border="1px solid"
+                borderColor={borderColor}
+                p={5}
+                mb={6}
+            >
+                <VStack spacing={4} align="stretch">
+                    <Box>
+                        <Text mb={2} color={textMuted} fontSize="sm">
+                            Sabab (ixtiyoriy)
+                        </Text>
+                        <Input
+                            placeholder="Customer changed mind"
+                            value={reason}
+                            onChange={(e) => setReason(e.target.value)}
+                            bg={inputBg}
+                            borderColor={borderColor}
+                        />
+                    </Box>
+                </VStack>
             </Box>
-
-            {/* META MA'LUMOTLAR */}
-            <Stack direction={{ base: "column", md: "row" }} spacing={4} mb={6}>
-                <Select
-                    placeholder="Kassani tanlang"
-                    maxW="300px"
-                    bg={inputBg}
-                    borderColor={borderColor}
-                    color={textPrimary}
-                    value={selectedCash}
-                    onChange={(e) => setSelectedCash(e.target.value)}
-                >
-                    {cashs.map((cash) => (
-                        <option key={cash.id} value={cash.id}>
-                            {cash.name}
-                        </option>
-                    ))}
-                </Select>
-
-                <Select
-                    placeholder="To'lov usuli"
-                    maxW="300px"
-                    bg={inputBg}
-                    borderColor={borderColor}
-                    color={textPrimary}
-                    value={selectedPayMethod}
-                    onChange={(e) => setSelectedPayMethod(e.target.value)}
-                >
-                    {payMethods.map((method) => (
-                        <option key={method.id} value={method.id}>
-                            {method.name}
-                        </option>
-                    ))}
-                </Select>
-
-                <Input
-                    type="datetime-local"
-                    defaultValue={new Date().toISOString().slice(0, 16)}
-                    maxW="260px"
-                    bg={inputBg}
-                    borderColor={borderColor}
-                    color={textPrimary}
-                    isReadOnly
-                />
-            </Stack>
 
             {/* BUYURTMA JADVALI */}
             <Box
@@ -445,7 +319,7 @@ export default function OrderCreate() {
                 >
                     <VStack align="flex-start" spacing={0}>
                         <Text color={textMuted} fontSize="sm">
-                            Umumiy summa
+                            Qaytarish summasi
                         </Text>
                         <Heading size="md" color={accentColor}>
                             {formatPrice(totalSum)}
@@ -454,31 +328,22 @@ export default function OrderCreate() {
 
                     <HStack spacing={3} flexWrap="wrap">
                         <Badge
-                            colorScheme={orderType === "sale" ? "blue" : "orange"}
+                            colorScheme="red"
                             fontSize="sm"
                             px={3}
                             py={1}
                             borderRadius="md"
                         >
-                            {orderType === "sale" ? "Sotuv" : "Utilizatsiya"}
-                        </Badge>
-                        <Badge
-                            colorScheme="gray"
-                            fontSize="sm"
-                            px={3}
-                            py={1}
-                            borderRadius="md"
-                        >
-                            {orderItems.length} ta mahsulot
+                            {orderItems.length} ta mahsulot qaytarilmoqda
                         </Badge>
                         <Button
-                            colorScheme="blue"
+                            colorScheme="red"
                             size="lg"
-                            onClick={createOrder}
+                            onClick={createReturn}
                             isLoading={loading}
-                            loadingText="Yaratilmoqda..."
+                            loadingText="Qaytarilmoqda..."
                         >
-                            Buyurtmani tasdiqlash
+                            Qaytarishni tasdiqlash
                         </Button>
                     </HStack>
                 </Flex>
@@ -490,26 +355,6 @@ export default function OrderCreate() {
                 onClose={sidebar.onClose}
                 orderItems={orderItems}
                 addItem={addItem}
-            />
-
-            {/* CHEK MODAL */}
-            <ReceiptModal
-                isOpen={receipt.isOpen}
-                onClose={() => {
-                    receipt.onClose();
-                    // Chek yopilgandan keyin EditSum modalni ochish
-                    editSumModal.onOpen();
-                }}
-                paymentData={paymentData}
-                orderItems={savedOrderItems}
-            />
-
-            {/* SUMMANI TAHRIRLASH MODAL */}
-            <EditSumModal
-                isOpen={editSumModal.isOpen}
-                onClose={editSumModal.onClose}
-                paymentId={currentPaymentId}
-                onSumUpdated={handleEditSum}
             />
         </Box>
     );

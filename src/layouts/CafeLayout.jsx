@@ -2,7 +2,8 @@ import { Outlet } from "react-router";
 import Sidebar from "../components/common/Sidebar";
 import { Box } from "@chakra-ui/react";
 import { useUIStore } from "../store/useUIStore";
-import { Home, BringToFront, Logs } from "lucide-react";
+import { Home, BringToFront, Logs, Layers } from "lucide-react";
+import WarehouseGuard from "../auth/WarehouseGuard";
 
 const links = [
     { label: "Home", to: "/cafe/dashboard", icon: Home },
@@ -11,17 +12,22 @@ const links = [
 ]
 
 export default function CafeLayout() {
+
+
     const { collapsed } = useUIStore();
     return (
-        <Box>
-            <Sidebar collapsed={collapsed} links={links} role={"seller"} />
-            <Box
-                pl={collapsed ? "80px" : "250px"}
-                transition="0.25s ease"
-                minH="100vh"
-            >
-                <Outlet />
+        <WarehouseGuard isCafe={true}>
+            <Box>
+                <Sidebar collapsed={collapsed} links={links} role={"seller"} />
+                <Box
+                    pl={collapsed ? "80px" : "250px"}
+                    transition="0.25s ease"
+                    minH="100vh"
+                >
+                    <Outlet />
+                </Box>
             </Box>
-        </Box>
+        </WarehouseGuard>
+
     )
 }
