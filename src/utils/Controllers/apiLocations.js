@@ -6,7 +6,7 @@ class apiLocations {
         return response;
     }
     static getWarehouses = async () => {
-        const response = await $api.get(`${BASE_URL}/locations/type/warehouse`);
+        const response = await $api.get(`${BASE_URL}/locations`);
         return response;
     }
     static Add = async (data) => {

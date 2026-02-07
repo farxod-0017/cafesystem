@@ -135,7 +135,7 @@ export default function Login() {
                         fontWeight="bold"
                         fontSize="md"
                     >
-                        USD
+                        Cafe
                     </Box>
                 </Flex>
 
