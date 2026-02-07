@@ -45,7 +45,7 @@ const adminRoutes = [
   },
   {
     name:"admin cashs", 
-    path:'cashs',
+    path:'kassalar',
     element:<CashsPage/>
   }
 ];
