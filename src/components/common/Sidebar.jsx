@@ -152,7 +152,8 @@ export default function Sidebar({ collapsed, links = [], role, end = false }) {
                     >
                         <Flex alignItems={"center"}>
                             <MenuButton onClick={()=> {
-                                navigate("/account")
+                                const path = role === "admin" ? "/account" : role === "seller" ? "/cafe/account" : "/ombor/account"
+                                navigate(path)
                             }} w="100%" cursor={collapsed ? "pointer" : "default"} >
                                 <Flex
                                     align="center"
