@@ -99,6 +99,7 @@ export default function EditSumModal({ isOpen, onClose, paymentId, onSumUpdated 
                                 <NumberInputField
                                     placeholder="Summani kiriting"
                                     color={textPrimary}
+                                    inputMode="numeric"
                                 />
                                 <NumberInputStepper>
                                     <NumberIncrementStepper />
