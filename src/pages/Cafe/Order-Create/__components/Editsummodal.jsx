@@ -79,7 +79,7 @@ export default function EditSumModal({ isOpen, onClose, paymentId, onSumUpdated 
         <Modal isOpen={isOpen} onClose={handleClose} size="md" isCentered>
             <ModalOverlay backdropFilter="blur(4px)" />
             <ModalContent bg={bgModal}>
-                <ModalHeader color={textPrimary}>Summani tahrirlash</ModalHeader>
+                <ModalHeader color={textPrimary}>Qabul qilingan summa</ModalHeader>
                 <ModalCloseButton />
 
                 <ModalBody>

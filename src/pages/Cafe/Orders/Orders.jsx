@@ -250,10 +250,10 @@ export default function Orders() {
                                 <Th color={textMuted}>Turi</Th>
                                 <Th color={textMuted}>To'lov usuli</Th>
                                 <Th color={textMuted} isNumeric>Summa</Th>
-                                <Th color={textMuted}>Holat</Th>
-                                <Th color={textMuted}>Yaratgan</Th>
+                                {/* <Th color={textMuted}>Holat</Th> */}
+                                {/* <Th color={textMuted}>Yaratgan</Th> */}
                                 <Th color={textMuted}>Sana</Th>
-                                <Th></Th>
+                                <Th>Amallar</Th>
                             </Tr>
                         </Thead>
                         <Tbody>
@@ -303,15 +303,15 @@ export default function Orders() {
                                     <Td isNumeric fontWeight="semibold" color={textPrimary} fontSize="sm">
                                         {formatPrice(order.totalSum)}
                                     </Td>
-                                    <Td onClick={(e) => e.stopPropagation()}>
+                                    {/* <Td onClick={(e) => e.stopPropagation()}>
                                         <OrderStatusMenu
                                             order={order}
                                             onStatusUpdated={GetAllPayment}
                                         />
-                                    </Td>
-                                    <Td color={textPrimary} fontSize="sm">
+                                    </Td> */}
+                                    {/* <Td color={textPrimary} fontSize="sm">
                                         {order.created?.full_name || "—"}
-                                    </Td>
+                                    </Td> */}
                                     <Td color={textMuted} fontSize="xs">
                                         {formatDate(order.createdAt)}
                                     </Td>

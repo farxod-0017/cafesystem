@@ -101,7 +101,7 @@ export default function ReceiptModal({
                         <HStack justify="space-between">
                             <Text color={textMuted}>To'lov turi:</Text>
                             <Text fontWeight="semibold" color={textPrimary}>
-                                {paymentData.type === "cash" ? "Naqd pul" : "Nasiya"}
+                                {paymentData.type === "sale" ? "Naqd pul" : "Nasiya"}
                             </Text>
                         </HStack>
 
@@ -115,7 +115,7 @@ export default function ReceiptModal({
                                         : "green.500"
                                 }
                             >
-                                {paymentData.status === "pending" ? "Kutilmoqda" : "To'langan"}
+                                {paymentData.orderStatus === "pending" ? "Kutilmoqda" : "To'langan"}
                             </Text>
                         </HStack>
 
