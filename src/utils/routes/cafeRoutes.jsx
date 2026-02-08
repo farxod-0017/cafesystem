@@ -1,6 +1,8 @@
+import CafeChiqim from "../../pages/Cafe/CafeChiqim/CafeChiqim";
 import CafedagiTovarlar from "../../pages/Cafe/CafedagiTovarlar/CafedagiTovarlar";
 import Home from "../../pages/Cafe/Home/Home";
 import CafeKirim from "../../pages/Cafe/Kirim/CafeKirim";
+import CafeClients from "../../pages/Cafe/Klientlar/CafeClients";
 import OperatsiyalarTarixi from "../../pages/Cafe/OperatsiyalarTarixi/OperatsiyalarTarixi";
 import OrderCreate from "../../pages/Cafe/Order-Create/OrderCreate";
 import Orders from "../../pages/Cafe/Orders/Orders";
@@ -47,6 +49,16 @@ const cafeRoutes = [
         name:"cf operatsiyalar tarixi",
         path:"operatsiyalar-tarixi",
         element:<OperatsiyalarTarixi/>
+    },
+    {
+        name:"cf chiqim",
+        path:'chiqim',
+        element:<CafeChiqim/>
+    }, 
+    {
+        name:"cafe clients",
+        path:"klientlar",
+        element:<CafeClients/>
     }
 ];
 export default cafeRoutes

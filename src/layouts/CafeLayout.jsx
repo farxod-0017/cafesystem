@@ -2,7 +2,7 @@ import { Outlet } from "react-router";
 import Sidebar from "../components/common/Sidebar";
 import { Box } from "@chakra-ui/react";
 import { useUIStore } from "../store/useUIStore";
-import { Home, BringToFront, Logs, Layers, Handshake, PackagePlus, Package, Move } from "lucide-react";
+import { Home, BringToFront, Logs, Layers, Handshake, PackagePlus, Package, Move, PackageMinus, Users } from "lucide-react";
 import WarehouseGuard from "../auth/WarehouseGuard";
 
 const links = [
@@ -11,14 +11,13 @@ const links = [
     { label: "Zakazlar", to: "/cafe/orders", icon: Logs },
     { label: "Cafedagi tovarlar", to: "/cafe/cafedagi-tovarlar", icon: Package },
     { label: "Kirim", to: "/cafe/kirim", icon: PackagePlus },
+    { label: "Chiqim", to: "/cafe/chiqim", icon: PackageMinus },
     { label: "Operatsiyalar tarixi", to: "/cafe/operatsiyalar-tarixi", icon: Move },
     { label: "Taminotchilar", to: "/cafe/taminotchilar", icon: Handshake },
-
+    { label: "Klientlar", to: "/cafe/klientlar", icon: Users },
 ]
 
 export default function CafeLayout() {
-
-
     const { collapsed } = useUIStore();
     return (
         <WarehouseGuard isCafe={true}>
