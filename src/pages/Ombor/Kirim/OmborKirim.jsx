@@ -761,7 +761,7 @@ export default function OmborKirim() {
                             </CardBody>
                         </Card>
 
-                        <Card bg={cardBg} borderColor={borderColor}>
+                        {/* <Card bg={cardBg} borderColor={borderColor}>
                             <CardBody>
                                 <Text fontSize="sm" color="gray.500" mb={1}>
                                     O'rtacha narx
@@ -770,7 +770,7 @@ export default function OmborKirim() {
                                     {formatNumber(Math.round(averagePrice))} so'm
                                 </Text>
                             </CardBody>
-                        </Card>
+                        </Card> */}
                     </Grid>
 
                     {/* TABLE - DESKTOP */}

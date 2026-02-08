@@ -136,11 +136,11 @@ const normalizeStock = (stock) => {
 // MAIN COMPONENT
 // ==============================
 
-export default function OmbordagiTovarlar() {
+export default function CafedagiTovarlar() {
     const toast = useToast();
     const searchInputRef = useRef(null);
 
-    const { mainWarehouseId, locationName } = useWarehouseStore();
+    const { cafeWarehouseId, locationName } = useWarehouseStore();
 
     // ==============================
     // STATE MANAGEMENT
@@ -164,11 +164,11 @@ export default function OmbordagiTovarlar() {
     // ==============================
 
     const fetchStocks = async (searchText = "") => {
-        if (!mainWarehouseId) return;
+        if (!cafeWarehouseId) return;
         setIsLoading(true);
         try {
             const response = await apiStock.getStocksForOperationById(
-                mainWarehouseId,
+                cafeWarehouseId,
                 searchText,
                 "outgoing"
             );
@@ -449,7 +449,7 @@ export default function OmbordagiTovarlar() {
             >
                 <VStack align={{ base: "center", sm: "start" }} spacing={1}>
                     <Heading size={{ base: "md", md: "lg" }}>
-                        Ombordagi tovarlar qoldig'i
+                        Cafedagi tovarlar qoldig'i
                     </Heading>
                     <Text fontSize="sm" color="gray.500">
                         {locationName}

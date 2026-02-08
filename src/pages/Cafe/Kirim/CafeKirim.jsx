@@ -456,7 +456,7 @@ export default function CafeKirim() {
                 items: selectedItems.map((item) => ({
                     productId: item.id,
                     quantity: item.quantity,
-                    salePrice: item.salePrice || 0,
+                    salePrice: item.purchasePrice || 0,
                     purchasePrice: item.purchasePrice,
                     discount: 0,
                     isNewBatch: item.isNewBatch,
@@ -533,7 +533,7 @@ export default function CafeKirim() {
                 gap={4}
             >
                 <Heading size={{ base: "md", md: "lg" }}>
-                    Omborga kirim
+                    Cafe omborga kirim
                 </Heading>
                 <Button
                     leftIcon={<AddIcon />}
@@ -761,7 +761,7 @@ export default function CafeKirim() {
                             </CardBody>
                         </Card>
 
-                        <Card bg={cardBg} borderColor={borderColor}>
+                        {/* <Card bg={cardBg} borderColor={borderColor}>
                             <CardBody>
                                 <Text fontSize="sm" color="gray.500" mb={1}>
                                     O'rtacha narx
@@ -770,7 +770,7 @@ export default function CafeKirim() {
                                     {formatNumber(Math.round(averagePrice))} so'm
                                 </Text>
                             </CardBody>
-                        </Card>
+                        </Card> */}
                     </Grid>
 
                     {/* TABLE - DESKTOP */}
@@ -789,7 +789,7 @@ export default function CafeKirim() {
                                     <Th>Nomlanishi</Th>
                                     <Th>Birlik</Th>
                                     <Th>Narx (so'm)</Th>
-                                    <Th>Sotuv narxi (so'm)</Th>
+                                    {/* <Th>Sotuv narxi (so'm)</Th> */}
                                     <Th>Miqdor</Th>
                                     <Th>Jami (so'm)</Th>
                                     <Th></Th>
@@ -876,7 +876,7 @@ export default function CafeKirim() {
                                             </Td>
 
                                             {/* SALE PRICE */}
-                                            <Td>
+                                            {/* <Td>
                                                 <VStack align="start" spacing={1}>
                                                     <Input
                                                         type="number"
@@ -900,7 +900,7 @@ export default function CafeKirim() {
                                                         </Text>
                                                     )}
                                                 </VStack>
-                                            </Td>
+                                            </Td> */}
 
                                             {/* QUANTITY */}
                                             <Td>
