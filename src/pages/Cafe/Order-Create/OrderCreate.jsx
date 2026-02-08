@@ -31,7 +31,7 @@ import { apiPayMethods } from "../../../utils/Controllers/apiPayMethods";
 import { apiPayment } from "../../../utils/Controllers/apiPayment";
 import Cookies from "js-cookie";
 import ProductModal from "./__components/ProductModal";
-import ReceiptModal from "./__components/ReceiptModal";
+import Receiptmodal from "./__components/Receiptmodal";
 import EditSumModal from "./__components/EditSumModal";
 import { useWarehouseStore } from "../../../store/useWarehouseStore";
 
@@ -494,7 +494,7 @@ export default function OrderCreate() {
             />
 
             {/* CHEK MODAL */}
-            <ReceiptModal
+            <Receiptmodal
                 isOpen={receipt.isOpen}
                 onClose={() => {
                     receipt.onClose();
