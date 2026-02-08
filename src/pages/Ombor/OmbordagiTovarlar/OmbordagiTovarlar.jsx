@@ -449,7 +449,7 @@ export default function OmbordagiTovarlar() {
             >
                 <VStack align={{ base: "center", sm: "start" }} spacing={1}>
                     <Heading size={{ base: "md", md: "lg" }}>
-                        Ombordagi tovarlar
+                        Ombordagi tovarlar ro'yxati
                     </Heading>
                     <Text fontSize="sm" color="gray.500">
                         {locationName}
