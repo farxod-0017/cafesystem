@@ -1,95 +1,46 @@
 import { useState } from "react";
 import {
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter,
-    ModalCloseButton,
+    Menu,
+    MenuButton,
+    MenuList,
+    MenuItem,
+    MenuDivider,
     Button,
-    VStack,
-    Text,
-    Textarea,
-    FormControl,
-    FormLabel,
-    useColorModeValue,
+    Badge,
     useToast,
+    Text,
+    VStack,
+    Box,
 } from "@chakra-ui/react";
+import { ChevronDownIcon } from "@chakra-ui/icons";
 import { apiPayment } from "../../../../utils/Controllers/apiPayment";
-
-// Status workflow ma'lumotlari
-const STATUS_WORKFLOW = {
-    pending: {
-        next: "preparing",
-        label: "Kutilmoqda",
-        nextLabel: "Tayyorlanmoqda",
-        color: "yellow",
-        description: "Buyurtma qabul qilindi, tayyorlashni boshlash"
-    },
-    preparing: {
-        next: "ready",
-        label: "Tayyorlanmoqda",
-        nextLabel: "Tayyor",
-        color: "blue",
-        description: "Mahsulotlar tayyorlanmoqda, yakunlash"
-    },
-    ready: {
-        next: "completed",
-        label: "Tayyor",
-        nextLabel: "Yakunlangan",
-        color: "green",
-        description: "Buyurtma tayyor, mijozga topshirish"
-    },
-    completed: {
-        next: null,
-        label: "Yakunlangan",
-        nextLabel: null,
-        color: "teal",
-        description: "Buyurtma muvaffaqiyatli yakunlandi"
-    }
-};
 
 const STATUS_OPTIONS = [
     { value: "pending", label: "Kutilmoqda", color: "yellow" },
     { value: "preparing", label: "Tayyorlanmoqda", color: "blue" },
     { value: "ready", label: "Tayyor", color: "green" },
     { value: "completed", label: "Yakunlangan", color: "teal" },
-    { value: "cancelled", label: "Bekor qilingan", color: "red" },
 ];
 
-export default function OrderStatusModal({
-    isOpen,
-    onClose,
-    order,
-    onStatusUpdated
-}) {
-    const [note, setNote] = useState("");
+export default function OrderStatusMenu({ order, onStatusUpdated }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
-
     const toast = useToast();
-    const textPrimary = useColorModeValue("gray.800", "gray.100");
-    const textMuted = useColorModeValue("gray.500", "gray.400");
-    const borderColor = useColorModeValue("gray.200", "gray.600");
-    const bgCard = useColorModeValue("white", "gray.800");
-    const inputBg = useColorModeValue("white", "gray.700");
 
     if (!order) return null;
 
-    const currentStatus = order.status || "pending";
-    const currentStatusInfo = STATUS_WORKFLOW[currentStatus] || {};
-    const nextStatus = currentStatusInfo.next;
+    const currentStatus = order.orderStatus || "pending";
+    const currentStatusInfo = STATUS_OPTIONS.find(s => s.value === currentStatus) || STATUS_OPTIONS[0];
 
     // Statusni o'zgartirish
     const handleStatusChange = async (newStatus) => {
-        if (isSubmitting) return;
+        if (isSubmitting || newStatus === currentStatus) return;
 
         try {
             setIsSubmitting(true);
 
             const data = {
                 orderStatus: newStatus,
-                note: note.trim() || "Status updated"
+                note: `Status o'zgartirildi: ${currentStatusInfo.label} → ${STATUS_OPTIONS.find(s => s.value === newStatus)?.label}`
             };
 
             await apiPayment.EditStatus(order.id, data);
@@ -98,145 +49,69 @@ export default function OrderStatusModal({
                 title: "Muvaffaqiyatli",
                 description: `Status "${STATUS_OPTIONS.find(s => s.value === newStatus)?.label}" ga o'zgartirildi`,
                 status: "success",
-                duration: 3000,
+                duration: 2000,
+                position: "top-right",
             });
 
-            // Note ni tozalash
-            setNote("");
-
             onStatusUpdated?.();
-            onClose();
         } catch (error) {
             console.error("Status update error:", error);
             toast({
                 title: "Xatolik",
-                description: error.response?.data?.message || "Statusni o'zgartirishda xatolik yuz berdi",
+                description: error.response?.data?.message || "Statusni o'zgartirishda xatolik",
                 status: "error",
                 duration: 3000,
+                position: "top-right",
             });
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    // Bekor qilish
-    const handleCancel = () => {
-        const cancelNote = "Bekor qilindi" + (note ? `: ${note}` : "");
-        handleStatusChange("cancelled");
-    };
-
-    // Note uchun placeholderlar
-    const getNotePlaceholder = (status) => {
-        const placeholders = {
-            preparing: "Misol: 20 daqiqa davom etadi, katta buyurtma...",
-            ready: "Misol: Mijoz kelishini kutmoqda, oziq-ovqat issiq...",
-            completed: "Misol: Mijozga topshirildi, naqd to'lov qabul qilindi...",
-            cancelled: "Misol: Mijoz bekor qildi, mahsulot yo'q...",
-            pending: "Misol: To'lovni kutmoqda, tasdiqlash kerak..."
-        };
-        return placeholders[status] || "Izoh qoldiring...";
-    };
-
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="md">
-            <ModalOverlay bg="blackAlpha.600" />
-            <ModalContent bg={bgCard} borderRadius="xl">
-                <ModalHeader borderBottomWidth="1px" borderColor={borderColor}>
-                    <Text color={textPrimary}>Statusni o'zgartirish</Text>
-                    <Text fontSize="sm" color={textMuted} fontWeight="normal">
-                        {order.payNumber}
+        <Menu>
+            <MenuButton
+                as={Button}
+                rightIcon={<ChevronDownIcon />}
+                size="sm"
+                colorScheme={currentStatusInfo.color}
+                variant="outline"
+                isLoading={isSubmitting}
+                loadingText={currentStatusInfo.label}
+            >
+                <Badge colorScheme={currentStatusInfo.color} fontSize="xs">
+                    {currentStatusInfo.label}
+                </Badge>
+            </MenuButton>
+
+            <MenuList minW="200px" zIndex={10}>
+                <Box px={3} py={2} borderBottomWidth="1px">
+                    <Text fontSize="xs" fontWeight="bold" color="gray.500">
+                        Statusni o'zgartirish
                     </Text>
-                </ModalHeader>
-                <ModalCloseButton
-                    color={textPrimary}
-                    onClick={() => {
-                        setNote("");
-                        onClose();
-                    }}
-                />
+                </Box>
 
-                <ModalBody py={6}>
-                    <VStack spacing={4} align="stretch">
-                        {/* Joriy holat */}
-                        <Text color={textPrimary} fontWeight="medium">
-                            Joriy holat:{" "}
-                            <Text as="span" color={`${currentStatusInfo.color}.500`}>
-                                {currentStatusInfo.label}
-                            </Text>
-                        </Text>
-
-                        {/* Tavsif */}
-                        {currentStatusInfo.description && (
-                            <Text fontSize="sm" color={textMuted}>
-                                {currentStatusInfo.description}
-                            </Text>
-                        )}
-
-                        {/* Note input */}
-                        <FormControl>
-                            <FormLabel fontSize="sm" color={textMuted}>
-                                Izoh (ixtiyoriy)
-                            </FormLabel>
-                            <Textarea
-                                value={note}
-                                onChange={(e) => setNote(e.target.value)}
-                                placeholder={getNotePlaceholder(currentStatus)}
-                                size="sm"
-                                bg={inputBg}
-                                borderColor={borderColor}
-                                color={textPrimary}
-                                _placeholder={{ color: textMuted }}
-                                rows={3}
-                                resize="vertical"
-                            />
-                        </FormControl>
-
-
-                        {/* Boshqa statuslar */}
-                        <Text fontSize="sm" color={textMuted} mt={4}>
-                            Boshqa holatlar:
-                        </Text>
-
-                        <VStack spacing={2}>
-                            {STATUS_OPTIONS
-                                .filter(option =>
-                                    option.value !== currentStatus &&
-                                    option.value !== "cancelled"
-                                )
-                                .map((option) => (
-                                    <Button
-                                        key={option.value}
-                                        variant="outline"
-                                        colorScheme={option.color}
-                                        width="100%"
-                                        onClick={() => handleStatusChange(option.value)}
-                                        size="sm"
-                                        isLoading={isSubmitting}
-                                    >
-                                        {option.label} ga o'tkazish
-                                    </Button>
-                                ))
-                            }
-                        </VStack>
-                    </VStack>
-                </ModalBody>
-
-                <ModalFooter borderTopWidth="1px" borderColor={borderColor} pt={4}>
-                    <VStack width="100%" spacing={3}>
-                        <Button
-                            variant="ghost"
-                            onClick={() => {
-                                setNote("");
-                                onClose();
-                            }}
-                            color={textPrimary}
-                            width="100%"
+                <VStack spacing={0} align="stretch" py={1}>
+                    {STATUS_OPTIONS.map((option) => (
+                        <MenuItem
+                            key={option.value}
+                            onClick={() => handleStatusChange(option.value)}
+                            isDisabled={option.value === currentStatus}
+                            fontSize="sm"
+                            py={2}
                         >
-                            Yopish
-                        </Button>
-                    </VStack>
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
+                            <Badge
+                                colorScheme={option.color}
+                                fontSize="xs"
+                                width="100%"
+                                textAlign="center"
+                            >
+                                {option.label}
+                            </Badge>
+                        </MenuItem>
+                    ))}
+                </VStack>
+            </MenuList>
+        </Menu>
     );
 }

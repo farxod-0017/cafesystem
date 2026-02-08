@@ -512,13 +512,10 @@ export default function OrderCreate() {
             {/* CHEK MODAL */}
             <Receiptmodal
                 isOpen={receipt.isOpen}
-                onClose={() => {
-                    receipt.onClose();
-                    // Chek yopilgandan keyin EditSum modalni ochish
-                    editSumModal.onOpen();
-                }}
+                onClose={receipt.onClose} // Просто закрываем без открытия другого модала
                 paymentData={paymentData}
                 orderItems={savedOrderItems}
+                onPaymentClick={editSumModal.onOpen} // Передаем функцию открытия Editsummodal
             />
 
             {/* SUMMANI TAHRIRLASH MODAL */}

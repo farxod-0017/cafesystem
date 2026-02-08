@@ -15,7 +15,13 @@ import {
     useColorModeValue,
 } from "@chakra-ui/react";
 
-export default function ReceiptModal({ isOpen, onClose, paymentData, orderItems }) {
+export default function ReceiptModal({
+    isOpen,
+    onClose,
+    paymentData,
+    orderItems,
+    onPaymentClick // Новый prop для открытия Editsummodal
+}) {
     const bgReceipt = useColorModeValue("white", "gray.800");
     const borderColor = useColorModeValue("gray.300", "gray.600");
     const textPrimary = useColorModeValue("gray.800", "gray.100");
@@ -37,9 +43,10 @@ export default function ReceiptModal({ isOpen, onClose, paymentData, orderItems 
         });
     };
 
-    // ─── Print qilish ───
-    const handlePrint = () => {
-        window.print();
+    // ─── To'lov qilish tugmasi bosilganda ───
+    const handlePayment = () => {
+        onClose(); // Chekni yopish
+        onPaymentClick(); // Editsummodal ochish
     };
 
     if (!paymentData) return null;
@@ -50,32 +57,32 @@ export default function ReceiptModal({ isOpen, onClose, paymentData, orderItems 
             onClose={onClose}
             size="md"
             isCentered
-            scrollBehavior="inside" // Добавляем скролл внутри модалки
+            scrollBehavior="inside"
         >
             <ModalOverlay />
             <ModalContent
                 bg={bgReceipt}
-                maxH="90vh" // Ограничиваем максимальную высоту
+                maxH="90vh"
             >
                 <ModalHeader
                     textAlign="center"
                     borderBottomWidth="1px"
                     borderColor={borderColor}
-                    position="sticky" // Фиксируем заголовок
+                    position="sticky"
                     top={0}
                     bg={bgReceipt}
                     zIndex={1}
                 >
                     <Text fontSize="2xl" fontWeight="bold" color={textPrimary}>
-                        CHEk
+                        CHEK
                     </Text>
                 </ModalHeader>
 
                 <ModalBody
                     py={6}
                     id="receipt-content"
-                    overflowY="auto" // Включаем вертикальный скролл
-                    maxH="calc(90vh - 140px)" // Ограничиваем высоту для контента
+                    overflowY="auto"
+                    maxH="calc(90vh - 140px)"
                 >
                     <VStack spacing={4} align="stretch">
                         {/* Chek raqami va sana */}
@@ -182,7 +189,7 @@ export default function ReceiptModal({ isOpen, onClose, paymentData, orderItems 
                 <ModalFooter
                     borderTopWidth="1px"
                     borderColor={borderColor}
-                    position="sticky" // Фиксируем футер
+                    position="sticky"
                     bottom={0}
                     bg={bgReceipt}
                     zIndex={1}
@@ -190,32 +197,11 @@ export default function ReceiptModal({ isOpen, onClose, paymentData, orderItems 
                     <Button variant="ghost" mr={3} onClick={onClose}>
                         Yopish
                     </Button>
-                    <Button colorScheme="blue" onClick={handlePrint}>
-                        Chop etish
+                    <Button colorScheme="green" onClick={handlePayment}>
+                        To'lov qilish
                     </Button>
                 </ModalFooter>
             </ModalContent>
-
-            {/* Print uchun maxsus stil */}
-            <style>
-                {`
-                    @media print {
-                        body * {
-                            visibility: hidden;
-                        }
-                        #receipt-content,
-                        #receipt-content * {
-                            visibility: visible;
-                        }
-                        #receipt-content {
-                            position: absolute;
-                            left: 0;
-                            top: 0;
-                            width: 100%;
-                        }
-                    }
-                `}
-            </style>
         </Modal>
     );
 }
