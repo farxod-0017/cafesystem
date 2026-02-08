@@ -24,12 +24,17 @@ import {
     AlertDialogContent,
     AlertDialogFooter,
     AlertDialogHeader,
-    AlertDialogOverlay
+    AlertDialogOverlay,
+    Badge,
+    FormLabel
 } from "@chakra-ui/react";
 import { EditIcon, DeleteIcon, AddIcon } from "@chakra-ui/icons";
 import { useEffect, useRef, useState } from "react";
-import { apiCashs } from "../../../utils/Controllers/apiCashs"; 
+import { apiCashs } from "../../../utils/Controllers/apiCashs";
 import { apiLocations } from "../../../utils/Controllers/apiLocations";
+import { Banknote, Plus, Wallet2 } from "lucide-react";
+import { apiPaymentCash } from "../../../utils/Controllers/apiPaymentCash";
+import Cookies from "js-cookie";
 
 // ==================================================
 // Axios so‘rovlarini bu joyga ulaysiz
@@ -48,9 +53,17 @@ export default function CashsPage() {
 
     // -------------------- CREATE / EDIT --------------------
     const { isOpen, onOpen, onClose } = useDisclosure();
+    const {
+        isOpen: isFillOpen,
+        onOpen: onFillOpen,
+        onClose: onFillClose
+    } = useDisclosure();
     const [submitting, setSubmitting] = useState(false);
     const [editingItem, setEditingItem] = useState(null); // { id, name }
     const [name, setName] = useState("");
+    const [pul, setPul] = useState("");
+    const [pulNote, setPulNote] = useState("");
+    const [fillingCash, setFillingCash] = useState(null);
 
     // -------------------- DELETE --------------------
     const {
@@ -68,9 +81,9 @@ export default function CashsPage() {
             const res = await apiLocations.getWarehouses()
             setLocations(res.data);
             setSelectedLocation(res.data?.[0] || null);
-        }finally {
+        } finally {
         }
-    };  
+    };
 
     // -------------------- FETCH LIST --------------------
     const fetchPayMethods = async () => {
@@ -87,17 +100,17 @@ export default function CashsPage() {
             setPageLoading(false);
         }
     };
-    
+
     useEffect(() => {
         fetchWarehouses();
     }, []);
     useEffect(() => {
-        if(selectedLocation) fetchPayMethods();
+        if (selectedLocation) fetchPayMethods();
     }, [selectedLocation]);
 
     // -------------------- CREATE / UPDATE --------------------
     const handleSubmit = async () => {
-        if (name.trim() === "" ) return;
+        if (name.trim() === "") return;
 
         try {
             setSubmitting(true);
@@ -108,7 +121,7 @@ export default function CashsPage() {
                 await apiCashs.Update({ name }, editingItem.id);
                 fetchPayMethods();
             } else {
-                if(!selectedLocation) return;
+                if (!selectedLocation) return;
                 await apiCashs.Add({ name, locationId: selectedLocation.id });
                 fetchPayMethods()
             }
@@ -132,6 +145,22 @@ export default function CashsPage() {
             fetchPayMethods()
         } finally {
             setDeleting(false);
+        }
+    };
+    // -------------------- FILL CASH --------------------
+    const handleFillCash = async () => {
+        console.log(pul);
+
+        if (!pul) return;
+        try {
+            setSubmitting(true);
+            await apiPaymentCash.Add({ amount: parseFloat(pul), cashId: fillingCash.id, type: "deposit", createdBy: Cookies.get("user_id"), note: pulNote });
+            setPul("");
+            setPulNote("");
+            onFillClose();
+            fetchPayMethods();
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -180,8 +209,14 @@ export default function CashsPage() {
                             role="group"
                         >
                             <CardBody>
-                                <Flex justify="space-between" align="center">
-                                    <Text fontWeight="600">{item.name}</Text>
+                                <Flex justify="space-between" align="start">
+                                    <Flex direction={"column"}>
+                                        <Text mb={2} fontWeight="600">{item.name}</Text>
+                                        <Flex gap={2}>
+                                            <Badge><Wallet2 /></Badge>
+                                            <Text>{item.balance}</Text>
+                                        </Flex>
+                                    </Flex>
 
                                     <Flex
                                         gap={2}
@@ -189,6 +224,17 @@ export default function CashsPage() {
                                         _groupHover={{ opacity: 1 }}
                                         transition="0.2s"
                                     >
+                                        {selectedLocation?.isCafe && (
+                                        <IconButton
+                                            size="sm"
+                                            aria-label="edit"
+                                            icon={<Plus />}
+                                            onClick={() => {
+                                                setFillingCash(item);
+                                                onFillOpen();
+                                                setPul("");
+                                            }}
+                                        />)}
                                         <IconButton
                                             size="sm"
                                             aria-label="edit"
@@ -235,6 +281,38 @@ export default function CashsPage() {
                             Bekor qilish
                         </Button>
                         <Button onClick={handleSubmit} isLoading={submitting}>
+                            Saqlash
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+            {/* Kassani t'ldirish modal */}
+            <Modal isOpen={isFillOpen} onClose={onFillClose} isCentered>
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader>
+                        Kassani to'ldirish
+                    </ModalHeader>
+                    <ModalBody>
+                        <FormLabel>{fillingCash?.name} - kassani to'ldirish uchun miqdor</FormLabel>
+                        <Input
+                            mb={2}
+                            type="number"
+                            placeholder="summa kiriting"
+                            value={pul}
+                            onChange={(e) => setPul(e.target.value)}
+                        />
+                        <Input
+                            placeholder="Izoh"
+                            value={pulNote}
+                            onChange={(e) => setPulNote(e.target.value)}
+                        />
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button mr={3} variant="ghost" onClick={onFillClose}>
+                            Bekor qilish
+                        </Button>
+                        <Button loadingText="Saqlanmoqda..." onClick={handleFillCash} isLoading={submitting}>
                             Saqlash
                         </Button>
                     </ModalFooter>
