@@ -31,11 +31,12 @@ import { apiPayMethods } from "../../../utils/Controllers/apiPayMethods";
 import { apiPayment } from "../../../utils/Controllers/apiPayment";
 import Cookies from "js-cookie";
 import ProductModal from "./__components/ProductModal";
-import ReceiptModal from "./__components/Receiptmodal";
-import EditSumModal from "./__components/EditSumModal";
+import Receiptmodal from "./__components/Receiptmodal";
+import Editsummodal from "./__components/Editsummodal";
 import { useWarehouseStore } from "../../../store/useWarehouseStore";
 
 export default function OrderCreate() {
+
     const [cashs, setCashs] = useState([]);
     const [payMethods, setPayMethods] = useState([]);
     const [orderItems, setOrderItems] = useState([]);
@@ -509,7 +510,7 @@ export default function OrderCreate() {
             />
 
             {/* CHEK MODAL */}
-            <ReceiptModal
+            <Receiptmodal
                 isOpen={receipt.isOpen}
                 onClose={() => {
                     receipt.onClose();
@@ -521,7 +522,7 @@ export default function OrderCreate() {
             />
 
             {/* SUMMANI TAHRIRLASH MODAL */}
-            <EditSumModal
+            <Editsummodal
                 isOpen={editSumModal.isOpen}
                 onClose={editSumModal.onClose}
                 paymentId={currentPaymentId}

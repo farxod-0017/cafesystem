@@ -374,7 +374,7 @@ export default function OperatsiyalarTarixi() {
             await apiInvoices.UpdateStatus(data, invoiceId);
             // Refresh list
             fetchInvoices();
-        } finally{}
+        } finally { }
     };
 
     // ==============================
@@ -1494,7 +1494,7 @@ export default function OperatsiyalarTarixi() {
             </Modal>
 
             {/* PRINT STYLES */}
-            <style jsx global>{`
+            <style>{`
         @media print {
           body * {
             visibility: hidden;
