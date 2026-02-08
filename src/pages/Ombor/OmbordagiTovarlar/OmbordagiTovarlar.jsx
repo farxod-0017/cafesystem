@@ -470,7 +470,7 @@ export default function OmbordagiTovarlar() {
                         <MenuItem onClick={exportToExcel}>
                             Excel (.xlsx)
                         </MenuItem>
-                        <MenuItem onClick={exportToCSV}>
+                        {/* <MenuItem onClick={exportToCSV}>
                             CSV
                         </MenuItem>
                         <MenuItem onClick={exportToPDF}>
@@ -479,7 +479,7 @@ export default function OmbordagiTovarlar() {
                         <Divider />
                         <MenuItem onClick={handlePrint}>
                             Chop etish
-                        </MenuItem>
+                        </MenuItem> */}
                     </MenuList>
                 </Menu>
             </Flex>

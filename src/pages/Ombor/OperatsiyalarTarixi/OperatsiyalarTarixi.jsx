@@ -168,7 +168,7 @@ const PAYMENT_COLORS = {
 const STATUS_TRANSITIONS = {
     sent: ["received", "cancelled"],
     received: ["cancelled"],
-    cancelled: ["sent"],
+    cancelled: ["received"],
 };
 
 // ==============================

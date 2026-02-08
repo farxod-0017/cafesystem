@@ -1,7 +1,9 @@
 import Home from "../../pages/Cafe/Home/Home";
+import CafeKirim from "../../pages/Cafe/Kirim/CafeKirim";
 import OrderCreate from "../../pages/Cafe/Order-Create/OrderCreate";
 import Orders from "../../pages/Cafe/Orders/Orders";
 import Return from "../../pages/Cafe/Return/Return";
+import Taminotchilar from "../../pages/Cafe/Taminotchilar/Taminotchilar";
 
 const cafeRoutes = [
     {
@@ -24,5 +26,15 @@ const cafeRoutes = [
         path: "return/:id",
         element: <Return />
     },
+    {
+        name: "cf taminotchilar",
+        path: "taminotchilar",
+        element: <Taminotchilar />
+    },
+    {
+        name:"cf kirim",
+        path:"kirim",
+        element:<CafeKirim/>
+    }
 ];
 export default cafeRoutes

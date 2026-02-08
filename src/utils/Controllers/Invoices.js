@@ -26,7 +26,7 @@ class apiInvoices {
         return response
     }
     static UpdateStatus = async (data, id) => {
-        const response = await $api.put(`${BASE_URL}/invoices/${id}`, data, {showSuccessToast:"Status yangilandi"})
+        const response = await $api.put(`${BASE_URL}/invoices/type/${id}`, data, {showSuccessToast:"Status yangilandi"})
         return response;
     }
     static Delete = async (id) => {

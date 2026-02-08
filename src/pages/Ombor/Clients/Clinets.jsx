@@ -55,9 +55,9 @@ import { useWarehouseStore } from '../../../store/useWarehouseStore';
 const ClientsPage = () => {
     const navigate = useNavigate();
     const toast = useToast();
-    const { mainWarehouseId } = useWarehouseStore()
+    let { mainWarehouseId } = useWarehouseStore();
     const userId = Cookies.get('user_id');
-
+    
     // Modals
     const { isOpen: isAddOpen, onOpen: onAddOpen, onClose: onAddClose } = useDisclosure();
     const { isOpen: isEditOpen, onOpen: onEditOpen, onClose: onEditClose } = useDisclosure();
