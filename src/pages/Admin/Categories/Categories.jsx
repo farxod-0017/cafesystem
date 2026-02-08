@@ -227,7 +227,7 @@ export default function CategoriesPage() {
                                             setEditingItem(item);
                                             setName(item.name);
                                             setNote(item.note || "");
-                                            setImagePreview(item.image || null);
+                                            setImagePreview(item.image ? IMAGE_URL + item.image : null);
                                             setImageFile(null);
                                             onOpen();
                                         }}

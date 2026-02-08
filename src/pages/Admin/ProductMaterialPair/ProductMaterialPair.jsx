@@ -302,7 +302,7 @@ const ProductMaterialsPage = () => {
                 list: selectedArray.map(item => ({
                     productId: menuProductId,
                     materialId: item.material.id,
-                    count: parseFloat(item.count),
+                    quantity: parseFloat(item.count),
                 })),
             };
 
@@ -628,7 +628,7 @@ const ProductMaterialsPage = () => {
                                             {Object.values(selectedMaterials).map(({ material, count }) => (
                                                 <HStack key={material.id} bg="bg" p={2} borderRadius="md">
                                                     <VStack align="start" spacing={0} flex={1}>
-                                                        <Text fontSize="sm" fontWeight="medium">
+                                                        <Text color={"text"} fontSize="sm" fontWeight="medium">
                                                             {material.name}
                                                         </Text>
                                                         <Text fontSize="xs" color="text">
@@ -705,7 +705,7 @@ const ProductMaterialsPage = () => {
                                                             onClick={(e) => e.stopPropagation()}
                                                         />
                                                         <VStack  align="start" spacing={0} flex={1}>
-                                                            <Text color={"white"} fontWeight="medium">{material.name}</Text>
+                                                            <Text color={"text"} fontWeight="medium">{material.name}</Text>
                                                             <HStack spacing={2}>
                                                                 <Badge colorScheme="gray" fontSize="xs">
                                                                     {material.unit}
