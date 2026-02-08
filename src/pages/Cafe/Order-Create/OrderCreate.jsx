@@ -31,12 +31,13 @@ import { apiPayMethods } from "../../../utils/Controllers/apiPayMethods";
 import { apiPayment } from "../../../utils/Controllers/apiPayment";
 import Cookies from "js-cookie";
 import ProductModal from "./__components/ProductModal";
-import ReceiptModal from "./__components/Receiptmodal";
+import ReceiptModal from "./__components/ReceiptModal";
 import EditSumModal from "./__components/EditSumModal";
 import { useWarehouseStore } from "../../../store/useWarehouseStore";
 
 export default function OrderCreate() {
-    const locationId = 'f848a70b-3d67-4db7-a4fd-ede488e79ed4'
+
+    // const locationId = 'f848a70b-3d67-4db7-a4fd-ede488e79ed4'
     const [cashs, setCashs] = useState([]);
     const [payMethods, setPayMethods] = useState([]);
     const [orderItems, setOrderItems] = useState([]);
