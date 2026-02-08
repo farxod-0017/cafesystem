@@ -23,12 +23,13 @@ import {
     IconButton,
     Tooltip,
 } from "@chakra-ui/react";
-import { SearchIcon, ViewIcon, ChevronDownIcon, EditIcon } from "@chakra-ui/icons";
+import { SearchIcon, ViewIcon, ChevronDownIcon } from "@chakra-ui/icons";
 import { apiPayment } from "../../../utils/Controllers/apiPayment";
 import OrderDetailModal from "./__components/OrderDetailModal";
-import OrderStatusModal from "./__components/OrderStatusModal";
-import { ReceiptRussianRuble, Undo2 } from "lucide-react";
+import { ReceiptRussianRuble, Undo2, Wallet } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import OrderStatusMenu from "./__components/OrderStatusModal";
+import OrderPayment from "./__components/OrderPayment";
 
 // ─── Helpers ───
 const formatPrice = (price) =>
@@ -85,10 +86,10 @@ export default function Orders() {
     const [loading, setLoading] = useState(false);
     const [loadingMore, setLoadingMore] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
-    const [orderForStatus, setOrderForStatus] = useState(null);
+    const [orderForPayment, setOrderForPayment] = useState(null);
 
     const detailModal = useDisclosure();
-    const statusModal = useDisclosure();
+    const paymentModal = useDisclosure();
     const toast = useToast();
     const LIMIT = 20;
 
@@ -164,15 +165,33 @@ export default function Orders() {
         detailModal.onOpen();
     };
 
-    // ─── Status modal ───
-    const openStatusModal = (order) => {
-        setOrderForStatus(order);
-        statusModal.onOpen();
+    // ─── Payment modal ───
+    const openPaymentModal = (order) => {
+        setOrderForPayment(order);
+        paymentModal.onOpen();
     };
 
-    // ─── Status yangilanganda ───
-    const handleStatusUpdated = () => {
-        GetAllPayment(page, false); // Yangilash
+    // ─── Summani yangilash ───
+    const handleEditSum = async (paymentId, sum) => {
+        try {
+            const data = { receivedSum: sum };
+            const response = await apiPayment.EditSum(paymentId, data);
+
+            toast({
+                title: "Muvaffaqiyatli",
+                description: "To'lov summasi yangilandi",
+                status: "success",
+                duration: 2000,
+            });
+
+            // Ro'yxatni yangilash
+            GetAllPayment(page, false);
+
+            return response;
+        } catch (error) {
+            console.log(error);
+            throw error;
+        }
     };
 
     return (
@@ -284,8 +303,11 @@ export default function Orders() {
                                     <Td isNumeric fontWeight="semibold" color={textPrimary} fontSize="sm">
                                         {formatPrice(order.totalSum)}
                                     </Td>
-                                    <Td>
-                                        <StatusBadge status={order.orderStatus} />
+                                    <Td onClick={(e) => e.stopPropagation()}>
+                                        <OrderStatusMenu
+                                            order={order}
+                                            onStatusUpdated={GetAllPayment}
+                                        />
                                     </Td>
                                     <Td color={textPrimary} fontSize="sm">
                                         {order.created?.full_name || "—"}
@@ -316,16 +338,18 @@ export default function Orders() {
                                                     />
                                                 </Tooltip>
                                             </NavLink>
-                                            <Tooltip label="Statusni o'zgartirish" hasArrow>
-                                                <IconButton
-                                                    size="sm"
-                                                    icon={<EditIcon />}
-                                                    variant="ghost"
-                                                    colorScheme="orange"
-                                                    aria-label="Statusni o'zgartirish"
-                                                    onClick={() => openStatusModal(order)}
-                                                />
-                                            </Tooltip>
+                                            {order?.paymentStatus === 'unpaid' && (
+                                                <Tooltip label="To'lov qilish" hasArrow>
+                                                    <IconButton
+                                                        size="sm"
+                                                        icon={<Wallet />}
+                                                        variant="ghost"
+                                                        colorScheme="green"
+                                                        aria-label="To'lov qilish"
+                                                        onClick={() => openPaymentModal(order)}
+                                                    />
+                                                </Tooltip>
+                                            )}
                                         </HStack>
                                     </Td>
                                 </Tr>
@@ -365,12 +389,13 @@ export default function Orders() {
                 order={selectedOrder}
             />
 
-            {/* STATUS MODAL */}
-            <OrderStatusModal
-                isOpen={statusModal.isOpen}
-                onClose={statusModal.onClose}
-                order={orderForStatus}
-                onStatusUpdated={handleStatusUpdated}
+            {/* PAYMENT MODAL */}
+            <OrderPayment
+                isOpen={paymentModal.isOpen}
+                onClose={paymentModal.onClose}
+                paymentId={orderForPayment?.id}
+                orderData={orderForPayment}
+                onSumUpdated={handleEditSum}
             />
         </Box>
     );
