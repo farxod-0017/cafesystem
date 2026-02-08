@@ -52,10 +52,10 @@ import Cookies from 'js-cookie';
 import { useWarehouseStore } from '../../../store/useWarehouseStore';
 // import { set } from 'react-datepicker/dist/dist/date_utils.js';
 
-const TaminotchilarPage = () => {
+const Taminotchilar = () => {
     const navigate = useNavigate();
     const toast = useToast();
-    const { mainWarehouseId, cafeWarehouseId } = useWarehouseStore()
+    const { cafeWarehouseId } = useWarehouseStore()
     const userId = Cookies.get('user_id');
 
     // Modals
@@ -111,13 +111,13 @@ const TaminotchilarPage = () => {
 
     // Fetch partners
     const fetchPartners = async () => {
-        if (!mainWarehouseId) return;
+        if (!cafeWarehouseId) return;
         console.log(cafeWarehouseId);
         
         setLoading(true);
         try {
             const res = await apiLocations.getFilteredLocalLocationsByType(
-                mainWarehouseId,
+                cafeWarehouseId,
                 'partner',
                 debouncedText || "all",
                 page,
@@ -142,11 +142,9 @@ const TaminotchilarPage = () => {
     };
 
     useEffect(() => {
-        // if (mainWarehouseId) {
         fetchPartners();
 
-        // }
-    }, [debouncedText, page, limit, mainWarehouseId]);
+    }, [debouncedText, page, limit, cafeWarehouseId]);
 
     // Format currency
     const formatCurrency = (amount) => {
@@ -183,7 +181,7 @@ const TaminotchilarPage = () => {
                 name: formData.name,
                 phone: formData.phone,
                 address: formData.address,
-                parentId: mainWarehouseId,
+                parentId: cafeWarehouseId,
                 isCafe: false
             });
             onAddClose();
@@ -278,10 +276,10 @@ const TaminotchilarPage = () => {
             ]);
 
             const filteredMethods = methodsRes.data.payMethods.filter(
-                m => m.locationId === mainWarehouseId
+                m => m.locationId === cafeWarehouseId
             );
             const filteredCashboxes = cashRes.data.filter(
-                c => c.locationId === mainWarehouseId
+                c => c.locationId === cafeWarehouseId
             );
 
             setPaymentMethods(filteredMethods);
@@ -320,7 +318,7 @@ const TaminotchilarPage = () => {
                 methodId: paymentData.methodId,
                 status: 'confirmed',
                 cashId: paymentData.cashId,
-                payerId: mainWarehouseId,
+                payerId: cafeWarehouseId,
                 receiverId: selectedPartner.id,
                 note: paymentData.note,
                 createdBy: userId
@@ -756,4 +754,4 @@ const TaminotchilarPage = () => {
     );
 };
 
-export default TaminotchilarPage;
+export default Taminotchilar;
