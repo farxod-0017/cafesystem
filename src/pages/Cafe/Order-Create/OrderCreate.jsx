@@ -50,6 +50,7 @@ export default function OrderCreate() {
     const {
         cafeWarehouseId,
     } = useWarehouseStore();
+    // const cafeWarehouseId = "ced7a9cd-7af2-4c3d-89c4-0299ae9fd9be"
 
     const sidebar = useDisclosure();
     const receipt = useDisclosure();

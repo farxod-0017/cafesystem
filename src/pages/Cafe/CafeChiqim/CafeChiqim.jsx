@@ -18,7 +18,6 @@ import {
     Tr,
     Th,
     Td,
-    Checkbox,
     Input,
     Select,
     Stack,
@@ -42,9 +41,7 @@ import {
     Textarea,
     Alert,
     AlertIcon,
-    AlertTitle,
     AlertDescription,
-    Spinner,
     Center,
     Grid,
     GridItem,
@@ -53,13 +50,14 @@ import {
     Card,
     CardBody,
     useColorModeValue,
+    Switch,
+    FormHelperText,
 } from "@chakra-ui/react";
 import {
     DeleteIcon,
     SearchIcon,
     AddIcon,
     CheckIcon,
-    CloseIcon,
     InfoIcon,
     WarningIcon,
 } from "@chakra-ui/icons";
@@ -78,37 +76,22 @@ const getUserId = () => {
     return Cookies.get("user_id");
 };
 
-// Normalize API response (Stock vs Product)
-const normalizeProduct = (item) => {
-    const isStock = !!item.productId; // Has productId means it's stock
-
-    if (isStock) {
-        return {
-            id: item.product.id,
-            name: item.product.name,
-            unit: item.product.unit,
-            purchasePrice: parseFloat(item.purchasePrice) || 0,
-            salePrice: parseFloat(item.salePrice) || 0,
-            quantity: parseFloat(item.quantity) || 0,
-            batch: item.batch,
-            barcode: item.barcode || "",
-            isStock: true,
-            originalPurchasePrice: parseFloat(item.purchasePrice) || 0, // For batch detection
-        };
-    } else {
-        return {
-            id: item.id,
-            name: item.name,
-            unit: item.unit,
-            purchasePrice: 0,
-            salePrice: 0,
-            quantity: 1,
-            batch: null,
-            barcode: "",
-            isStock: false,
-            originalPurchasePrice: 0,
-        };
-    }
+// Normalize stock response (faqat stocklar keladi)
+const normalizeStock = (stock) => {
+    return {
+        id: stock.product.id,
+        productId: stock.productId,
+        name: stock.product.name,
+        unit: stock.product.unit,
+        purchasePrice: parseFloat(stock.purchasePrice) || 0, // Backend uchun, UI da ko'rinmaydi
+        salePrice: parseFloat(stock.salePrice) || 0,
+        availableQuantity: parseFloat(stock.quantity) || 0, // Omborda qolgan
+        batch: stock.batch,
+        barcode: stock.barcode || "",
+        // UI uchun
+        quantity: 1, // Default 1
+        discount: 0, // Default 0%
+    };
 };
 
 // Format number with spaces
@@ -128,17 +111,27 @@ const formatDate = () => {
     });
 };
 
+// Sort batches by date (FIFO - eski birinchi)
+const sortByBatch = (stocks) => {
+    return [...stocks].sort((a, b) => {
+        // Batch format: YYYYMMDD-PRICE-SEQ
+        const dateA = a.batch?.split("-")[0] || "99999999";
+        const dateB = b.batch?.split("-")[0] || "99999999";
+        return dateA.localeCompare(dateB);
+    });
+};
+
 // ==============================
 // MAIN COMPONENT
 // ==============================
 
-export default function OmborKirim() {
+export default function CafeChiqim() {
     const toast = useToast();
     const sidebar = useDisclosure();
     const modal = useDisclosure();
     const searchInputRef = useRef(null);
 
-    const { mainWarehouseId, locationName } = useWarehouseStore();
+    const { cafeWarehouseId, locationName } = useWarehouseStore();
 
     // ==============================
     // STATE MANAGEMENT
@@ -147,34 +140,35 @@ export default function OmborKirim() {
     const [search, setSearch] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
     const [selectedItems, setSelectedItems] = useState([]);
-    const [partners, setPartners] = useState([]);
-    const [products, setProducts] = useState([]);
-    const [selectedPartner, setSelectedPartner] = useState("");
+    const [clients, setClients] = useState([]);
+    const [stocks, setStocks] = useState([]);
+    const [selectedClient, setSelectedClient] = useState("");
     const [note, setNote] = useState("");
+    const [isDiscountEnabled, setIsDiscountEnabled] = useState(false);
 
     // Loading states
-    const [isLoadingPartners, setIsLoadingPartners] = useState(false);
-    const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+    const [isLoadingClients, setIsLoadingClients] = useState(false);
+    const [isLoadingStocks, setIsLoadingStocks] = useState(false);
     const [isLoadingDrawer, setIsLoadingDrawer] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // ==============================
-    // FETCH PARTNERS
+    // FETCH CLIENTS
     // ==============================
 
-    const fetchPartners = async () => {
-        setIsLoadingPartners(true);
-        if (!mainWarehouseId) return
+    const fetchClients = async () => {
+        if (!cafeWarehouseId) return;
+        setIsLoadingClients(true);
         try {
-            const response = await apiLocations.getLocalLocationsByType("partner", mainWarehouseId);
-            setPartners(response.data || []);
+            const response = await apiLocations.getLocalLocationsByType("client", cafeWarehouseId);
+            setClients(response.data || []);
         } finally {
-            setIsLoadingPartners(false);
+            setIsLoadingClients(false);
         }
     };
 
     useEffect(() => {
-        fetchPartners();
+        fetchClients();
         // Auto-focus search input
         setTimeout(() => searchInputRef.current?.focus(), 100);
     }, []);
@@ -192,65 +186,63 @@ export default function OmborKirim() {
     }, [search]);
 
     // ==============================
-    // FETCH PRODUCTS (SEARCH)
+    // FETCH STOCKS (SEARCH)
     // ==============================
 
     useEffect(() => {
         if (debouncedSearch.length >= 3) {
-            fetchProducts(debouncedSearch);
+            fetchStocks(debouncedSearch);
         } else if (debouncedSearch.length === 0) {
-            setProducts([]);
+            setStocks([]);
         }
     }, [debouncedSearch]);
 
-    const fetchProducts = async (searchText) => {
-        setIsLoadingProducts(true);
+    const fetchStocks = async (searchText) => {
+        setIsLoadingStocks(true);
         try {
             const response = await apiStock.getStocksForOperationById(
-                mainWarehouseId,
+                cafeWarehouseId,
                 searchText || "",
-                "incoming"
+                "outgoing"
             );
-            const normalized = (response.data || []).map(normalizeProduct);
-            setProducts(normalized);
+            const normalized = (response.data || []).map(normalizeStock);
+            const sorted = sortByBatch(normalized); // FIFO sort
+            setStocks(sorted);
         } finally {
-            setIsLoadingProducts(false);
+            setIsLoadingStocks(false);
         }
     };
 
     // ==============================
-    // FETCH ALL PRODUCTS (DRAWER)
+    // FETCH ALL STOCKS (DRAWER)
     // ==============================
 
     const handleOpenDrawer = async () => {
         sidebar.onOpen();
-        // if (products.length > 0 && !debouncedSearch) {
-        //     return
-        // }
         setIsLoadingDrawer(true);
         try {
             const response = await apiStock.getStocksForOperationById(
-                mainWarehouseId,
-                "all", // Empty = all products
-                "incoming"
+                cafeWarehouseId,
+                "", // Empty = all stocks
+                "outgoing"
             );
-            const normalized = (response.data || []).map(normalizeProduct);
-            setProducts(normalized);
+            const normalized = (response.data || []).map(normalizeStock);
+            const sorted = sortByBatch(normalized); // FIFO sort
+            setStocks(sorted);
         } finally {
             setIsLoadingDrawer(false);
         }
     };
 
     // ==============================
-    // ADD PRODUCT TO TABLE
+    // ADD STOCK TO TABLE
     // ==============================
 
-    const addProduct = useCallback((product) => {
-        const existsInSelected = selectedItems.find((item) =>
-            item.id === product.id &&
-            (item.batch || null) === (product.batch || null)
-        );
-        if (existsInSelected) {
+    const addStock = useCallback((stock) => {
+        // Check if same stock+batch already added
+        if (selectedItems.find((item) =>
+            item.id === stock.id && item.batch === stock.batch
+        )) {
             toast({
                 title: "Mahsulot allaqachon qo'shilgan",
                 status: "warning",
@@ -261,15 +253,7 @@ export default function OmborKirim() {
             return;
         }
 
-        const newItem = {
-            ...product,
-            // Set isNewBatch: true for products, false for stocks
-            isNewBatch: !product.isStock,
-            // Disable checkbox for products
-            canToggleBatch: product.isStock,
-        };
-
-        setSelectedItems((prev) => [...prev, newItem]);
+        setSelectedItems((prev) => [...prev, { ...stock }]);
 
         // Close drawer if open
         if (sidebar.isOpen) {
@@ -278,48 +262,32 @@ export default function OmborKirim() {
 
         // Clear search
         setSearch("");
-        setProducts([]);
+        setStocks([]);
     }, [selectedItems, sidebar, toast]);
 
     // ==============================
-    // UPDATE QUANTITY
+    // UPDATE QUANTITY (with validation)
     // ==============================
 
-    const updateQuantity = (id, value) => {
+    const updateQuantity = (id, batch, value) => {
         const qty = parseFloat(value) || 0;
-        setSelectedItems((prev) =>
-            prev.map((item) =>
-                item.id === id ? { ...item, quantity: qty } : item
-            )
-        );
-    };
-
-    // ==============================
-    // UPDATE PURCHASE PRICE
-    // ==============================
-
-    const updatePurchasePrice = (id, value) => {
-        const price = parseFloat(value) || 0;
 
         setSelectedItems((prev) =>
             prev.map((item) => {
-                if (item.id === id) {
-                    // Auto-detect batch change for stocks
-                    if (item.isStock && price !== item.originalPurchasePrice) {
-                        return {
-                            ...item,
-                            purchasePrice: price,
-                            isNewBatch: true,
-                            canToggleBatch: false, // Lock checkbox
-                        };
-                    } else if (item.isStock && price === item.originalPurchasePrice) {
-                        return {
-                            ...item,
-                            purchasePrice: price,
-                            canToggleBatch: true, // Unlock checkbox
-                        };
+                if (item.id === id && item.batch === batch) {
+                    // Auto-correct to max available
+                    if (qty > item.availableQuantity) {
+                        toast({
+                            title: "Diqqat",
+                            description: `Omborda faqat ${item.availableQuantity} ${item.unit} bor. Avtomatik to'g'rilandi.`,
+                            status: "warning",
+                            duration: 3000,
+                            isClosable: true,
+                            position: "top",
+                        });
+                        return { ...item, quantity: item.availableQuantity };
                     }
-                    return { ...item, purchasePrice: price };
+                    return { ...item, quantity: qty };
                 }
                 return item;
             })
@@ -330,24 +298,41 @@ export default function OmborKirim() {
     // UPDATE SALE PRICE
     // ==============================
 
-    const updateSalePrice = (id, value) => {
+    const updateSalePrice = (id, batch, value) => {
         const price = parseFloat(value) || 0;
         setSelectedItems((prev) =>
             prev.map((item) =>
-                item.id === id ? { ...item, salePrice: price } : item
+                item.id === id && item.batch === batch
+                    ? { ...item, salePrice: price }
+                    : item
             )
         );
     };
 
     // ==============================
-    // TOGGLE BATCH
+    // UPDATE DISCOUNT
     // ==============================
 
-    const toggleBatch = (id) => {
+    const updateDiscount = (id, batch, value) => {
+        let discount = parseFloat(value) || 0;
+
+        // Max 100%
+        if (discount > 100) {
+            discount = 100;
+            toast({
+                title: "Diqqat",
+                description: "Chegirma 100% dan oshmasligi kerak",
+                status: "warning",
+                duration: 2000,
+                isClosable: true,
+                position: "top",
+            });
+        }
+
         setSelectedItems((prev) =>
             prev.map((item) =>
-                item.id === id && item.canToggleBatch
-                    ? { ...item, isNewBatch: !item.isNewBatch }
+                item.id === id && item.batch === batch
+                    ? { ...item, discount }
                     : item
             )
         );
@@ -357,37 +342,51 @@ export default function OmborKirim() {
     // REMOVE ITEM
     // ==============================
 
-    const removeItem = (id) => {
-        setSelectedItems((prev) => prev.filter((item) => item.id !== id));
+    const removeItem = (id, batch) => {
+        setSelectedItems((prev) =>
+            prev.filter((item) => !(item.id === id && item.batch === batch))
+        );
     };
 
     // ==============================
     // CALCULATIONS
     // ==============================
 
+    const calculateItemTotal = (item) => {
+        const subtotal = item.salePrice * item.quantity;
+        const discountAmount = subtotal * (item.discount / 100);
+        return subtotal - discountAmount;
+    };
+
     const totalAmount = useMemo(() => {
-        return selectedItems.reduce(
-            (sum, item) => sum + item.purchasePrice * item.quantity,
-            0
-        );
+        return selectedItems.reduce((sum, item) => sum + calculateItemTotal(item), 0);
+    }, [selectedItems]);
+
+    const totalDiscount = useMemo(() => {
+        return selectedItems.reduce((sum, item) => {
+            const subtotal = item.salePrice * item.quantity;
+            const discountAmount = subtotal * (item.discount / 100);
+            return sum + discountAmount;
+        }, 0);
     }, [selectedItems]);
 
     const totalItems = selectedItems.length;
 
     const averagePrice = useMemo(() => {
         if (totalItems === 0) return 0;
-        return totalAmount / totalItems;
-    }, [totalAmount, totalItems]);
+        const totalQty = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
+        return totalAmount / totalQty;
+    }, [totalAmount, totalItems, selectedItems]);
 
     // ==============================
     // VALIDATION
     // ==============================
 
     const validateForm = () => {
-        if (!selectedPartner) {
+        if (!selectedClient) {
             toast({
                 title: "Xatolik",
-                description: "Jo'natuvchini tanlang",
+                description: "Mijozni tanlang",
                 status: "error",
                 duration: 3000,
                 isClosable: true,
@@ -409,10 +408,10 @@ export default function OmborKirim() {
         }
 
         for (const item of selectedItems) {
-            if (item.purchasePrice <= 0) {
+            if (item.salePrice <= 0) {
                 toast({
                     title: "Xatolik",
-                    description: `"${item.name}" uchun narxni kiriting`,
+                    description: `"${item.name}" (${item.batch}) uchun sotuv narxini kiriting`,
                     status: "error",
                     duration: 3000,
                     isClosable: true,
@@ -424,7 +423,19 @@ export default function OmborKirim() {
             if (item.quantity < 1) {
                 toast({
                     title: "Xatolik",
-                    description: `"${item.name}" uchun miqdor kamida 1 bo'lishi kerak`,
+                    description: `"${item.name}" (${item.batch}) uchun miqdor kamida 1 bo'lishi kerak`,
+                    status: "error",
+                    duration: 3000,
+                    isClosable: true,
+                    position: "top",
+                });
+                return false;
+            }
+
+            if (item.quantity > item.availableQuantity) {
+                toast({
+                    title: "Xatolik",
+                    description: `"${item.name}" (${item.batch}) - omborda faqat ${item.availableQuantity} ${item.unit} bor`,
                     status: "error",
                     duration: 3000,
                     isClosable: true,
@@ -450,20 +461,20 @@ export default function OmborKirim() {
             const userId = getUserId();
 
             const payload = {
-                type: "incoming",
-                senderId: selectedPartner,
-                receiverId: mainWarehouseId,
+                type: selectedClient === "disposal" ? "disposal" : "outgoing",
+                senderId: cafeWarehouseId, // Bizning ombor
+                receiverId: selectedClient === "disposal" ? cafeWarehouseId : selectedClient, // Mijoz
                 createdBy: userId,
-                status: "received",
+                status: "sent",
                 note: note || "",
                 items: selectedItems.map((item) => ({
                     productId: item.id,
                     quantity: item.quantity,
-                    salePrice: item.salePrice || 0,
-                    purchasePrice: item.purchasePrice,
-                    discount: 0,
-                    isNewBatch: item.isNewBatch,
-                    ...(!item.isNewBatch && { batch: item.batch })
+                    salePrice: item.salePrice,
+                    purchasePrice: item.purchasePrice, // Stock dan, UI da ko'rinmaydi
+                    discount: isDiscountEnabled ? item.discount : 0,
+                    batch: item.batch,
+                    isNewBatch: false
                 })),
             };
 
@@ -471,13 +482,14 @@ export default function OmborKirim() {
 
             // Success - reset form
             setSelectedItems([]);
-            setSelectedPartner("");
+            setSelectedClient("");
             setNote("");
+            setIsDiscountEnabled(false);
             modal.onClose();
 
             toast({
                 title: "Muvaffaqiyatli",
-                description: "Kirim hujjati yaratildi",
+                description: "Chiqim hujjati yaratildi",
                 status: "success",
                 duration: 3000,
                 isClosable: true,
@@ -502,14 +514,14 @@ export default function OmborKirim() {
             }
 
             // ENTER - add first search result
-            if (e.key === "Enter" && products.length > 0 && !sidebar.isOpen && !modal.isOpen) {
-                addProduct(products[0]);
+            if (e.key === "Enter" && stocks.length > 0 && !sidebar.isOpen && !modal.isOpen) {
+                addStock(stocks[0]);
             }
         };
 
         document.addEventListener("keydown", handleKeyDown);
         return () => document.removeEventListener("keydown", handleKeyDown);
-    }, [products, modal, sidebar, addProduct]);
+    }, [stocks, modal, sidebar, addStock]);
 
     // ==============================
     // COLORS
@@ -536,7 +548,7 @@ export default function OmborKirim() {
                 gap={4}
             >
                 <Heading size={{ base: "md", md: "lg" }}>
-                    Omborga kirim
+                    Ombordan chiqim
                 </Heading>
                 <Button
                     leftIcon={<AddIcon />}
@@ -548,7 +560,7 @@ export default function OmborKirim() {
                 </Button>
             </Flex>
 
-            {/* META INFO - PARTNER & WAREHOUSE */}
+            {/* META INFO - CLIENT & WAREHOUSE */}
             <Grid
                 templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}
                 gap={4}
@@ -557,25 +569,26 @@ export default function OmborKirim() {
                 <GridItem>
                     <FormControl isRequired>
                         <FormLabel fontSize="sm" fontWeight="medium">
-                            Jo'natuvchi
+                            Qabul qiluvchi (mijoz)
                         </FormLabel>
-                        {isLoadingPartners ? (
+                        {isLoadingClients ? (
                             <Skeleton height="40px" borderRadius="md" />
                         ) : (
                             <Select
                                 placeholder="Tanlang..."
-                                value={selectedPartner}
-                                onChange={(e) => setSelectedPartner(e.target.value)}
+                                value={selectedClient}
+                                onChange={(e) => setSelectedClient(e.target.value)}
                                 bg={inputBg}
                                 borderColor={borderColor}
                                 _hover={{ borderColor: "blue.400" }}
                                 _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)" }}
                             >
-                                {partners.map((partner) => (
-                                    <option key={partner.id} value={partner.id}>
-                                        {partner.name}
+                                {clients.map((client) => (
+                                    <option key={client.id} value={client.id}>
+                                        {client.name}
                                     </option>
                                 ))}
+                                <option value="disposal">UTILIZATSIYA</option>
                             </Select>
                         )}
                     </FormControl>
@@ -584,7 +597,7 @@ export default function OmborKirim() {
                 <GridItem>
                     <FormControl>
                         <FormLabel fontSize="sm" fontWeight="medium">
-                            Qabul qiluvchi ombor
+                            Jo'natuvchi ombor
                         </FormLabel>
                         <Input
                             value={locationName}
@@ -598,22 +611,42 @@ export default function OmborKirim() {
                 </GridItem>
             </Grid>
 
-            {/* NOTE (OPTIONAL) */}
-            <FormControl mb={6}>
-                <FormLabel fontSize="sm" fontWeight="medium">
-                    Izoh (ixtiyoriy)
-                </FormLabel>
-                <Textarea
-                    placeholder="Qo'shimcha ma'lumot..."
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    bg={inputBg}
-                    borderColor={borderColor}
-                    _hover={{ borderColor: "blue.400" }}
-                    _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)" }}
-                    rows={3}
-                />
-            </FormControl>
+            {/* NOTE & DISCOUNT TOGGLE */}
+            <Stack spacing={4} mb={6}>
+                <FormControl>
+                    <FormLabel fontSize="sm" fontWeight="medium">
+                        Izoh (ixtiyoriy)
+                    </FormLabel>
+                    <Textarea
+                        placeholder="Qo'shimcha ma'lumot..."
+                        value={note}
+                        onChange={(e) => setNote(e.target.value)}
+                        bg={inputBg}
+                        borderColor={borderColor}
+                        _hover={{ borderColor: "blue.400" }}
+                        _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)" }}
+                        rows={3}
+                    />
+                </FormControl>
+                {/* DISCOUNT TOGGLE */}
+                {selectedClient !== "disposal" && (
+                <FormControl display="flex" alignItems="center">
+                    <FormLabel htmlFor="discount-toggle" mb="0" fontSize="sm" fontWeight="medium">
+                        Chegirma qo'llash
+                    </FormLabel>
+                    <Switch
+                        id="discount-toggle"
+                        colorScheme="blue"
+                        isChecked={isDiscountEnabled}
+                        onChange={(e) => setIsDiscountEnabled(e.target.checked)}
+                    />
+                    {isDiscountEnabled && (
+                        <FormHelperText ml={3} mt={0} fontSize="xs" color="blue.500">
+                            Har bir mahsulot uchun chegirma kiritish mumkin
+                        </FormHelperText>
+                    )}
+                </FormControl>)}
+            </Stack>
 
             {/* SEARCH */}
             <FormControl mb={4}>
@@ -644,7 +677,7 @@ export default function OmborKirim() {
             </FormControl>
 
             {/* SEARCH RESULTS */}
-            {isLoadingProducts && (
+            {isLoadingStocks && (
                 <Card mb={6} bg={cardBg} borderColor={borderColor}>
                     <CardBody>
                         <Stack spacing={3}>
@@ -656,12 +689,12 @@ export default function OmborKirim() {
                 </Card>
             )}
 
-            {!isLoadingProducts && products.length > 0 && (
+            {!isLoadingStocks && stocks.length > 0 && (
                 <Card mb={6} bg={cardBg} borderColor={borderColor}>
                     <CardBody p={0}>
-                        {products.slice(0, 10).map((product, index) => (
+                        {stocks.slice(0, 10).map((stock, index) => (
                             <Flex
-                                key={product.id}
+                                key={`${stock.id}-${stock.batch}`}
                                 p={3}
                                 justify="space-between"
                                 align="center"
@@ -669,38 +702,36 @@ export default function OmborKirim() {
                                 borderColor={borderColor}
                                 cursor="pointer"
                                 _hover={{ bg: hoverBg }}
-                                onClick={() => addProduct(product)}
+                                onClick={() => addStock(stock)}
                                 transition="background 0.2s"
                             >
-                                <VStack align="start" spacing={0}>
-                                    <Text fontWeight="medium">{product.name}</Text>
-                                    <HStack spacing={2} fontSize="sm" color="gray.500">
-                                        <Text>{product.unit}</Text>
-                                        {product.isStock && (
-                                            <Badge colorScheme="green" fontSize="xs">
-                                                Omborda bor
-                                            </Badge>
-                                        )}
+                                <VStack align="start" spacing={1} flex={1}>
+                                    <Text fontWeight="medium">{stock.name}</Text>
+                                    <HStack spacing={2} fontSize="sm">
+                                        <Badge colorScheme="purple" fontSize="xs">
+                                            {stock.batch}
+                                        </Badge>
+                                        <Text color="gray.500">
+                                            Omborda: {stock.availableQuantity} {stock.unit}
+                                        </Text>
                                     </HStack>
                                 </VStack>
 
-                                {product.isStock && (
-                                    <VStack align="end" spacing={0}>
-                                        <Text fontSize="sm" fontWeight="medium">
-                                            {formatNumber(product.purchasePrice)} so'm
-                                        </Text>
-                                        <Text fontSize="xs" color="gray.500">
-                                            Oldingi narx
-                                        </Text>
-                                    </VStack>
-                                )}
+                                <VStack align="end" spacing={0}>
+                                    <Text fontSize="sm" fontWeight="medium">
+                                        {formatNumber(stock.salePrice)} so'm
+                                    </Text>
+                                    <Text fontSize="xs" color="gray.500">
+                                        Sotuv narxi
+                                    </Text>
+                                </VStack>
                             </Flex>
                         ))}
 
-                        {products.length > 10 && (
+                        {stocks.length > 10 && (
                             <Flex p={3} justify="center" borderTop="1px solid" borderColor={borderColor}>
                                 <Text fontSize="sm" color="gray.500">
-                                    va yana {products.length - 10} ta mahsulot
+                                    va yana {stocks.length - 10} ta mahsulot
                                 </Text>
                             </Flex>
                         )}
@@ -708,7 +739,7 @@ export default function OmborKirim() {
                 </Card>
             )}
 
-            {!isLoadingProducts && search.length >= 3 && products.length === 0 && (
+            {!isLoadingStocks && search.length >= 3 && stocks.length === 0 && (
                 <Alert status="info" mb={6} borderRadius="md">
                     <AlertIcon />
                     <AlertDescription>
@@ -738,7 +769,7 @@ export default function OmborKirim() {
                 <>
                     {/* SUMMARY CARDS */}
                     <Grid
-                        templateColumns={{ base: "1fr", sm: "repeat(3, 1fr)" }}
+                        templateColumns={{ base: "1fr", sm: isDiscountEnabled ? "repeat(4, 1fr)" : "repeat(3, 1fr)" }}
                         gap={4}
                         mb={4}
                     >
@@ -764,6 +795,19 @@ export default function OmborKirim() {
                             </CardBody>
                         </Card>
 
+                        {isDiscountEnabled && totalDiscount > 0 && (
+                            <Card bg={cardBg} borderColor={borderColor}>
+                                <CardBody>
+                                    <Text fontSize="sm" color="gray.500" mb={1}>
+                                        Jami chegirma
+                                    </Text>
+                                    <Text fontSize="2xl" fontWeight="bold" color="orange.500">
+                                        {formatNumber(totalDiscount)} so'm
+                                    </Text>
+                                </CardBody>
+                            </Card>
+                        )}
+
                         {/* <Card bg={cardBg} borderColor={borderColor}>
                             <CardBody>
                                 <Text fontSize="sm" color="gray.500" mb={1}>
@@ -788,134 +832,64 @@ export default function OmborKirim() {
                         <Table size="sm">
                             <Thead>
                                 <Tr>
-                                    <Th>Partiya</Th>
                                     <Th>Nomlanishi</Th>
-                                    <Th>Birlik</Th>
-                                    <Th>Narx (so'm)</Th>
+                                    <Th>Partiya</Th>
+                                    <Th>Omborda</Th>
                                     <Th>Sotuv narxi (so'm)</Th>
+                                    {isDiscountEnabled && <Th>Chegirma (%)</Th>}
                                     <Th>Miqdor</Th>
+                                    <Th>Birlik</Th>
                                     <Th>Jami (so'm)</Th>
                                     <Th></Th>
                                 </Tr>
                             </Thead>
                             <Tbody>
                                 {selectedItems.map((item) => {
-                                    const total = item.purchasePrice * item.quantity;
-                                    const isPriceChanged = item.isStock &&
-                                        item.purchasePrice !== item.originalPurchasePrice;
+                                    const total = calculateItemTotal(item);
+                                    const remaining = item.availableQuantity - item.quantity;
+                                    const isLowStock = remaining < 10;
 
                                     return (
-                                        <Tr key={item.id}>
-                                            {/* BATCH CHECKBOX */}
-                                            <Td>
-                                                <Tooltip
-                                                    label={
-                                                        item.isNewBatch
-                                                            ? "Yangi partiya"
-                                                            : item.batch || "Mavjud partiya"
-                                                    }
-                                                >
-                                                    <Checkbox
-                                                        isChecked={item.isNewBatch}
-                                                        onChange={() => toggleBatch(item.id)}
-                                                        isDisabled={!item.canToggleBatch}
-                                                        colorScheme="blue"
-                                                    />
-                                                </Tooltip>
-                                                {item.isNewBatch && (
-                                                    <Badge colorScheme="blue" ml={2} fontSize="xs">
-                                                        Yangi
-                                                    </Badge>
-                                                )}
-                                                {!item.isNewBatch && item.batch && (
-                                                    <Text fontSize="xs" color="gray.500" mt={1}>
-                                                        {item.batch}
-                                                    </Text>
-                                                )}
-                                            </Td>
-
+                                        <Tr key={`${item.id}-${item.batch}`}>
                                             {/* NAME */}
                                             <Td>
                                                 <Text fontWeight="medium">{item.name}</Text>
-                                                {!item.isStock && (
-                                                    <Badge colorScheme="orange" fontSize="xs" mt={1}>
-                                                        Yangi mahsulot
-                                                    </Badge>
-                                                )}
                                             </Td>
 
-                                            {/* UNIT */}
+                                            {/* BATCH */}
                                             <Td>
-                                                <Text color="gray.600" fontSize="sm">
-                                                    {item.unit}
-                                                </Text>
+                                                <Badge colorScheme="purple" fontSize="xs">
+                                                    {item.batch}
+                                                </Badge>
                                             </Td>
 
-                                            {/* PURCHASE PRICE */}
+                                            {/* AVAILABLE QUANTITY */}
                                             <Td>
-                                                <VStack align="start" spacing={1}>
-                                                    <Input
-                                                        type="number"
-                                                        value={item.purchasePrice || ""}
-                                                        onChange={(e) =>
-                                                            updatePurchasePrice(item.id, e.target.value)
-                                                        }
-                                                        placeholder="0"
-                                                        size="sm"
-                                                        maxW="120px"
-                                                        bg={inputBg}
-                                                        borderColor={isPriceChanged ? "blue.400" : borderColor}
-                                                        _focus={{
-                                                            borderColor: "blue.500",
-                                                            boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)",
-                                                        }}
-                                                    />
-                                                    {item.isStock && item.originalPurchasePrice > 0 && (
-                                                        <Text fontSize="xs" color="gray.500">
-                                                            Oldingi: {formatNumber(item.originalPurchasePrice)}
-                                                        </Text>
-                                                    )}
+                                                <VStack align="start" spacing={0}>
+                                                    <Text
+                                                        fontSize="sm"
+                                                        fontWeight="medium"
+                                                        color={isLowStock ? "orange.500" : "gray.600"}
+                                                    >
+                                                        {item.availableQuantity} {item.unit}
+                                                    </Text>
+                                                    <Text fontSize="xs" color="gray.500">
+                                                        Qoladi: {remaining} {item.unit}
+                                                    </Text>
                                                 </VStack>
                                             </Td>
 
                                             {/* SALE PRICE */}
                                             <Td>
-                                                <VStack align="start" spacing={1}>
-                                                    <Input
-                                                        type="number"
-                                                        value={item.salePrice || ""}
-                                                        onChange={(e) =>
-                                                            updateSalePrice(item.id, e.target.value)
-                                                        }
-                                                        placeholder="0"
-                                                        size="sm"
-                                                        maxW="120px"
-                                                        bg={inputBg}
-                                                        borderColor={borderColor}
-                                                        _focus={{
-                                                            borderColor: "blue.500",
-                                                            boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)",
-                                                        }}
-                                                    />
-                                                    {item.isStock && item.salePrice > 0 && (
-                                                        <Text fontSize="xs" color="gray.500">
-                                                            Oldingi: {formatNumber(item.salePrice)}
-                                                        </Text>
-                                                    )}
-                                                </VStack>
-                                            </Td>
-
-                                            {/* QUANTITY */}
-                                            <Td>
                                                 <Input
                                                     type="number"
-                                                    value={item.quantity || ""}
+                                                    value={item.salePrice || ""}
                                                     onChange={(e) =>
-                                                        updateQuantity(item.id, e.target.value)
+                                                        updateSalePrice(item.id, item.batch, e.target.value)
                                                     }
-                                                    placeholder="1"
+                                                    placeholder="0"
                                                     size="sm"
-                                                    maxW="90px"
+                                                    maxW="120px"
                                                     bg={inputBg}
                                                     borderColor={borderColor}
                                                     _focus={{
@@ -925,11 +899,76 @@ export default function OmborKirim() {
                                                 />
                                             </Td>
 
+                                            {/* DISCOUNT (if enabled) */}
+                                            {isDiscountEnabled && (
+                                                <Td>
+                                                    <VStack align="start" spacing={1}>
+                                                        <Input
+                                                            type="number"
+                                                            value={item.discount || ""}
+                                                            onChange={(e) =>
+                                                                updateDiscount(item.id, item.batch, e.target.value)
+                                                            }
+                                                            placeholder="0"
+                                                            size="sm"
+                                                            maxW="90px"
+                                                            max={100}
+                                                            bg={inputBg}
+                                                            borderColor={borderColor}
+                                                            _focus={{
+                                                                borderColor: "blue.500",
+                                                                boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)",
+                                                            }}
+                                                        />
+                                                        {item.discount > 0 && (
+                                                            <Text fontSize="xs" color="orange.500">
+                                                                -{formatNumber(item.salePrice * item.quantity * (item.discount / 100))} so'm
+                                                            </Text>
+                                                        )}
+                                                    </VStack>
+                                                </Td>
+                                            )}
+
+                                            {/* QUANTITY */}
+                                            <Td>
+                                                <Input
+                                                    type="number"
+                                                    value={item.quantity || ""}
+                                                    onChange={(e) =>
+                                                        updateQuantity(item.id, item.batch, e.target.value)
+                                                    }
+                                                    placeholder="1"
+                                                    size="sm"
+                                                    maxW="90px"
+                                                    max={item.availableQuantity}
+                                                    bg={inputBg}
+                                                    borderColor={item.quantity > item.availableQuantity ? "red.400" : borderColor}
+                                                    _focus={{
+                                                        borderColor: "blue.500",
+                                                        boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)",
+                                                    }}
+                                                />
+                                            </Td>
+
+                                            {/* UNIT */}
+                                            <Td>
+                                                <Text color="gray.600" fontSize="sm">
+                                                    {item.unit}
+                                                </Text>
+                                            </Td>
+
                                             {/* TOTAL */}
                                             <Td>
-                                                <Text fontWeight="bold" color="blue.600">
-                                                    {formatNumber(total)}
-                                                </Text>
+                                                <VStack align="end" spacing={0}>
+                                                    <Text fontWeight="bold" color="blue.600">
+                                                        {formatNumber(total)}
+                                                    </Text>
+                                                    {isDiscountEnabled && item.discount > 0 && (
+                                                        <Text fontSize="xs" color="gray.500" textDecoration="line-through">
+                                                            {formatNumber(item.salePrice * item.quantity)}
+                                                        </Text>
+                                                    )}
+                                                </VStack>
                                             </Td>
 
                                             {/* DELETE */}
@@ -940,7 +979,7 @@ export default function OmborKirim() {
                                                         size="sm"
                                                         colorScheme="red"
                                                         variant="ghost"
-                                                        onClick={() => removeItem(item.id)}
+                                                        onClick={() => removeItem(item.id, item.batch)}
                                                         aria-label="O'chirish"
                                                     />
                                                 </Tooltip>
@@ -958,12 +997,12 @@ export default function OmborKirim() {
                         display={{ base: "flex", lg: "none" }}
                     >
                         {selectedItems.map((item) => {
-                            const total = item.purchasePrice * item.quantity;
-                            const isPriceChanged = item.isStock &&
-                                item.purchasePrice !== item.originalPurchasePrice;
+                            const total = calculateItemTotal(item);
+                            const remaining = item.availableQuantity - item.quantity;
+                            const isLowStock = remaining < 10;
 
                             return (
-                                <Card key={item.id} bg={cardBg} borderColor={borderColor}>
+                                <Card key={`${item.id}-${item.batch}`} bg={cardBg} borderColor={borderColor}>
                                     <CardBody>
                                         <Flex justify="space-between" align="start" mb={3}>
                                             <VStack align="start" spacing={1} flex={1}>
@@ -971,10 +1010,8 @@ export default function OmborKirim() {
                                                     {item.name}
                                                 </Text>
                                                 <HStack spacing={2}>
+                                                    <Badge colorScheme="purple">{item.batch}</Badge>
                                                     <Badge colorScheme="gray">{item.unit}</Badge>
-                                                    {!item.isStock && (
-                                                        <Badge colorScheme="orange">Yangi</Badge>
-                                                    )}
                                                 </HStack>
                                             </VStack>
 
@@ -983,47 +1020,26 @@ export default function OmborKirim() {
                                                 size="sm"
                                                 colorScheme="red"
                                                 variant="ghost"
-                                                onClick={() => removeItem(item.id)}
+                                                onClick={() => removeItem(item.id, item.batch)}
                                                 aria-label="O'chirish"
                                             />
                                         </Flex>
 
                                         <Divider mb={3} />
 
-                                        {/* BATCH */}
-                                        <FormControl mb={3}>
-                                            <FormLabel fontSize="sm">Partiya</FormLabel>
-                                            <HStack>
-                                                <Checkbox
-                                                    isChecked={item.isNewBatch}
-                                                    onChange={() => toggleBatch(item.id)}
-                                                    isDisabled={!item.canToggleBatch}
-                                                    colorScheme="blue"
-                                                >
-                                                    {item.isNewBatch ? "Yangi partiya" : item.batch || "Mavjud"}
-                                                </Checkbox>
-                                            </HStack>
-                                        </FormControl>
-
-                                        {/* PURCHASE PRICE */}
-                                        <FormControl mb={3}>
-                                            <FormLabel fontSize="sm">Narx (so'm)</FormLabel>
-                                            <Input
-                                                type="number"
-                                                value={item.purchasePrice || ""}
-                                                onChange={(e) =>
-                                                    updatePurchasePrice(item.id, e.target.value)
-                                                }
-                                                placeholder="0"
-                                                bg={inputBg}
-                                                borderColor={isPriceChanged ? "blue.400" : borderColor}
-                                            />
-                                            {item.isStock && item.originalPurchasePrice > 0 && (
-                                                <Text fontSize="xs" color="gray.500" mt={1}>
-                                                    Oldingi: {formatNumber(item.originalPurchasePrice)} so'm
-                                                </Text>
-                                            )}
-                                        </FormControl>
+                                        {/* AVAILABLE */}
+                                        <HStack justify="space-between" mb={3}>
+                                            <Text fontSize="sm" color="gray.500">
+                                                Omborda:
+                                            </Text>
+                                            <Text
+                                                fontSize="sm"
+                                                fontWeight="medium"
+                                                color={isLowStock ? "orange.500" : "gray.600"}
+                                            >
+                                                {item.availableQuantity} {item.unit}
+                                            </Text>
+                                        </HStack>
 
                                         {/* SALE PRICE */}
                                         <FormControl mb={3}>
@@ -1032,13 +1048,36 @@ export default function OmborKirim() {
                                                 type="number"
                                                 value={item.salePrice || ""}
                                                 onChange={(e) =>
-                                                    updateSalePrice(item.id, e.target.value)
+                                                    updateSalePrice(item.id, item.batch, e.target.value)
                                                 }
                                                 placeholder="0"
                                                 bg={inputBg}
                                                 borderColor={borderColor}
                                             />
                                         </FormControl>
+
+                                        {/* DISCOUNT (if enabled) */}
+                                        {isDiscountEnabled && (
+                                            <FormControl mb={3}>
+                                                <FormLabel fontSize="sm">Chegirma (%)</FormLabel>
+                                                <Input
+                                                    type="number"
+                                                    value={item.discount || ""}
+                                                    onChange={(e) =>
+                                                        updateDiscount(item.id, item.batch, e.target.value)
+                                                    }
+                                                    placeholder="0"
+                                                    max={100}
+                                                    bg={inputBg}
+                                                    borderColor={borderColor}
+                                                />
+                                                {item.discount > 0 && (
+                                                    <Text fontSize="xs" color="orange.500" mt={1}>
+                                                        -{formatNumber(item.salePrice * item.quantity * (item.discount / 100))} so'm
+                                                    </Text>
+                                                )}
+                                            </FormControl>
+                                        )}
 
                                         {/* QUANTITY */}
                                         <FormControl mb={3}>
@@ -1047,12 +1086,16 @@ export default function OmborKirim() {
                                                 type="number"
                                                 value={item.quantity || ""}
                                                 onChange={(e) =>
-                                                    updateQuantity(item.id, e.target.value)
+                                                    updateQuantity(item.id, item.batch, e.target.value)
                                                 }
                                                 placeholder="1"
+                                                max={item.availableQuantity}
                                                 bg={inputBg}
-                                                borderColor={borderColor}
+                                                borderColor={item.quantity > item.availableQuantity ? "red.400" : borderColor}
                                             />
+                                            <Text fontSize="xs" color="gray.500" mt={1}>
+                                                Qoladi: {remaining} {item.unit}
+                                            </Text>
                                         </FormControl>
 
                                         {/* TOTAL */}
@@ -1061,9 +1104,16 @@ export default function OmborKirim() {
                                             <Text fontSize="sm" color="gray.500">
                                                 Jami:
                                             </Text>
-                                            <Text fontSize="xl" fontWeight="bold" color="blue.600">
-                                                {formatNumber(total)} so'm
-                                            </Text>
+                                            <VStack align="end" spacing={0}>
+                                                <Text fontSize="xl" fontWeight="bold" color="blue.600">
+                                                    {formatNumber(total)} so'm
+                                                </Text>
+                                                {isDiscountEnabled && item.discount > 0 && (
+                                                    <Text fontSize="xs" color="gray.500" textDecoration="line-through">
+                                                        {formatNumber(item.salePrice * item.quantity)} so'm
+                                                    </Text>
+                                                )}
+                                            </VStack>
                                         </Flex>
                                     </CardBody>
                                 </Card>
@@ -1091,7 +1141,7 @@ export default function OmborKirim() {
                 </Flex>
             )}
 
-            {/* DRAWER - ALL PRODUCTS */}
+            {/* DRAWER - ALL STOCKS */}
             <Drawer
                 isOpen={sidebar.isOpen}
                 placement="left"
@@ -1111,50 +1161,46 @@ export default function OmborKirim() {
                                     <SkeletonText key={i} noOfLines={2} spacing="2" />
                                 ))}
                             </Stack>
-                        ) : products.length === 0 ? (
+                        ) : stocks.length === 0 ? (
                             <Center py={10}>
                                 <VStack spacing={3}>
                                     <WarningIcon boxSize={10} color="gray.400" />
-                                    <Text >Mahsulot topilmadi</Text>
+                                    <Text color="gray.500">Mahsulot topilmadi</Text>
                                 </VStack>
                             </Center>
                         ) : (
                             <>
                                 <Box p={3} borderBottomWidth="1px" bg={hoverBg}>
-                                    <Text fontSize="sm" fontWeight="medium">
-                                        Jami: {products.length} ta mahsulot
+                                    <Text fontSize="sm" fontWeight="medium" color="gray.600">
+                                        Jami: {stocks.length} ta mahsulot
                                     </Text>
                                 </Box>
 
-                                {products.map((product, index) => (
+                                {stocks.map((stock, index) => (
                                     <Flex
-                                        key={product.id}
+                                        key={`${stock.id}-${stock.batch}`}
                                         p={4}
-                                        borderBottom={index < products.length - 1 ? "1px solid" : "none"}
-                                        borderColor={"border"}
+                                        borderBottom={index < stocks.length - 1 ? "1px solid" : "none"}
+                                        borderColor={borderColor}
                                         cursor="pointer"
-                                        bg={"surface"}
-                                        _hover={{ bg: "bg" }}
-                                        onClick={() => addProduct(product)}
+                                        _hover={{ bg: hoverBg }}
+                                        onClick={() => addStock(stock)}
                                         transition="background 0.2s"
                                     >
                                         <VStack align="start" spacing={1} flex={1}>
-                                            <Text fontWeight="medium">{product.name}</Text>
+                                            <Text fontWeight="medium">{stock.name}</Text>
                                             <HStack spacing={2}>
-                                                <Badge colorScheme="gray" fontSize="xs">
-                                                    {product.unit}
+                                                <Badge colorScheme="purple" fontSize="xs">
+                                                    {stock.batch}
                                                 </Badge>
-                                                {product.isStock && (
-                                                    <Badge colorScheme="green" fontSize="xs">
-                                                        Omborda bor
-                                                    </Badge>
-                                                )}
+                                                <Badge colorScheme="gray" fontSize="xs">
+                                                    {stock.unit}
+                                                </Badge>
                                             </HStack>
-                                            {product.isStock && (
-                                                <Text fontSize="sm" color="gray.500">
-                                                    {formatNumber(product.purchasePrice)} so'm
-                                                </Text>
-                                            )}
+                                            <HStack spacing={3} fontSize="sm" color="gray.500">
+                                                <Text>Omborda: {stock.availableQuantity}</Text>
+                                                <Text>Narx: {formatNumber(stock.salePrice)} so'm</Text>
+                                            </HStack>
                                         </VStack>
                                     </Flex>
                                 ))}
@@ -1186,7 +1232,7 @@ export default function OmborKirim() {
                                             <Text fontSize="sm" color="gray.500" mb={1}>
                                                 Hujjat
                                             </Text>
-                                            <Text fontWeight="medium">Omborga kirim</Text>
+                                            <Text fontWeight="medium">Ombordan chiqim</Text>
                                         </Box>
 
                                         <Box>
@@ -1200,16 +1246,16 @@ export default function OmborKirim() {
                                             <Text fontSize="sm" color="gray.500" mb={1}>
                                                 Jo'natuvchi
                                             </Text>
-                                            <Text fontWeight="medium">
-                                                {partners.find((p) => p.id === selectedPartner)?.name || "-"}
-                                            </Text>
+                                            <Text fontWeight="medium">{locationName}</Text>
                                         </Box>
 
                                         <Box>
                                             <Text fontSize="sm" color="gray.500" mb={1}>
                                                 Qabul qiluvchi
                                             </Text>
-                                            <Text fontWeight="medium">{locationName}</Text>
+                                            <Text fontWeight="medium">
+                                                {clients.find((c) => c.id === selectedClient)?.name || "-"}
+                                            </Text>
                                         </Box>
                                     </Grid>
 
@@ -1228,7 +1274,7 @@ export default function OmborKirim() {
                             </Card>
 
                             {/* SUMMARY */}
-                            <Grid templateColumns="repeat(3, 1fr)" gap={4}>
+                            <Grid templateColumns={isDiscountEnabled && totalDiscount > 0 ? "repeat(4, 1fr)" : "repeat(3, 1fr)"} gap={4}>
                                 <Card bg={cardBg} borderColor={borderColor}>
                                     <CardBody textAlign="center">
                                         <Text fontSize="sm" color="gray.500" mb={1}>
@@ -1251,7 +1297,20 @@ export default function OmborKirim() {
                                     </CardBody>
                                 </Card>
 
-                                <Card bg={cardBg} borderColor={borderColor}>
+                                {isDiscountEnabled && totalDiscount > 0 && (
+                                    <Card bg={cardBg} borderColor={borderColor}>
+                                        <CardBody textAlign="center">
+                                            <Text fontSize="sm" color="gray.500" mb={1}>
+                                                Chegirma
+                                            </Text>
+                                            <Text fontSize="2xl" fontWeight="bold" color="orange.500">
+                                                {formatNumber(totalDiscount)}
+                                            </Text>
+                                        </CardBody>
+                                    </Card>
+                                )}
+
+                                {/* <Card bg={cardBg} borderColor={borderColor}>
                                     <CardBody textAlign="center">
                                         <Text fontSize="sm" color="gray.500" mb={1}>
                                             O'rtacha
@@ -1260,7 +1319,7 @@ export default function OmborKirim() {
                                             {formatNumber(Math.round(averagePrice))}
                                         </Text>
                                     </CardBody>
-                                </Card>
+                                </Card> */}
                             </Grid>
 
                             {/* ITEMS TABLE */}
@@ -1272,33 +1331,49 @@ export default function OmborKirim() {
                                             <Th>Nomlanishi</Th>
                                             <Th>Partiya</Th>
                                             <Th isNumeric>Narx</Th>
+                                            {isDiscountEnabled && <Th isNumeric>Chegirma</Th>}
                                             <Th isNumeric>Miqdor</Th>
                                             <Th>Birlik</Th>
                                             <Th isNumeric>Jami</Th>
                                         </Tr>
                                     </Thead>
                                     <Tbody>
-                                        {selectedItems.map((item, index) => (
-                                            <Tr key={item.id}>
-                                                <Td>{index + 1}</Td>
-                                                <Td>
-                                                    <Text fontWeight="medium">{item.name}</Text>
-                                                </Td>
-                                                <Td>
-                                                    {item.isNewBatch ? (
-                                                        <Badge colorScheme="blue">Yangi</Badge>
-                                                    ) : (
-                                                        <Text fontSize="xs">{item.batch || "-"}</Text>
+                                        {selectedItems.map((item, index) => {
+                                            const total = calculateItemTotal(item);
+                                            return (
+                                                <Tr key={`${item.id}-${item.batch}`}>
+                                                    <Td>{index + 1}</Td>
+                                                    <Td>
+                                                        <Text fontWeight="medium">{item.name}</Text>
+                                                    </Td>
+                                                    <Td>
+                                                        <Badge colorScheme="purple" fontSize="xs">
+                                                            {item.batch}
+                                                        </Badge>
+                                                    </Td>
+                                                    <Td isNumeric>{formatNumber(item.salePrice)}</Td>
+                                                    {isDiscountEnabled && (
+                                                        <Td isNumeric>
+                                                            {item.discount > 0 ? (
+                                                                <VStack align="end" spacing={0}>
+                                                                    <Text fontWeight="medium">{item.discount}%</Text>
+                                                                    <Text fontSize="xs" color="gray.500">
+                                                                        -{formatNumber(item.salePrice * item.quantity * (item.discount / 100))}
+                                                                    </Text>
+                                                                </VStack>
+                                                            ) : (
+                                                                "-"
+                                                            )}
+                                                        </Td>
                                                     )}
-                                                </Td>
-                                                <Td isNumeric>{formatNumber(item.purchasePrice)}</Td>
-                                                <Td isNumeric>{item.quantity}</Td>
-                                                <Td>{item.unit}</Td>
-                                                <Td isNumeric fontWeight="bold">
-                                                    {formatNumber(item.purchasePrice * item.quantity)}
-                                                </Td>
-                                            </Tr>
-                                        ))}
+                                                    <Td isNumeric>{item.quantity}</Td>
+                                                    <Td>{item.unit}</Td>
+                                                    <Td isNumeric fontWeight="bold">
+                                                        {formatNumber(total)}
+                                                    </Td>
+                                                </Tr>
+                                            );
+                                        })}
                                     </Tbody>
                                 </Table>
                             </Box>
