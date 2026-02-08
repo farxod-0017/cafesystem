@@ -198,7 +198,7 @@ const ProductMaterialsPage = () => {
             const data = {
                 productId: menuProductId,
                 materialId: pair.materialId,
-                count: parseFloat(editCount),
+                quantity: parseFloat(editCount),
             };
             await apiProductMaterialPairs.Update(data, pair.id);
             await fetchMaterialPairs();
@@ -517,7 +517,7 @@ const ProductMaterialsPage = () => {
                                                 <HStack justify="space-between">
                                                     <HStack spacing={2}>
                                                         <Text fontSize="2xl" fontWeight="bold" color="blue.600">
-                                                            {pair.count}
+                                                            {pair.quantity}
                                                         </Text>
                                                         <Text fontSize="sm" color="gray.600">
                                                             {pair.material?.unit}
