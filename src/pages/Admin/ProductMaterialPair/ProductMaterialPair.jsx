@@ -129,7 +129,7 @@ const ProductMaterialsPage = () => {
         setPairsLoading(true);
         try {
             const response = await apiProductMaterialPairs.getByProductId(menuProductId);
-            setMaterialPairs(response.data || []);
+            setMaterialPairs(response.data.product_materials || []);
         } finally {
             setPairsLoading(false);
         }
