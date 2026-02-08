@@ -36,7 +36,6 @@ import EditSumModal from "./__components/EditSumModal";
 import { useWarehouseStore } from "../../../store/useWarehouseStore";
 
 export default function OrderCreate() {
-    const locationId = 'f848a70b-3d67-4db7-a4fd-ede488e79ed4'
     const [cashs, setCashs] = useState([]);
     const [payMethods, setPayMethods] = useState([]);
     const [orderItems, setOrderItems] = useState([]);
@@ -67,10 +66,18 @@ export default function OrderCreate() {
     const inputBg = useColorModeValue("white", "gray.700");
 
     // ─── API calls ───
+    // ─── API calls ───
     const GetCash = async () => {
         try {
             const response = await apiCashs.getAll();
-            setCashs(response.data || response);
+            const allCashs = response.data || response;
+
+            // Фильтрация по locationId
+            const filteredCashs = allCashs.filter(
+                (cash) => cash.locationId === cafeWarehouseId
+            );
+
+            setCashs(filteredCashs);
         } catch (error) {
             console.log(error);
         }
@@ -79,17 +86,26 @@ export default function OrderCreate() {
     const GetPaymentMethod = async () => {
         try {
             const response = await apiPayMethods.getAll();
-            setPayMethods(response.data?.payMethods || response.payMethods || []);
+            const allPayMethods = response.data?.payMethods || response.payMethods || [];
+
+            // Фильтрация по locationId
+            const filteredPayMethods = allPayMethods.filter(
+                (method) => method.locationId === cafeWarehouseId
+            );
+
+            setPayMethods(filteredPayMethods);
         } catch (error) {
             console.log(error);
         }
     };
 
     useEffect(() => {
-        GetCash();
-        GetPaymentMethod();
-    }, []);
-
+        // Запускать только если cafeWarehouseId определен
+        if (cafeWarehouseId) {
+            GetCash();
+            GetPaymentMethod();
+        }
+    }, [cafeWarehouseId]); // Добавить cafeWarehouseId в зависимости
     // ─── Mahsulotni buyurtmaga qo'shish ───
     const addItem = (product) => {
         setOrderItems((prev) => {
