@@ -163,6 +163,7 @@ export default function OrderPayment({
                                     color={textPrimary}
                                     fontSize="lg"
                                     fontWeight="semibold"
+                                    inputMode="numeric"
                                 />
                                 <NumberInputStepper>
                                     <NumberIncrementStepper />
