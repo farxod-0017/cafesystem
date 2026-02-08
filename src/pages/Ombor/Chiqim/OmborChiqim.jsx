@@ -465,7 +465,7 @@ export default function OmborChiqim() {
                 senderId: mainWarehouseId, // Bizning ombor
                 receiverId: selectedClient === "disposal" ? mainWarehouseId : selectedClient, // Mijoz
                 createdBy: userId,
-                status: "received",
+                status: "sent",
                 note: note || "",
                 items: selectedItems.map((item) => ({
                     productId: item.id,
@@ -808,7 +808,7 @@ export default function OmborChiqim() {
                             </Card>
                         )}
 
-                        <Card bg={cardBg} borderColor={borderColor}>
+                        {/* <Card bg={cardBg} borderColor={borderColor}>
                             <CardBody>
                                 <Text fontSize="sm" color="gray.500" mb={1}>
                                     O'rtacha narx
@@ -817,7 +817,7 @@ export default function OmborChiqim() {
                                     {formatNumber(Math.round(averagePrice))} so'm
                                 </Text>
                             </CardBody>
-                        </Card>
+                        </Card> */}
                     </Grid>
 
                     {/* TABLE - DESKTOP */}
@@ -1310,7 +1310,7 @@ export default function OmborChiqim() {
                                     </Card>
                                 )}
 
-                                <Card bg={cardBg} borderColor={borderColor}>
+                                {/* <Card bg={cardBg} borderColor={borderColor}>
                                     <CardBody textAlign="center">
                                         <Text fontSize="sm" color="gray.500" mb={1}>
                                             O'rtacha
@@ -1319,7 +1319,7 @@ export default function OmborChiqim() {
                                             {formatNumber(Math.round(averagePrice))}
                                         </Text>
                                     </CardBody>
-                                </Card>
+                                </Card> */}
                             </Grid>
 
                             {/* ITEMS TABLE */}

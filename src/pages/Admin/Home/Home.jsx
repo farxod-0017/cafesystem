@@ -1,10 +1,11 @@
-import { Box, Center, Text } from "@chakra-ui/react";
+import { Box, Center, Heading, Text, VStack } from "@chakra-ui/react";
 
 export default function AdminHome() {
     return (
         <Box>
-            <Center><Text>Admin Home Page</Text></Center>
-            
+            <Center h="100vh" w={"100%"}>
+                <Heading>DONERCI</Heading>
+            </Center>
         </Box>
     )
 }

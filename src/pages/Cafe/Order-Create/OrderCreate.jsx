@@ -79,6 +79,7 @@ export default function OrderCreate() {
             );
 
             setCashs(filteredCashs);
+            setSelectedCash(filteredCashs[0]?.id || ""); // Автоматически выбирать первую кассу
         } catch (error) {
             console.log(error);
         }
@@ -95,6 +96,7 @@ export default function OrderCreate() {
             );
 
             setPayMethods(filteredPayMethods);
+            setSelectedPayMethod(filteredPayMethods[0]?.id || ""); // Автоматически выбирать первый метод оплаты
         } catch (error) {
             console.log(error);
         }
@@ -210,6 +212,7 @@ export default function OrderCreate() {
             locationId: cafeWarehouseId,
             cashId: selectedCash,
             payMethodId: selectedPayMethod,
+            orderStatus:"completed",
             createdBy: Cookies.get("user_id"),
             items: orderItems.map((item) => ({
                 productId: item.productId,
@@ -238,8 +241,6 @@ export default function OrderCreate() {
 
             // Tozalash
             setOrderItems([]);
-            setSelectedCash("");
-            setSelectedPayMethod("");
             setOrderType("sale");
 
             // Chekni ochish

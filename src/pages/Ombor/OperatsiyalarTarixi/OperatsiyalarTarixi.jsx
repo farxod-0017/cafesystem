@@ -154,14 +154,14 @@ const STATUS_COLORS = {
 const PAYMENT_LABELS = {
     paid: "To'langan",
     unpaid: "To'lanmagan",
-    "partly-paid": "Qisman to'langan",
+    "partially_paid": "Qisman to'langan",
     all: "Barchasi",
 };
 
 const PAYMENT_COLORS = {
     paid: "green",
     unpaid: "red",
-    "partly-paid": "orange",
+    "partially_paid": "orange",
 };
 
 // Available status transitions
@@ -368,7 +368,6 @@ export default function OperatsiyalarTarixi() {
     const updateStatus = async (invoiceId, newStatus) => {
         const data = {
             status: newStatus,
-            changedBy: Cookies.get("user_id"),
         }
         try {
             await apiInvoices.UpdateStatus(data, invoiceId);
@@ -632,13 +631,13 @@ export default function OperatsiyalarTarixi() {
                             <MenuItem onClick={exportToExcel}>
                                 Excel (.xlsx)
                             </MenuItem>
-                            <MenuItem onClick={exportToPDF}>
+                            {/* <MenuItem onClick={exportToPDF}>
                                 PDF
                             </MenuItem>
                             <Divider />
                             <MenuItem onClick={handlePrint}>
                                 Chop etish
-                            </MenuItem>
+                            </MenuItem> */}
                         </MenuList>
                     </Menu>
 
@@ -1446,12 +1445,13 @@ export default function OperatsiyalarTarixi() {
                                 <Card variant="outline" bg={useColorModeValue("blue.50", "blue.900")}>
                                     <CardBody>
                                         <VStack align="stretch" spacing={2}>
+                                            {detailCalculations?.hasDiscount && (
                                             <Flex justify="space-between">
                                                 <Text>Oraliq jami:</Text>
                                                 <Text fontWeight="medium">
                                                     {formatNumber(detailCalculations?.subtotal || 0)} so'm
                                                 </Text>
-                                            </Flex>
+                                            </Flex>)}
 
                                             {detailCalculations?.hasDiscount && (
                                                 <Flex justify="space-between" color="orange.600">
@@ -1461,8 +1461,8 @@ export default function OperatsiyalarTarixi() {
                                                     </Text>
                                                 </Flex>
                                             )}
-
-                                            <Divider />
+                                            {detailCalculations?.hasDiscount && (
+                                            <Divider />)}
 
                                             <Flex justify="space-between" fontSize="lg">
                                                 <Text fontWeight="bold">Jami:</Text>

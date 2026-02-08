@@ -546,7 +546,7 @@ export default function OmbordagiTovarlar() {
                 </Card>
 
                 <Card
-                    bg={statistics.lowStockItems > 0 ? "red.50" : cardBg}
+                    // bg={statistics.lowStockItems > 0 ? "red.50" : cardBg}
                     borderColor={statistics.lowStockItems > 0 ? "red.200" : borderColor}
                 >
                     <CardBody>
@@ -729,7 +729,7 @@ export default function OmbordagiTovarlar() {
                                     return (
                                         <Tr
                                             key={`${stock.productId}-${stock.batch}-${index}`}
-                                            bg={isLowStock ? "red.50" : undefined}
+                                            // bg={isLowStock ? "red.50" : undefined}
                                             _hover={{ bg: hoverBg }}
                                         >
                                             {/* PRODUCT NAME */}
