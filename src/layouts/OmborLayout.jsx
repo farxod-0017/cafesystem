@@ -3,13 +3,14 @@ import { Outlet } from "react-router";
 import Sidebar from "../components/common/Sidebar";
 import { Box } from "@chakra-ui/react";
 import { useUIStore } from "../store/useUIStore";
-import { Package, PackagePlus, PackageMinus, Handshake } from "lucide-react";
+import { Package, PackagePlus, PackageMinus, Handshake, Move } from "lucide-react";
 import WarehouseGuard from "../auth/WarehouseGuard";
 
 const links = [
     { label: "Ombor", to: "/ombor", icon: Package },
     { label: "Kirim", to: "/ombor/kirim", icon: PackagePlus },
     { label: "Chiqim", to: "/ombor/chiqim", icon: PackageMinus },
+    { label: "Operatsiyalar tarixi", to: "/ombor/operatsiyalar-tarixi", icon: Move },
     { label: "Ta'minotchilar", to: "/ombor/taminotchilar", icon: Handshake },
 ];
 
