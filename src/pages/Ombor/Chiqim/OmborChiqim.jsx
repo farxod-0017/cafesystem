@@ -1413,7 +1413,7 @@ export default function OmborChiqim() {
             </Modal>
 
             {/* PRINT STYLES */}
-            <style jsx global>{`
+            <style>{`
         @media print {
           body * {
             visibility: hidden;
