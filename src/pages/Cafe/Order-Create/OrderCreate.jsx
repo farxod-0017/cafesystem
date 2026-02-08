@@ -32,7 +32,7 @@ import { apiPayment } from "../../../utils/Controllers/apiPayment";
 import Cookies from "js-cookie";
 import ProductModal from "./__components/ProductModal";
 import Receiptmodal from "./__components/Receiptmodal";
-import EditSumModal from "./__components/EditSumModal";
+import Editsummodal from "./__components/Editsummodal";
 import { useWarehouseStore } from "../../../store/useWarehouseStore";
 
 export default function OrderCreate() {
@@ -506,7 +506,7 @@ export default function OrderCreate() {
             />
 
             {/* SUMMANI TAHRIRLASH MODAL */}
-            <EditSumModal
+            <Editsummodal
                 isOpen={editSumModal.isOpen}
                 onClose={editSumModal.onClose}
                 paymentId={currentPaymentId}
