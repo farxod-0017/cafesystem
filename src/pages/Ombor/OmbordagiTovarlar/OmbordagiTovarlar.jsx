@@ -987,7 +987,7 @@ export default function OmbordagiTovarlar() {
             )}
 
             {/* PRINT STYLES */}
-            <style jsx global>{`
+            <style>{`
         @media print {
           body * {
             visibility: hidden;

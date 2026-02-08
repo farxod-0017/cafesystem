@@ -1334,7 +1334,7 @@ export default function OmborKirim() {
             </Modal>
 
             {/* PRINT STYLES */}
-            <style jsx global>{`
+            <style>{`
         @media print {
           body * {
             visibility: hidden;
