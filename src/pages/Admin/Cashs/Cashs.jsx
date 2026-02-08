@@ -200,7 +200,7 @@ export default function CashsPage() {
             ) : items.length === 0 ? (
                 <Text color="neutral.500">Kassalar mavjud emas</Text>
             ) : (
-                <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
+                <SimpleGrid columns={{ base: 1, md:2}} spacing={4}>
                     {items.map((item) => (
                         <Card
                             key={item.id}
