@@ -257,7 +257,7 @@ const CafeClients = () => {
     const openPaymentModal = async (partner) => {
         setSelectedPartner(partner);
         setPaymentData({
-            amount: partner.balance,
+            amount: partner.balance < 0 ? Math.abs(partner.balance) : "",
             methodId: '',
             cashId: '',
             note: ''
@@ -422,12 +422,12 @@ const CafeClients = () => {
                                                             <Text
                                                                 fontWeight="semibold"
                                                                 color={
-                                                                    Number(partner.balance) > 0 ? 'red.500' :
-                                                                        Number(partner.balance) < 0 ? 'green.500' :
+                                                                    Number(partner.balance) < 0 ? 'red.500' :
+                                                                        Number(partner.balance) > 0 ? 'green.500' :
                                                                             'gray.600'
                                                                 }
                                                             >
-                                                                {formatCurrency(Math.abs(partner.balance))}
+                                                                {formatCurrency(partner.balance)}
                                                             </Text>
                                                         </Td>
                                                         <Td isNumeric>
@@ -671,8 +671,8 @@ const CafeClients = () => {
                                             fontSize="2xl"
                                             fontWeight="bold"
                                             color={
-                                                Number(selectedPartner?.balance) > 0 ? 'red.500' :
-                                                    Number(selectedPartner?.balance) < 0 ? 'green.500' :
+                                                Number(selectedPartner?.balance) < 0 ? 'red.500' :
+                                                    Number(selectedPartner?.balance) > 0 ? 'green.500' :
                                                         'gray.600'
                                             }
                                         >

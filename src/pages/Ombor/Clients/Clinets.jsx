@@ -57,7 +57,7 @@ const ClientsPage = () => {
     const toast = useToast();
     let { mainWarehouseId } = useWarehouseStore();
     const userId = Cookies.get('user_id');
-    
+
     // Modals
     const { isOpen: isAddOpen, onOpen: onAddOpen, onClose: onAddClose } = useDisclosure();
     const { isOpen: isEditOpen, onOpen: onEditOpen, onClose: onEditClose } = useDisclosure();
@@ -148,7 +148,10 @@ const ClientsPage = () => {
 
     // Format currency
     const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('uz-UZ').format(amount) + ' so\'m';
+        // return new Intl.NumberFormat('uz-UZ').format(amount) + ' so\'m';
+        amount = Number(amount)
+        const formatter = new Intl.NumberFormat('uz-UZ');
+        return formatter.format(amount) + " so'm";
     };
 
     // Format phone
@@ -260,7 +263,7 @@ const ClientsPage = () => {
     const openPaymentModal = async (partner) => {
         setSelectedPartner(partner);
         setPaymentData({
-            amount: partner.balance,
+            amount: partner.balance < 0 ? Math.abs(partner.balance) : "",
             methodId: '',
             cashId: '',
             note: ''
@@ -425,12 +428,12 @@ const ClientsPage = () => {
                                                             <Text
                                                                 fontWeight="semibold"
                                                                 color={
-                                                                    Number(partner.balance) > 0 ? 'red.500' :
-                                                                        Number(partner.balance) < 0 ? 'green.500' :
+                                                                    Number(partner.balance)  < 0 ? 'red.500' :
+                                                                        Number(partner.balance) > 0 ? 'green.500' :
                                                                             'gray.600'
                                                                 }
                                                             >
-                                                                {formatCurrency(Math.abs(partner.balance))}
+                                                                {formatCurrency(partner.balance)}
                                                             </Text>
                                                         </Td>
                                                         <Td isNumeric>
@@ -674,8 +677,8 @@ const ClientsPage = () => {
                                             fontSize="2xl"
                                             fontWeight="bold"
                                             color={
-                                                Number(selectedPartner?.balance) > 0 ? 'red.500' :
-                                                    Number(selectedPartner?.balance) < 0 ? 'green.500' :
+                                                Number(selectedPartner?.balance) < 0 ? 'red.500' :
+                                                    Number(selectedPartner?.balance) > 0 ? 'green.500' :
                                                         'gray.600'
                                             }
                                         >
