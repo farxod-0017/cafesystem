@@ -465,7 +465,7 @@ export default function OmborChiqim() {
                 senderId: mainWarehouseId, // Bizning ombor
                 receiverId: selectedClient === "disposal" ? mainWarehouseId : selectedClient, // Mijoz
                 createdBy: userId,
-                status: "sent",
+                status: "received",
                 note: note || "",
                 items: selectedItems.map((item) => ({
                     productId: item.id,

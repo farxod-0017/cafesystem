@@ -465,7 +465,7 @@ export default function CafeChiqim() {
                 senderId: cafeWarehouseId, // Bizning ombor
                 receiverId: selectedClient === "disposal" ? cafeWarehouseId : selectedClient, // Mijoz
                 createdBy: userId,
-                status: "sent",
+                status: "received",
                 note: note || "",
                 items: selectedItems.map((item) => ({
                     productId: item.id,
