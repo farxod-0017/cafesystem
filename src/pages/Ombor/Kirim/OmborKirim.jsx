@@ -421,7 +421,7 @@ export default function OmborKirim() {
                 return false;
             }
 
-            if (item.quantity < 1) {
+            if (item.quantity <= 0) {
                 toast({
                     title: "Xatolik",
                     description: `"${item.name}" uchun miqdor kamida 1 bo'lishi kerak`,
