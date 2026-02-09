@@ -264,6 +264,7 @@ export default function CafeKirim() {
             isNewBatch: !product.isStock,
             // Disable checkbox for products
             canToggleBatch: product.isStock,
+            quantity:1
         };
 
         setSelectedItems((prev) => [...prev, newItem]);
@@ -1247,7 +1248,7 @@ export default function CafeKirim() {
                                     </CardBody>
                                 </Card>
 
-                                <Card bg={cardBg} borderColor={borderColor}>
+                                {/* <Card bg={cardBg} borderColor={borderColor}>
                                     <CardBody textAlign="center">
                                         <Text fontSize="sm" color="gray.500" mb={1}>
                                             O'rtacha
@@ -1256,7 +1257,7 @@ export default function CafeKirim() {
                                             {formatNumber(Math.round(averagePrice))}
                                         </Text>
                                     </CardBody>
-                                </Card>
+                                </Card> */}
                             </Grid>
 
                             {/* ITEMS TABLE */}

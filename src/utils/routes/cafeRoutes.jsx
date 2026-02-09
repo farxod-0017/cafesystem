@@ -1,5 +1,7 @@
 import CafeChiqim from "../../pages/Cafe/CafeChiqim/CafeChiqim";
+import CafeClientDetail from "../../pages/Cafe/CafeClientDetail/CafeClientDetail";
 import CafedagiTovarlar from "../../pages/Cafe/CafedagiTovarlar/CafedagiTovarlar";
+import CafePartnerDetail from "../../pages/Cafe/CafePartnerDetail/CafePartnerDetail";
 import Home from "../../pages/Cafe/Home/Home";
 import CafeKirim from "../../pages/Cafe/Kirim/CafeKirim";
 import CafeClients from "../../pages/Cafe/Klientlar/CafeClients";
@@ -59,6 +61,16 @@ const cafeRoutes = [
         name:"cafe clients",
         path:"klientlar",
         element:<CafeClients/>
+    },
+    {
+        name:"cafe partner detrail",
+        path:"taminotchilar/:partnerId",
+        element:<CafePartnerDetail/>
+    },
+    {
+        name:"cafe klient detail",
+        path:"klientlar/:partnerId",
+        element:<CafeClientDetail/>
     }
 ];
 export default cafeRoutes

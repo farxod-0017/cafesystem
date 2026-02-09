@@ -40,7 +40,7 @@ export default function Sidebar({ collapsed, links = [], role, end = false }) {
     return (
         <Flex
             position="fixed"
-            w={collapsed ? "80px" : "250px"}
+            w={collapsed ? "70px" : "220px"}
             minH="100vh"
             bg="surface"
             color="text"
@@ -77,7 +77,7 @@ export default function Sidebar({ collapsed, links = [], role, end = false }) {
                             <Tooltip label={collapsed ? item.label : ""} placement="right">
                                 <Flex
                                     align="center"
-                                    gap={3}
+                                    gap={2}
                                     p={3}
                                     borderRadius="lg"
                                     bg={isActive ? "secondary" : "transparent"}

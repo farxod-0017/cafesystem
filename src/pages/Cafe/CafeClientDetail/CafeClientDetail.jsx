@@ -70,14 +70,14 @@ import { apiCashs } from '../../../utils/Controllers/apiCashs';
 import Cookies from 'js-cookie';
 import { useWarehouseStore } from '../../../store/useWarehouseStore';
 
-const ClientDetailPage = () => {
+const CafeClientDetail = () => {
     const { partnerId } = useParams();
     console.log(partnerId);
 
     const navigate = useNavigate();
     const toast = useToast();
     const { colorMode } = useColorMode();
-    const { mainWarehouseId } = useWarehouseStore()
+    const { cafeWarehouseId } = useWarehouseStore()
     const userId = Cookies.get('user_id');
     const [formLoading, setFormLoading] = useState({
         generalPay: false,
@@ -160,7 +160,7 @@ const ClientDetailPage = () => {
         setLoadingInvoices(true);
         try {
             const res = await apiInvoices.getFilteredInvoices(
-                mainWarehouseId,
+                cafeWarehouseId,
                 invoiceStartDate || 'all',
                 invoiceEndDate || 'all',
                 'outgoing',
@@ -189,10 +189,10 @@ const ClientDetailPage = () => {
     };
 
     useEffect(() => {
-        if (mainWarehouseId && partnerId) {
+        if (cafeWarehouseId && partnerId) {
             fetchInvoices();
         }
-    }, [mainWarehouseId, partnerId, invoicesPage, invoiceStatus, invoicePaymentStatus, invoiceStartDate, invoiceEndDate]);
+    }, [cafeWarehouseId, partnerId, invoicesPage, invoiceStatus, invoicePaymentStatus, invoiceStartDate, invoiceEndDate]);
 
     // Fetch payments
     const fetchPayments = async () => {
@@ -200,7 +200,7 @@ const ClientDetailPage = () => {
         try {
             const res = await apiLocationPayment.getFilterPayerReceiverIDs(
                 partnerId,
-                mainWarehouseId,
+                cafeWarehouseId,
                 paymentsPage
             );
             setPayments(res.data.data.records);
@@ -219,10 +219,10 @@ const ClientDetailPage = () => {
     };
 
     useEffect(() => {
-        if (mainWarehouseId && partnerId) {
+        if (cafeWarehouseId && partnerId) {
             fetchPayments();
         }
-    }, [mainWarehouseId, partnerId, paymentsPage]);
+    }, [cafeWarehouseId, partnerId, paymentsPage]);
 
     // Format currency
     const formatCurrency = (amount) => {
@@ -309,10 +309,10 @@ const ClientDetailPage = () => {
             ]);
 
             const filteredMethods = methodsRes.data.payMethods.filter(
-                m => m.locationId === mainWarehouseId
+                m => m.locationId === cafeWarehouseId
             );
             const filteredCashboxes = cashRes.data.filter(
-                c => c.locationId === mainWarehouseId
+                c => c.locationId === cafeWarehouseId
             );
 
             setPaymentMethods(filteredMethods);
@@ -361,10 +361,10 @@ const ClientDetailPage = () => {
             ]);
 
             const filteredMethods = methodsRes.data.payMethods.filter(
-                m => m.locationId === mainWarehouseId
+                m => m.locationId === cafeWarehouseId
             );
             const filteredCashboxes = cashRes.data.filter(
-                c => c.locationId === mainWarehouseId
+                c => c.locationId === cafeWarehouseId
             );
 
             setPaymentMethods(filteredMethods);
@@ -402,7 +402,7 @@ const ClientDetailPage = () => {
                 methodId: paymentData.methodId,
                 status: 'confirmed',
                 cashId: paymentData.cashId,
-                receiverId: mainWarehouseId,
+                receiverId: cafeWarehouseId,
                 payerId: partnerId,
                 note: paymentData.note,
                 createdBy: userId
@@ -442,7 +442,7 @@ const ClientDetailPage = () => {
                 methodId: paymentData.methodId,
                 status: 'confirmed',
                 cashId: paymentData.cashId,
-                receiverId: mainWarehouseId,
+                receiverId: cafeWarehouseId,
                 payerId: partnerId,
                 note: paymentData.note,
                 createdBy: userId,
@@ -477,7 +477,7 @@ const ClientDetailPage = () => {
                         <VStack spacing={4} py={8}>
                             <Icon as={AlertCircle} boxSize={16} color="red.500" />
                             <Text fontSize="lg" color="textSecondary">Partner topilmadi</Text>
-                            <Button leftIcon={<ArrowLeft size={18} />} onClick={() => navigate('/ombor/taminotchilar')}>
+                            <Button leftIcon={<ArrowLeft size={18} />} onClick={() => navigate('/cafe/taminotchilar')}>
                                 Orqaga
                             </Button>
                         </VStack>
@@ -496,7 +496,7 @@ const ClientDetailPage = () => {
                         aria-label="Orqaga"
                         icon={<ArrowLeft size={20} />}
                         variant="ghost"
-                        onClick={() => navigate('/ombor/klientlar')}
+                        onClick={() => navigate('/cafe/klientlar')}
                     />
                     <Heading size="lg">Klient</Heading>
                 </Flex>
@@ -1148,4 +1148,4 @@ const ClientDetailPage = () => {
     );
 };
 
-export default ClientDetailPage;
+export default CafeClientDetail;

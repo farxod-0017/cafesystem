@@ -195,11 +195,12 @@ export default function ReceiptModal({
                     zIndex={1}
                 >
                     <Button variant="ghost" mr={3} onClick={onClose}>
-                        Keyinroq to'lov qilish
+                        {paymentData?.type === "disposal" ? "Yopish" : "Keyinroq to'lov qilish"}
                     </Button>
-                    <Button colorScheme="green" onClick={handlePayment}>
-                        To'lov qilish
-                    </Button>
+                    {paymentData.type !== "disposal" &&
+                        <Button colorScheme="green" onClick={handlePayment}>
+                            To'lov qilish
+                        </Button>}
                 </ModalFooter>
             </ModalContent>
         </Modal>
