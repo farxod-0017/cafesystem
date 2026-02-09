@@ -19,7 +19,7 @@ export default function AdminLayout() {
         <Box>
             <Sidebar collapsed={collapsed} links={links} role={"admin"} end={false} />
             <Box
-                pl={collapsed ? "80px" : "250px"}
+                pl={collapsed ? "70px" : "230px"}
                 transition="0.25s ease"
                 minH="100vh"
             >

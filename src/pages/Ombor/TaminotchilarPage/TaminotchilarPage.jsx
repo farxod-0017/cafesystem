@@ -313,7 +313,7 @@ const TaminotchilarPage = () => {
         setProcessingPayment(true);
         try {
             const res = await apiLocationPayment.Add({
-                amount: String(paymentData.amount),
+                amount: Number(paymentData.amount),
                 methodId: paymentData.methodId,
                 status: 'confirmed',
                 cashId: paymentData.cashId,
@@ -681,7 +681,7 @@ const TaminotchilarPage = () => {
                                                         'gray.600'
                                             }
                                         >
-                                            {formatCurrency(Math.abs(selectedPartner?.balance || 0))}
+                                            {formatCurrency(selectedPartner?.balance || "-")}
                                         </Text>
                                     </Box>
 

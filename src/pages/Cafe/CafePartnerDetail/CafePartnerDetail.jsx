@@ -70,22 +70,27 @@ import { apiCashs } from '../../../utils/Controllers/apiCashs';
 import Cookies from 'js-cookie';
 import { useWarehouseStore } from '../../../store/useWarehouseStore';
 
-const ClientDetailPage = () => {
+const CafePartnerDetail = () => {
     const { partnerId } = useParams();
-    console.log(partnerId);
-
     const navigate = useNavigate();
     const toast = useToast();
     const { colorMode } = useColorMode();
-    const { mainWarehouseId } = useWarehouseStore()
+    const { cafeWarehouseId } = useWarehouseStore()
     const userId = Cookies.get('user_id');
     const [formLoading, setFormLoading] = useState({
         generalPay: false,
         invPay: false,
+
     })
 
     // Color mode values
+    const bg = useColorModeValue('white', 'gray.800');
     const bgAlt = useColorModeValue('gray.50', 'gray.900');
+    const borderColor = useColorModeValue('gray.200', 'gray.700');
+    const textPrimary = useColorModeValue('gray.800', 'white');
+    const textSecondary = useColorModeValue('gray.600', 'gray.300');
+    const solidBlue = useColorModeValue('blue.50', 'blue.900')
+    const solidGray = useColorModeValue('gray.50', 'gray.700')
 
     // Modals
     const { isOpen: isGeneralPaymentOpen, onOpen: onGeneralPaymentOpen, onClose: onGeneralPaymentClose } = useDisclosure();
@@ -160,10 +165,10 @@ const ClientDetailPage = () => {
         setLoadingInvoices(true);
         try {
             const res = await apiInvoices.getFilteredInvoices(
-                mainWarehouseId,
+                cafeWarehouseId,
                 invoiceStartDate || 'all',
                 invoiceEndDate || 'all',
-                'outgoing',
+                'incoming',
                 invoiceStatus,
                 invoicePaymentStatus,
                 'all',
@@ -171,7 +176,7 @@ const ClientDetailPage = () => {
             );
             // Filter by partner (senderId should match partnerId for incoming)
             const partnerInvoices = res.data.data.records.filter(
-                inv => inv.receiverId === partnerId
+                inv => inv.senderId === partnerId
             );
             setInvoices(partnerInvoices);
             setInvoicesPagination(res.data.data.pagination);
@@ -189,18 +194,18 @@ const ClientDetailPage = () => {
     };
 
     useEffect(() => {
-        if (mainWarehouseId && partnerId) {
+        if (cafeWarehouseId && partnerId) {
             fetchInvoices();
         }
-    }, [mainWarehouseId, partnerId, invoicesPage, invoiceStatus, invoicePaymentStatus, invoiceStartDate, invoiceEndDate]);
+    }, [cafeWarehouseId, partnerId, invoicesPage, invoiceStatus, invoicePaymentStatus, invoiceStartDate, invoiceEndDate]);
 
     // Fetch payments
     const fetchPayments = async () => {
         setLoadingPayments(true);
         try {
             const res = await apiLocationPayment.getFilterPayerReceiverIDs(
+                cafeWarehouseId,
                 partnerId,
-                mainWarehouseId,
                 paymentsPage
             );
             setPayments(res.data.data.records);
@@ -219,10 +224,10 @@ const ClientDetailPage = () => {
     };
 
     useEffect(() => {
-        if (mainWarehouseId && partnerId) {
+        if (cafeWarehouseId && partnerId) {
             fetchPayments();
         }
-    }, [mainWarehouseId, partnerId, paymentsPage]);
+    }, [cafeWarehouseId, partnerId, paymentsPage]);
 
     // Format currency
     const formatCurrency = (amount) => {
@@ -293,7 +298,7 @@ const ClientDetailPage = () => {
     // Open general payment modal
     const openGeneralPayment = async () => {
         setPaymentData({
-            amount: partner?.balance < 0 ? Math.abs(partner?.balance) : '',
+            amount: partner?.balance > 0 ? partner?.balance : '',
             methodId: '',
             cashId: '',
             note: ''
@@ -309,10 +314,10 @@ const ClientDetailPage = () => {
             ]);
 
             const filteredMethods = methodsRes.data.payMethods.filter(
-                m => m.locationId === mainWarehouseId
+                m => m.locationId === cafeWarehouseId
             );
             const filteredCashboxes = cashRes.data.filter(
-                c => c.locationId === mainWarehouseId
+                c => c.locationId === cafeWarehouseId
             );
 
             setPaymentMethods(filteredMethods);
@@ -361,10 +366,10 @@ const ClientDetailPage = () => {
             ]);
 
             const filteredMethods = methodsRes.data.payMethods.filter(
-                m => m.locationId === mainWarehouseId
+                m => m.locationId === cafeWarehouseId
             );
             const filteredCashboxes = cashRes.data.filter(
-                c => c.locationId === mainWarehouseId
+                c => c.locationId === cafeWarehouseId
             );
 
             setPaymentMethods(filteredMethods);
@@ -402,8 +407,8 @@ const ClientDetailPage = () => {
                 methodId: paymentData.methodId,
                 status: 'confirmed',
                 cashId: paymentData.cashId,
-                receiverId: mainWarehouseId,
-                payerId: partnerId,
+                payerId: cafeWarehouseId,
+                receiverId: partnerId,
                 note: paymentData.note,
                 createdBy: userId
             });
@@ -412,7 +417,6 @@ const ClientDetailPage = () => {
             setPaymentData({ amount: '', methodId: '', cashId: '', note: '' });
             fetchPartner();
             fetchPayments();
-            fetchInvoices()
         } finally {
             setFormLoading({ ...formLoading, generalPay: false })
         }
@@ -442,8 +446,8 @@ const ClientDetailPage = () => {
                 methodId: paymentData.methodId,
                 status: 'confirmed',
                 cashId: paymentData.cashId,
-                receiverId: mainWarehouseId,
-                payerId: partnerId,
+                payerId: cafeWarehouseId,
+                receiverId: partnerId,
                 note: paymentData.note,
                 createdBy: userId,
                 invoices: invoicesPayload
@@ -477,7 +481,7 @@ const ClientDetailPage = () => {
                         <VStack spacing={4} py={8}>
                             <Icon as={AlertCircle} boxSize={16} color="red.500" />
                             <Text fontSize="lg" color="textSecondary">Partner topilmadi</Text>
-                            <Button leftIcon={<ArrowLeft size={18} />} onClick={() => navigate('/ombor/taminotchilar')}>
+                            <Button leftIcon={<ArrowLeft size={18} />} onClick={() => navigate('/cafe/taminotchilar')}>
                                 Orqaga
                             </Button>
                         </VStack>
@@ -496,9 +500,9 @@ const ClientDetailPage = () => {
                         aria-label="Orqaga"
                         icon={<ArrowLeft size={20} />}
                         variant="ghost"
-                        onClick={() => navigate('/ombor/klientlar')}
+                        onClick={() => navigate('/cafe/taminotchilar')}
                     />
-                    <Heading size="lg">Klient</Heading>
+                    <Heading size="lg" color={textPrimary}>Taminotchi</Heading>
                 </Flex>
             </Box>
 
@@ -665,7 +669,7 @@ const ClientDetailPage = () => {
                                             <Box>
                                                 <Flex
                                                     p={4}
-                                                    bg={useColorModeValue('blue.50', 'blue.900')}
+                                                    bg={solidBlue}
                                                     borderRadius="lg"
                                                     justify="space-between"
                                                     align="center"
@@ -673,7 +677,7 @@ const ClientDetailPage = () => {
                                                     gap={4}
                                                 >
                                                     <VStack align="start" spacing={1}>
-                                                        <Text fontWeight="bold">
+                                                        <Text fontWeight="bold" color={textPrimary}>
                                                             {selectedInvoices.length} ta invoice tanlandi
                                                         </Text>
                                                         <Text fontSize="lg" fontWeight="semibold" color="blue.600">
@@ -748,7 +752,7 @@ const ClientDetailPage = () => {
                                                 </Thead>
                                                 <Tbody>
                                                     {invoices.map(invoice => (
-                                                        <Tr key={invoice.id} _hover={{ bg: useColorModeValue('gray.50', 'gray.700') }}>
+                                                        <Tr key={invoice.id} _hover={{ bg:solidGray }}>
                                                             {selectionMode && (
                                                                 <Td>
                                                                     <Checkbox
@@ -851,7 +855,7 @@ const ClientDetailPage = () => {
                                                 </Thead>
                                                 <Tbody>
                                                     {payments.map(payment => (
-                                                        <Tr key={payment.id} _hover={{ bg: useColorModeValue('gray.50', 'gray.700') }}>
+                                                        <Tr key={payment.id} _hover={{ bg:solidGray}}>
                                                             <Td>
                                                                 <Text fontWeight="bold" fontSize="lg" color="green.500">
                                                                     {formatCurrency(payment.amount)}
@@ -940,7 +944,7 @@ const ClientDetailPage = () => {
                 <ModalOverlay />
                 <ModalContent>
                     <form onSubmit={handleGeneralPayment}>
-                        <ModalHeader>{partner.name} klientdan to'lovni qabul qilish</ModalHeader>
+                        <ModalHeader>Umumiy to'lov - {partner.name}</ModalHeader>
                         <ModalCloseButton />
                         <ModalBody>
                             {loadingPaymentOptions ? (
@@ -1036,7 +1040,7 @@ const ClientDetailPage = () => {
                 <ModalOverlay />
                 <ModalContent>
                     <form onSubmit={handleInvoicePayment}>
-                        <ModalHeader>To'lovni qabul qilish</ModalHeader>
+                        <ModalHeader>To'lov tasdiqlash</ModalHeader>
                         <ModalCloseButton />
                         <ModalBody>
                             {loadingPaymentOptions ? (
@@ -1148,4 +1152,4 @@ const ClientDetailPage = () => {
     );
 };
 
-export default ClientDetailPage;
+export default CafePartnerDetail;

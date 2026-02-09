@@ -311,7 +311,7 @@ const Taminotchilar = () => {
         setProcessingPayment(true);
         try {
             const res = await apiLocationPayment.Add({
-                amount: paymentData.amount,
+                amount: Number(paymentData.amount),
                 methodId: paymentData.methodId,
                 status: 'confirmed',
                 cashId: paymentData.cashId,
@@ -331,7 +331,7 @@ const Taminotchilar = () => {
 
     // Navigate to partner detail
     const goToPartnerDetail = (partnerId) => {
-        navigate(`/ombor/taminotchilar/${partnerId}`);
+        navigate(`/cafe/taminotchilar/${partnerId}`);
     };
 
     return (

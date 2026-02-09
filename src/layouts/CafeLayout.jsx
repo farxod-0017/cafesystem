@@ -24,7 +24,7 @@ export default function CafeLayout() {
             <Box>
                 <Sidebar collapsed={collapsed} links={links} role={"seller"} end={true} />
                 <Box
-                    pl={collapsed ? "80px" : "250px"}
+                    pl={collapsed ? "70px" : "230px"}
                     transition="0.25s ease"
                     minH="100vh"
                 >

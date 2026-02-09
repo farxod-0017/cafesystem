@@ -309,7 +309,7 @@ const CafeClients = () => {
         setProcessingPayment(true);
         try {
             const res = await apiLocationPayment.Add({
-                amount: paymentData.amount,
+                amount: Number(paymentData.amount),
                 methodId: paymentData.methodId,
                 status: 'confirmed',
                 cashId: paymentData.cashId,
@@ -329,7 +329,7 @@ const CafeClients = () => {
 
     // Navigate to partner detail
     const goToPartnerDetail = (partnerId) => {
-        navigate(`/ombor/taminotchilar/${partnerId}`);
+        navigate(`/cafe/klientlar/${partnerId}`);
     };
 
     return (
@@ -674,7 +674,7 @@ const CafeClients = () => {
                                                         'gray.600'
                                             }
                                         >
-                                            {formatCurrency(Math.abs(selectedPartner?.balance || 0))}
+                                            {formatCurrency(selectedPartner?.balance || 0)}
                                         </Text>
                                     </Box>
 
