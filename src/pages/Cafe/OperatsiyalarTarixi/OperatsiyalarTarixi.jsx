@@ -154,7 +154,7 @@ const STATUS_COLORS = {
 const PAYMENT_LABELS = {
     paid: "To'langan",
     unpaid: "To'lanmagan",
-    "partly-paid": "Qisman to'langan",
+    "partially_paid": "Qisman to'langan",
     all: "Barchasi",
 };
 

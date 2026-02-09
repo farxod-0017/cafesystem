@@ -267,6 +267,7 @@ export default function OmborKirim() {
             isNewBatch: !product.isStock,
             // Disable checkbox for products
             canToggleBatch: product.isStock,
+            quantity:1
         };
 
         setSelectedItems((prev) => [...prev, newItem]);
@@ -286,7 +287,8 @@ export default function OmborKirim() {
     // ==============================
 
     const updateQuantity = (id, value) => {
-        const qty = parseFloat(value) || 0;
+        // const qty = parseFloat(value) || 0;
+        const qty = +value < 0 ? "" : value
         setSelectedItems((prev) =>
             prev.map((item) =>
                 item.id === id ? { ...item, quantity: qty } : item
@@ -458,7 +460,7 @@ export default function OmborKirim() {
                 note: note || "",
                 items: selectedItems.map((item) => ({
                     productId: item.id,
-                    quantity: item.quantity,
+                    quantity: +item.quantity,
                     salePrice: item.salePrice || 0,
                     purchasePrice: item.purchasePrice,
                     discount: 0,
@@ -909,7 +911,7 @@ export default function OmborKirim() {
                                             <Td>
                                                 <Input
                                                     type="number"
-                                                    value={item.quantity || ""}
+                                                    value={item.quantity}
                                                     onChange={(e) =>
                                                         updateQuantity(item.id, e.target.value)
                                                     }
