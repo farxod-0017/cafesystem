@@ -142,7 +142,6 @@ export default function OrderCreate() {
             setReason("");
 
         } catch (error) {
-            console.log(error);
             toast({
                 title: "Xatolik yuz berdi",
                 status: "error",

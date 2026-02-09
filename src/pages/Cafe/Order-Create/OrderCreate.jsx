@@ -84,7 +84,6 @@ export default function OrderCreate() {
             setCashs(filteredCashs);
             setSelectedCash(filteredCashs[0]?.id || ""); // Автоматически выбирать первую кассу
         } catch (error) {
-            console.log(error);
         }
     };
 
@@ -100,9 +99,7 @@ export default function OrderCreate() {
 
             setPayMethods(filteredPayMethods);
             setSelectedPayMethod(filteredPayMethods[0]?.id || ""); // Автоматически выбирать первый метод оплаты
-        } catch (error) {
-            console.log(error);
-        }
+        }finally{}
     };
 
     useEffect(() => {
@@ -155,10 +152,7 @@ export default function OrderCreate() {
             }
 
             return response;
-        } catch (error) {
-            console.log(error);
-            throw error;
-        }
+        }finally{}
     };
 
     // ─── Sonini o'zgartirish ───
@@ -251,7 +245,6 @@ export default function OrderCreate() {
             receipt.onOpen();
 
         } catch (error) {
-            console.log(error);
             toast({ title: "Xatolik yuz berdi", status: "error", duration: 3000 });
         } finally {
             setLoading(false);

@@ -61,7 +61,6 @@ export default function WarehouseGuard({ isCafe, children }) {
 
             setIsLoading(false);
         } catch (err) {
-            console.error("Warehouse yuklashda xatolik:", err);
             setError(err.message || "Ombor ma'lumotlari yuklanmadi");
             setIsLoading(false);
         }

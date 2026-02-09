@@ -1,10 +1,10 @@
 import { $api } from "../api/axios";
 import { BASE_URL } from "../api/axios";
 class apiLocationPayment {
-    // static All = async () => {
-    //     const response = await $api.get(`${BASE_URL}/locations`)
-    //     return response;
-    // }
+    static getFilterPayerReceiverIDs = async (payerId, receiverId, page) => {
+        const response = await $api.get(`${BASE_URL}/payment-locations/location?payerId=${payerId}&receiverId=${receiverId}&page=${page}&limit=20`)
+        return response;
+    }
     // static getWarehouses = async () => {
     //     const response = await $api.get(`${BASE_URL}/locations`);
     //     return response;

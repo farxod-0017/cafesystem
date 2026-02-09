@@ -79,7 +79,6 @@ const useDebounce = (value, delay) => {
 const ProductMaterialsPage = () => {
     const { cafeId, menuProductId } = useParams();
     // const param = useParams()
-    // console.log(param);
 
     const navigate = useNavigate();
     const toast = useToast();
@@ -204,9 +203,7 @@ const ProductMaterialsPage = () => {
             await fetchMaterialPairs();
             setEditingPairId(null);
             setEditCount('');
-        } catch (error) {
-            console.error('Edit error:', error);
-        }
+        } finally{}
     };
 
     const handleCancelEdit = () => {
@@ -312,9 +309,7 @@ const ProductMaterialsPage = () => {
             setSearchText('');
             setCurrentPage(1);
             onDrawerClose();
-        } catch (error) {
-            console.error('Save materials error:', error);
-        } finally {
+        }  finally {
             setSavingMaterials(false);
         }
     };

@@ -112,7 +112,6 @@ const Taminotchilar = () => {
     // Fetch partners
     const fetchPartners = async () => {
         if (!cafeWarehouseId) return;
-        console.log(cafeWarehouseId);
         
         setLoading(true);
         try {
@@ -135,7 +134,6 @@ const Taminotchilar = () => {
                 duration: 3000,
                 isClosable: true,
             });
-            console.error(error);
         } finally {
             setLoading(false);
         }
@@ -292,7 +290,6 @@ const Taminotchilar = () => {
                 duration: 3000,
                 isClosable: true,
             });
-            console.error(error);
         } finally {
             setLoadingPaymentOptions(false);
         }

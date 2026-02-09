@@ -6,7 +6,7 @@ import { Home, BringToFront, Logs, Layers, Handshake, PackagePlus, Package, Move
 import WarehouseGuard from "../auth/WarehouseGuard";
 
 const links = [
-    { label: "Home", to: "/cafe", icon: Home },
+    { label: "Home", to: "/cafe", icon: Home, end:true },
     { label: "Zakaz yaratish", to: "/cafe/order-create", icon: BringToFront },
     { label: "Zakazlar", to: "/cafe/orders", icon: Logs },
     { label: "Cafedagi tovarlar", to: "/cafe/cafedagi-tovarlar", icon: Package },

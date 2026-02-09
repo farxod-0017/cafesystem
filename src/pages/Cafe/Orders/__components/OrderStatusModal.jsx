@@ -55,7 +55,6 @@ export default function OrderStatusMenu({ order, onStatusUpdated }) {
 
             onStatusUpdated?.();
         } catch (error) {
-            console.error("Status update error:", error);
             toast({
                 title: "Xatolik",
                 description: error.response?.data?.message || "Statusni o'zgartirishda xatolik",

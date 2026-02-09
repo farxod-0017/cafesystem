@@ -91,7 +91,6 @@ export default function Login() {
             }
 
         } catch (err) {
-            console.log(err);
 
             if (err) { toastService.error(err?.response?.data?.message || "Tizim xatosi") }
         } finally {

@@ -164,7 +164,7 @@ export default function OrderDetailModal({ isOpen, onClose, order }) {
                             <Thead bg={bgTableHead}>
                                 <Tr>
                                     <Th color={textMuted}>#</Th>
-                                    <Th color={textMuted}>Mahsulot ID</Th>
+                                    <Th color={textMuted}>Mahsulot</Th>
                                     <Th color={textMuted} isNumeric>Narx</Th>
                                     <Th color={textMuted} isNumeric>Soni</Th>
                                     <Th color={textMuted} isNumeric>Jami</Th>
@@ -175,7 +175,7 @@ export default function OrderDetailModal({ isOpen, onClose, order }) {
                                     <Tr key={item.id}>
                                         <Td color={textPrimary} fontSize="sm">{idx + 1}</Td>
                                         <Td color={textPrimary} fontSize="xs" fontFamily="mono">
-                                            {item.productId?.slice(0, 8)}...
+                                            {item?.product?.name}
                                         </Td>
                                         <Td isNumeric color={textPrimary} fontSize="sm">
                                             {formatPrice(item.price)}

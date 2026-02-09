@@ -128,6 +128,8 @@ const TYPE_LABELS = {
     outgoing: "Chiqim",
     disposal: "Utilizatsiya",
     all: "Barchasi",
+    production_out:"Zakaz uchun",
+    production_in:"Zakaz qaytishi"
 };
 
 const TYPE_COLORS = {

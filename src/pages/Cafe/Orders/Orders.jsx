@@ -147,7 +147,6 @@ export default function Orders() {
                     params.type = typeFilter;
                 }
 
-                console.log("API params:", params); // Для отладки
 
                 const response = await apiPayment.Get(params);
                 const result = response?.data?.data || response?.data || response;
@@ -164,7 +163,6 @@ export default function Orders() {
                 setTotalCount(pagination.total_count || 0);
                 setPage(pageNum);
             } catch (error) {
-                console.log(error);
                 toast({
                     title: "Xatolik yuz berdi",
                     status: "error",
@@ -234,7 +232,6 @@ export default function Orders() {
 
             return response;
         } catch (error) {
-            console.log(error);
             throw error;
         }
     };

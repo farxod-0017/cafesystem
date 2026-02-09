@@ -31,10 +31,6 @@ export default function OrderPayment({
     const [sum, setSum] = useState("");
     const [loading, setLoading] = useState(false);
     const toast = useToast();
-
-
-    console.log(orderData)
-
     const bgModal = useColorModeValue("white", "gray.800");
     const textPrimary = useColorModeValue("gray.800", "gray.100");
     const textMuted = useColorModeValue("gray.600", "gray.400");
@@ -117,7 +113,6 @@ export default function OrderPayment({
             setSum("");
             onClose();
         } catch (error) {
-            console.log(error);
             toast({
                 title: "Xatolik yuz berdi",
                 description: error?.response?.data?.message || "Summani yangilashda xatolik",
