@@ -1,8 +1,8 @@
 import { $api } from "../api/axios";
 import { BASE_URL } from "../api/axios";
 class apiLocations {
-    static All = async () => {
-        const response = await $api.get(`${BASE_URL}/locations`)
+    static getById = async (id) => {
+        const response = await $api.get(`${BASE_URL}/locations/${id}`)
         return response;
     }
     static getWarehouses = async () => {
