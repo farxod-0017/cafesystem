@@ -262,7 +262,7 @@ const TaminotchilarPage = () => {
     const openPaymentModal = async (partner) => {
         setSelectedPartner(partner);
         setPaymentData({
-            amount: partner.balance,
+            amount: partner.balance > 0 ? partner.balance : "",
             methodId: '',
             cashId: '',
             note: ''
@@ -430,12 +430,12 @@ const TaminotchilarPage = () => {
                                                             <Text
                                                                 fontWeight="semibold"
                                                                 color={
-                                                                    Number(partner.balance) > 0 ? 'red.500' :
-                                                                        Number(partner.balance) < 0 ? 'green.500' :
+                                                                    Number(partner.balance) < 0 ? 'red.500' :
+                                                                        Number(partner.balance) > 0 ? 'green.500' :
                                                                             'gray.600'
                                                                 }
                                                             >
-                                                                {formatCurrency(Math.abs(partner.balance))}
+                                                                {formatCurrency(partner.balance)}
                                                             </Text>
                                                         </Td>
                                                         <Td isNumeric>
@@ -679,8 +679,8 @@ const TaminotchilarPage = () => {
                                             fontSize="2xl"
                                             fontWeight="bold"
                                             color={
-                                                Number(selectedPartner?.balance) > 0 ? 'red.500' :
-                                                    Number(selectedPartner?.balance) < 0 ? 'green.500' :
+                                                Number(selectedPartner?.balance) < 0 ? 'red.500' :
+                                                    Number(selectedPartner?.balance) > 0 ? 'green.500' :
                                                         'gray.600'
                                             }
                                         >
