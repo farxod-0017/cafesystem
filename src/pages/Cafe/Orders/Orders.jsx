@@ -329,7 +329,7 @@ export default function Orders() {
                             <Tr>
                                 <Th color={textMuted}>#</Th>
                                 <Th color={textMuted}>Pay raqam</Th>
-                                <Th color={textMuted}>Turi</Th>
+                                {/* <Th color={textMuted}>Turi</Th> */}
                                 <Th color={textMuted}>To'lov usuli</Th>
                                 <Th color={textMuted} isNumeric>Summa</Th>
                                 <Th color={textMuted}>To'lov holati</Th>
@@ -377,9 +377,9 @@ export default function Orders() {
                                     <Td fontWeight="semibold" color={accentColor} fontSize="sm">
                                         {order.payNumber}
                                     </Td>
-                                    <Td>
+                                    {/* <Td>
                                         <TypeBadge type={order.type} />
-                                    </Td>
+                                    </Td> */}
                                     <Td color={textPrimary} fontSize="sm">
                                         {order.payMethod?.name || "—"}
                                     </Td>

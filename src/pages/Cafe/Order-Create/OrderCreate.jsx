@@ -98,7 +98,7 @@ export default function OrderCreate() {
             );
 
             setPayMethods(filteredPayMethods);
-            setSelectedPayMethod(filteredPayMethods[0]?.id || ""); // Автоматически выбирать первый метод оплаты
+            setSelectedPayMethod(filteredPayMethods[1]?.id || ""); // Автоматически выбирать первый метод оплаты
         }finally{}
     };
 
