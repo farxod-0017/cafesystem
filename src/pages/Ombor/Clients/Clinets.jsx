@@ -133,7 +133,6 @@ const ClientsPage = () => {
                 duration: 3000,
                 isClosable: true,
             });
-            console.error(error);
         } finally {
             setLoading(false);
         }
@@ -295,7 +294,6 @@ const ClientsPage = () => {
                 duration: 3000,
                 isClosable: true,
             });
-            console.error(error);
         } finally {
             setLoadingPaymentOptions(false);
         }
@@ -317,7 +315,7 @@ const ClientsPage = () => {
         setProcessingPayment(true);
         try {
             const res = await apiLocationPayment.Add({
-                amount: paymentData.amount,
+                amount: String(paymentData.amount),
                 methodId: paymentData.methodId,
                 status: 'confirmed',
                 cashId: paymentData.cashId,
@@ -337,7 +335,7 @@ const ClientsPage = () => {
 
     // Navigate to partner detail
     const goToPartnerDetail = (partnerId) => {
-        navigate(`/ombor/taminotchilar/${partnerId}`);
+        navigate(`/ombor/klientlar/${partnerId}`);
     };
 
     return (

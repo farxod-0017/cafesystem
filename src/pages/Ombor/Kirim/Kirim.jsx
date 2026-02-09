@@ -54,7 +54,6 @@
 //   const sidebar = useDisclosure();
 //   const modal = useDisclosure();
 //   const { mainWarehouseId, locationName } = useWarehouseStore();
-//   console.log(mainWarehouseId);
   
 
 //   const [search, setSearch] = useState("");

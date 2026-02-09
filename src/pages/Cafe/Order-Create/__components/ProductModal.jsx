@@ -56,7 +56,6 @@ export default function ProductModal({ isOpen, onClose, orderItems, addItem }) {
             const response = await apiCategories.All();
             setCategories(response.data?.categories || response.categories || []);
         } catch (error) {
-            console.log(error);
         } finally {
             setLoading(false);
         }
@@ -82,7 +81,6 @@ export default function ProductModal({ isOpen, onClose, orderItems, addItem }) {
                 [categoryId]: productsData
             }));
         } catch (error) {
-            console.log(error);
             setCategoryProducts(prev => ({
                 ...prev,
                 [categoryId]: []
@@ -110,7 +108,6 @@ export default function ProductModal({ isOpen, onClose, orderItems, addItem }) {
             const productsData = response.data?.data?.records || response?.data?.records || [];
             setSearchResults(productsData);
         } catch (error) {
-            console.log(error);
             setSearchResults([]);
         } finally {
             setLoading(false);

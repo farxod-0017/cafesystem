@@ -112,7 +112,6 @@ export default function OrderPayment({
             setSum("");
             onClose();
         } catch (error) {
-            console.log(error);
             toast({
                 title: "Xatolik yuz berdi",
                 description: error?.response?.data?.message || "Summani yangilashda xatolik",

@@ -149,8 +149,6 @@ export default function CashsPage() {
     };
     // -------------------- FILL CASH --------------------
     const handleFillCash = async () => {
-        console.log(pul);
-
         if (!pul) return;
         try {
             setSubmitting(true);

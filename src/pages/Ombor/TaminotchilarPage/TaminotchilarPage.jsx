@@ -112,7 +112,6 @@ const TaminotchilarPage = () => {
     // Fetch partners
     const fetchPartners = async () => {
         if (!mainWarehouseId) return;
-        console.log(cafeWarehouseId);
         
         setLoading(true);
         try {
@@ -135,7 +134,6 @@ const TaminotchilarPage = () => {
                 duration: 3000,
                 isClosable: true,
             });
-            console.error(error);
         } finally {
             setLoading(false);
         }
@@ -294,7 +292,6 @@ const TaminotchilarPage = () => {
                 duration: 3000,
                 isClosable: true,
             });
-            console.error(error);
         } finally {
             setLoadingPaymentOptions(false);
         }
@@ -316,7 +313,7 @@ const TaminotchilarPage = () => {
         setProcessingPayment(true);
         try {
             const res = await apiLocationPayment.Add({
-                amount: paymentData.amount,
+                amount: String(paymentData.amount),
                 methodId: paymentData.methodId,
                 status: 'confirmed',
                 cashId: paymentData.cashId,

@@ -1391,7 +1391,8 @@ export default function OperatsiyalarTarixi() {
                                             </Thead>
                                             <Tbody>
                                                 {selectedInvoice.invoiceItems?.map((item, index) => {
-                                                    const itemPrice = parseFloat(item.salePrice || item.purchasePrice);
+
+                                                    const itemPrice = parseFloat(selectedInvoice.type === "incoming" ? item.purchasePrice : item.salePrice);
                                                     const itemQty = parseFloat(item.quantity);
                                                     const discount = parseFloat(item.discount) || 0;
                                                     const subtotal = itemPrice * itemQty;
@@ -1467,7 +1468,8 @@ export default function OperatsiyalarTarixi() {
                                             <Flex justify="space-between" fontSize="lg">
                                                 <Text fontWeight="bold">Jami:</Text>
                                                 <Text fontWeight="bold" color="blue.600">
-                                                    {formatNumber(detailCalculations?.grandTotal || selectedInvoice.totalSum)} so'm
+                                                    {/* {formatNumber(detailCalculations?.grandTotal || selectedInvoice.totalSum)} so'm */}
+                                                    {selectedInvoice?.totalSum} so'm
                                                 </Text>
                                             </Flex>
                                         </VStack>

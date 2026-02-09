@@ -133,7 +133,6 @@ const CafeClients = () => {
                 duration: 3000,
                 isClosable: true,
             });
-            console.error(error);
         } finally {
             setLoading(false);
         }
@@ -289,7 +288,6 @@ const CafeClients = () => {
                 duration: 3000,
                 isClosable: true,
             });
-            console.error(error);
         } finally {
             setLoadingPaymentOptions(false);
         }

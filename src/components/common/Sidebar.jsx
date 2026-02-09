@@ -72,7 +72,7 @@ export default function Sidebar({ collapsed, links = [], role, end = false }) {
             {/* TOP LINKS */}
             <VStack align="stretch" spacing={1} mt={10}>
                 {links.map((item) => (
-                    <NavLink key={item.to} to={item.to} style={{ textDecoration: "none" }} end={end}>
+                    <NavLink key={item.to} to={item.to} style={{ textDecoration: "none" }} end={item.end}>
                         {({ isActive }) => (
                             <Tooltip label={collapsed ? item.label : ""} placement="right">
                                 <Flex

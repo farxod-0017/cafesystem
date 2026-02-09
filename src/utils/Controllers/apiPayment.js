@@ -31,8 +31,6 @@ class apiPayment {
         const queryString = queryParams.toString();
         const url = queryString ? `${BASE_URL}/payments/page?${queryString}` : `${BASE_URL}/payments/page`;
 
-        console.log("API URL:", url); // Для отладки
-
         const response = await $api.get(url);
         return response;
     }

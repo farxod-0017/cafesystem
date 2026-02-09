@@ -7,7 +7,7 @@ import { Package, PackagePlus, PackageMinus, Handshake, Move, Users } from "luci
 import WarehouseGuard from "../auth/WarehouseGuard";
 
 const links = [
-    { label: "Ombor", to: "/ombor", icon: Package },
+    { label: "Ombor", to: "/ombor", icon: Package, end: true },
     { label: "Kirim", to: "/ombor/kirim", icon: PackagePlus },
     { label: "Chiqim", to: "/ombor/chiqim", icon: PackageMinus },
     { label: "Operatsiyalar tarixi", to: "/ombor/operatsiyalar-tarixi", icon: Move },
