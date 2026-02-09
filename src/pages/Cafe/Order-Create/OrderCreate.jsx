@@ -50,6 +50,8 @@ export default function OrderCreate() {
     const {
         cafeWarehouseId,
     } = useWarehouseStore();
+
+    const [orderData, setOrder] = useState()
     // const cafeWarehouseId = "ced7a9cd-7af2-4c3d-89c4-0299ae9fd9be"
 
     const sidebar = useDisclosure();
@@ -213,7 +215,7 @@ export default function OrderCreate() {
             locationId: cafeWarehouseId,
             cashId: selectedCash,
             payMethodId: selectedPayMethod,
-            orderStatus:"completed",
+            orderStatus: "completed",
             createdBy: Cookies.get("user_id"),
             items: orderItems.map((item) => ({
                 productId: item.productId,
@@ -221,6 +223,7 @@ export default function OrderCreate() {
                 price: item.price,
             })),
         };
+
 
         try {
             setLoading(true);
@@ -239,7 +242,7 @@ export default function OrderCreate() {
                 status: "success",
                 duration: 3000,
             });
-
+            setOrder(response?.data)
             // Tozalash
             setOrderItems([]);
             setOrderType("sale");
@@ -526,6 +529,7 @@ export default function OrderCreate() {
                 onClose={editSumModal.onClose}
                 paymentId={currentPaymentId}
                 onSumUpdated={handleEditSum}
+                orderData={orderData?.payment}
             />
         </Box>
     );

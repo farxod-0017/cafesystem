@@ -22,6 +22,8 @@ import {
     Skeleton,
     IconButton,
     Tooltip,
+    Select,
+    Stack,
 } from "@chakra-ui/react";
 import { SearchIcon, ViewIcon, ChevronDownIcon } from "@chakra-ui/icons";
 import { apiPayment } from "../../../utils/Controllers/apiPayment";
@@ -64,13 +66,25 @@ const StatusBadge = ({ status }) => {
 
 const TypeBadge = ({ type }) => (
     <Badge
-        colorScheme={type === "debt" ? "orange" : "blue"}
+        colorScheme={type === "disposal" ? "orange" : type === "return" ? "red" : "blue"}
         borderRadius="md"
         px={2}
         py={0.5}
         fontSize="xs"
     >
-        {type === "debt" ? "Utiliziatsiya" : "Sotuv"}
+        {type === "disposal" ? "Utilizatsiya" : type === "return" ? "Qaytarilgan" : "Sotuv"}
+    </Badge>
+);
+
+const PaymentSt = ({ status }) => (
+    <Badge
+        colorScheme={status === "unpaid" ? "red" : "green"}
+        borderRadius="md"
+        px={2}
+        py={0.5}
+        fontSize="xs"
+    >
+        {status === "unpaid" ? "To'lanmagan" : "To'langan"}
     </Badge>
 );
 
@@ -87,6 +101,8 @@ export default function Orders() {
     const [loadingMore, setLoadingMore] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [orderForPayment, setOrderForPayment] = useState(null);
+    const [paymentStatusFilter, setPaymentStatusFilter] = useState("");
+    const [typeFilter, setTypeFilter] = useState("");
 
     const detailModal = useDisclosure();
     const paymentModal = useDisclosure();
@@ -110,13 +126,30 @@ export default function Orders() {
             try {
                 append ? setLoadingMore(true) : setLoading(true);
 
-                const data = {
-                    search: search.trim() || "all",
+                // Собираем только непустые параметры
+                const params = {
                     page: pageNum,
                     limit: LIMIT,
                 };
 
-                const response = await apiPayment.Get(data);
+                // Добавляем поиск (если не пустой)
+                if (search.trim()) {
+                    params.search = search.trim();
+                }
+
+                // Добавляем фильтр по статусу оплаты (если выбран)
+                if (paymentStatusFilter) {
+                    params.paymentStatus = paymentStatusFilter;
+                }
+
+                // Добавляем фильтр по типу (если выбран)
+                if (typeFilter) {
+                    params.type = typeFilter;
+                }
+
+                console.log("API params:", params); // Для отладки
+
+                const response = await apiPayment.Get(params);
                 const result = response?.data?.data || response?.data || response;
                 const records = result?.records || [];
                 const pagination = result?.pagination || {};
@@ -132,18 +165,23 @@ export default function Orders() {
                 setPage(pageNum);
             } catch (error) {
                 console.log(error);
-                toast({ title: "Xatolik yuz berdi", status: "error", duration: 2000 });
+                toast({
+                    title: "Xatolik yuz berdi",
+                    status: "error",
+                    duration: 2000,
+                    description: error?.response?.data?.message || error.message
+                });
             } finally {
                 setLoading(false);
                 setLoadingMore(false);
             }
         },
-        [search, toast]
+        [search, paymentStatusFilter, typeFilter, toast]
     );
 
     useEffect(() => {
         GetAllPayment(1, false);
-    }, []);
+    }, [paymentStatusFilter, typeFilter]);
 
     // ─── Search ───
     const handleSearch = () => {
@@ -169,6 +207,13 @@ export default function Orders() {
     const openPaymentModal = (order) => {
         setOrderForPayment(order);
         paymentModal.onOpen();
+    };
+
+    // ─── Clear filters ───
+    const clearFilters = () => {
+        setPaymentStatusFilter("");
+        setTypeFilter("");
+        setSearch("");
     };
 
     // ─── Summani yangilash ───
@@ -210,27 +255,67 @@ export default function Orders() {
                 </HStack>
             </Flex>
 
-            {/* SEARCH */}
-            <HStack mb={6} maxW="500px">
-                <InputGroup>
-                    <InputLeftElement pointerEvents="none">
-                        <SearchIcon color={textMuted} />
-                    </InputLeftElement>
-                    <Input
-                        placeholder="Qidirish (raqam, ism...)"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        onKeyDown={handleKeyDown}
+            {/* FILTERS AND SEARCH */}
+            <Stack spacing={4} mb={6}>
+                {/* SEARCH ROW */}
+                <HStack mb={2} flexWrap="wrap" gap={2}>
+                    <InputGroup flex={1} minW="200px">
+                        <InputLeftElement pointerEvents="none">
+                            <SearchIcon color={textMuted} />
+                        </InputLeftElement>
+                        <Input
+                            placeholder="Qidirish (raqam, ism...)"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            bg={inputBg}
+                            borderColor={borderColor}
+                            color={textPrimary}
+                            _placeholder={{ color: textMuted }}
+                        />
+                    </InputGroup>
+                    <Button colorScheme="blue" onClick={handleSearch} isLoading={loading}>
+                        Qidirish
+                    </Button>
+                    {(paymentStatusFilter || typeFilter || search) && (
+                        <Button variant="outline" onClick={clearFilters} size="md">
+                            Filtrlarni tozalash
+                        </Button>
+                    )}
+                </HStack>
+
+                {/* FILTER SELECTS */}
+                <HStack spacing={3} flexWrap="wrap">
+                    <Select
+                        value={paymentStatusFilter}
+                        onChange={(e) => setPaymentStatusFilter(e.target.value)}
                         bg={inputBg}
                         borderColor={borderColor}
                         color={textPrimary}
-                        _placeholder={{ color: textMuted }}
-                    />
-                </InputGroup>
-                <Button colorScheme="blue" onClick={handleSearch} isLoading={loading}>
-                    Qidirish
-                </Button>
-            </HStack>
+                        width={{ base: "100%", md: "200px" }}
+                        size="md"
+                        placeholder="To'lov holati"
+                    >
+                        <option value="paid">To'langan</option>
+                        <option value="unpaid">To'lanmagan</option>
+                    </Select>
+
+                    <Select
+                        value={typeFilter}
+                        onChange={(e) => setTypeFilter(e.target.value)}
+                        bg={inputBg}
+                        borderColor={borderColor}
+                        color={textPrimary}
+                        width={{ base: "100%", md: "200px" }}
+                        size="md"
+                        placeholder="Buyurtma turi"
+                    >
+                        <option value="sale">Sotuv</option>
+                        <option value="disposal">Utilizatsiya</option>
+                        <option value="return">Qaytarilgan</option>
+                    </Select>
+                </HStack>
+            </Stack>
 
             {/* TABLE */}
             <Box
@@ -250,8 +335,7 @@ export default function Orders() {
                                 <Th color={textMuted}>Turi</Th>
                                 <Th color={textMuted}>To'lov usuli</Th>
                                 <Th color={textMuted} isNumeric>Summa</Th>
-                                {/* <Th color={textMuted}>Holat</Th> */}
-                                {/* <Th color={textMuted}>Yaratgan</Th> */}
+                                <Th color={textMuted}>To'lov holati</Th>
                                 <Th color={textMuted}>Sana</Th>
                                 <Th>Amallar</Th>
                             </Tr>
@@ -262,7 +346,7 @@ export default function Orders() {
                                 payments.length === 0 &&
                                 Array.from({ length: 5 }).map((_, i) => (
                                     <Tr key={`skel-${i}`}>
-                                        {Array.from({ length: 9 }).map((_, j) => (
+                                        {Array.from({ length: 8 }).map((_, j) => (
                                             <Td key={j}>
                                                 <Skeleton h="16px" borderRadius="md" />
                                             </Td>
@@ -273,8 +357,10 @@ export default function Orders() {
                             {/* Bo'sh */}
                             {!loading && payments.length === 0 && (
                                 <Tr>
-                                    <Td colSpan={9} textAlign="center" py={12} color={textMuted}>
-                                        Buyurtmalar topilmadi
+                                    <Td colSpan={8} textAlign="center" py={12} color={textMuted}>
+                                        {search || paymentStatusFilter || typeFilter
+                                            ? "Filtirlarga mos buyurtmalar topilmadi"
+                                            : "Buyurtmalar topilmadi"}
                                     </Td>
                                 </Tr>
                             )}
@@ -303,15 +389,9 @@ export default function Orders() {
                                     <Td isNumeric fontWeight="semibold" color={textPrimary} fontSize="sm">
                                         {formatPrice(order.totalSum)}
                                     </Td>
-                                    {/* <Td onClick={(e) => e.stopPropagation()}>
-                                        <OrderStatusMenu
-                                            order={order}
-                                            onStatusUpdated={GetAllPayment}
-                                        />
-                                    </Td> */}
-                                    {/* <Td color={textPrimary} fontSize="sm">
-                                        {order.created?.full_name || "—"}
-                                    </Td> */}
+                                    <Td>
+                                        <PaymentSt status={order.paymentStatus} />
+                                    </Td>
                                     <Td color={textMuted} fontSize="xs">
                                         {formatDate(order.createdAt)}
                                     </Td>
