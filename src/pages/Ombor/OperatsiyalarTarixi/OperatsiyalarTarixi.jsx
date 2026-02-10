@@ -168,7 +168,7 @@ const PAYMENT_COLORS = {
 const STATUS_TRANSITIONS = {
     sent: ["received", "cancelled"],
     received: ["cancelled"],
-    cancelled: ["received"],
+    cancelled: [],
 };
 
 // ==============================
@@ -1033,16 +1033,17 @@ export default function OperatsiyalarTarixi() {
                                                     >
                                                         {STATUS_LABELS[invoice.status]}
                                                     </MenuButton>
-                                                    <MenuList>
-                                                        {STATUS_TRANSITIONS[invoice.status]?.map((newStatus) => (
-                                                            <MenuItem
-                                                                key={newStatus}
-                                                                onClick={() => updateStatus(invoice.id, newStatus)}
-                                                            >
-                                                                {STATUS_LABELS[newStatus]}
-                                                            </MenuItem>
-                                                        ))}
-                                                    </MenuList>
+                                                    {STATUS_TRANSITIONS[invoice.status].length > 0 &&
+                                                        <MenuList>
+                                                            {STATUS_TRANSITIONS[invoice.status]?.map((newStatus) => (
+                                                                <MenuItem
+                                                                    key={newStatus}
+                                                                    onClick={() => updateStatus(invoice.id, newStatus)}
+                                                                >
+                                                                    {STATUS_LABELS[newStatus]}
+                                                                </MenuItem>
+                                                            ))}
+                                                        </MenuList>}
                                                 </Menu>
                                             </Td>
                                         )}
@@ -1447,12 +1448,12 @@ export default function OperatsiyalarTarixi() {
                                     <CardBody>
                                         <VStack align="stretch" spacing={2}>
                                             {detailCalculations?.hasDiscount && (
-                                            <Flex justify="space-between">
-                                                <Text>Oraliq jami:</Text>
-                                                <Text fontWeight="medium">
-                                                    {formatNumber(detailCalculations?.subtotal || 0)} so'm
-                                                </Text>
-                                            </Flex>)}
+                                                <Flex justify="space-between">
+                                                    <Text>Oraliq jami:</Text>
+                                                    <Text fontWeight="medium">
+                                                        {formatNumber(detailCalculations?.subtotal || 0)} so'm
+                                                    </Text>
+                                                </Flex>)}
 
                                             {detailCalculations?.hasDiscount && (
                                                 <Flex justify="space-between" color="orange.600">
@@ -1463,7 +1464,7 @@ export default function OperatsiyalarTarixi() {
                                                 </Flex>
                                             )}
                                             {detailCalculations?.hasDiscount && (
-                                            <Divider />)}
+                                                <Divider />)}
 
                                             <Flex justify="space-between" fontSize="lg">
                                                 <Text fontWeight="bold">Jami:</Text>

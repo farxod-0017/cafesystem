@@ -155,7 +155,7 @@ export default function ProductModal({ isOpen, onClose, orderItems, addItem }) {
                 position="relative"
             >
                 <CardBody p={3}>
-                    {product.image ? (
+                    {/* {product.image ? (
                         <Image
                             src={IMAGE_URL + product?.image}
                             alt={product.name}
@@ -172,7 +172,7 @@ export default function ProductModal({ isOpen, onClose, orderItems, addItem }) {
                             borderRadius="md"
                             mb={2}
                         />
-                    )}
+                    )} */}
                     <Text
                         fontWeight="medium"
                         fontSize="sm"
