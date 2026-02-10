@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Form } from 'react-router-dom';
 import {
     Box,
@@ -55,7 +55,9 @@ import {
     Alert,
     AlertIcon,
     AlertDescription,
-    Icon
+    Icon,
+    SkeletonText,
+    Grid
 } from '@chakra-ui/react';
 import {
     ArrowLeft, DollarSign, ChevronLeft, ChevronRight,
@@ -70,9 +72,66 @@ import { apiCashs } from '../../../utils/Controllers/apiCashs';
 import Cookies from 'js-cookie';
 import { useWarehouseStore } from '../../../store/useWarehouseStore';
 
+// Type labels
+const TYPE_LABELS = {
+    incoming: "Kirim",
+    outgoing: "Chiqim",
+    disposal: "Utilizatsiya",
+    all: "Barchasi",
+};
+
+const TYPE_COLORS = {
+    incoming: "green",
+    outgoing: "blue",
+    disposal: "orange",
+};
+
+// Status labels
+const STATUS_LABELS = {
+    sent: "Yuborildi",
+    received: "Qabul qilindi",
+    cancelled: "Bekor qilindi",
+    all: "Barchasi",
+};
+
+const STATUS_COLORS = {
+    sent: "yellow",
+    received: "green",
+    cancelled: "red",
+};
+
+// Payment labels
+const PAYMENT_LABELS = {
+    paid: "To'langan",
+    unpaid: "To'lanmagan",
+    "partially_paid": "Qisman to'langan",
+    all: "Barchasi",
+};
+
+const PAYMENT_COLORS = {
+    paid: "green",
+    unpaid: "red",
+    "partially_paid": "orange",
+};
+
+const formatDateTime = (dateString) => {
+    if (!dateString) return "—";
+    const date = new Date(dateString);
+    return date.toLocaleString("uz-UZ", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+};
+// Format number with spaces
+const formatNumber = (num) => {
+    return num?.toLocaleString("uz-UZ") || "0";
+};
+
 const ClientDetailPage = () => {
     const { partnerId } = useParams();
-    console.log(partnerId);
 
     const navigate = useNavigate();
     const toast = useToast();
@@ -104,6 +163,12 @@ const ClientDetailPage = () => {
     const [invoiceStartDate, setInvoiceStartDate] = useState('');
     const [invoiceEndDate, setInvoiceEndDate] = useState('');
     const [loadingInvoices, setLoadingInvoices] = useState(false);
+    // Detail Invoices
+    const detailModal = useDisclosure();
+    const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+    const [selectedInvoice, setSelectedInvoice] = useState(null);
+
+
 
     // Invoice selection
     const [selectionMode, setSelectionMode] = useState(false);
@@ -461,6 +526,52 @@ const ClientDetailPage = () => {
         }
     };
 
+    // ==============================
+    // FETCH INVOICE DETAILS
+    // ==============================
+    const detailCalculations = useMemo(() => {
+        if (!selectedInvoice?.invoiceItems) return null;
+
+        const items = selectedInvoice.invoiceItems;
+
+        const subtotal = items.reduce((sum, item) => {
+            const itemPrice = parseFloat(item.salePrice || item.purchasePrice);
+            const itemQty = parseFloat(item.quantity);
+            return sum + (itemPrice * itemQty);
+        }, 0);
+
+        const totalDiscount = items.reduce((sum, item) => {
+            const itemPrice = parseFloat(item.salePrice || item.purchasePrice);
+            const itemQty = parseFloat(item.quantity);
+            const discount = parseFloat(item.discount) || 0;
+            return sum + ((itemPrice * itemQty) * (discount / 100));
+        }, 0);
+
+        const grandTotal = subtotal - totalDiscount;
+
+        return {
+            subtotal,
+            totalDiscount,
+            grandTotal,
+            hasDiscount: totalDiscount > 0,
+        };
+    }, [selectedInvoice]);
+
+
+    const fetchInvoiceDetail = async (invoiceId) => {
+        setIsLoadingDetail(true);
+        try {
+            const response = await apiInvoices.getDetailedById(invoiceId);
+            setSelectedInvoice(response.data);
+            detailModal.onOpen();
+        } finally {
+            setIsLoadingDetail(false);
+        }
+    };
+
+    // ------------RENDER--------------
+
+
     if (loadingPartner) {
         return (
             <Flex minH="100vh" bg={bgAlt} justify="center" align="center">
@@ -748,12 +859,23 @@ const ClientDetailPage = () => {
                                                 </Thead>
                                                 <Tbody>
                                                     {invoices.map(invoice => (
-                                                        <Tr key={invoice.id} _hover={{ bg: useColorModeValue('gray.50', 'gray.700') }}>
+                                                        <Tr
+                                                            cursor={"pointer"}
+                                                            key={invoice.id}
+                                                            _hover={{ bg: "bg" }}
+                                                            onClick={() => fetchInvoiceDetail(invoice?.id)}
+                                                        >
                                                             {selectionMode && (
-                                                                <Td>
+                                                                <Td
+                                                                    cursor={"default"}
+                                                                    onClick={(e) => e.stopPropagation()}
+                                                                >
                                                                     <Checkbox
                                                                         isChecked={selectedInvoices.some(inv => inv.id === invoice.id)}
-                                                                        onChange={() => toggleInvoiceSelection(invoice)}
+                                                                        onChange={(e) => {
+                                                                            e.stopPropagation();
+                                                                            toggleInvoiceSelection(invoice)
+                                                                        }}
                                                                         isDisabled={invoice.paymentStatus === 'paid'}
                                                                     />
                                                                 </Td>
@@ -1142,6 +1264,225 @@ const ClientDetailPage = () => {
                             </Button>
                         </ModalFooter>
                     </form>
+                </ModalContent>
+            </Modal>
+
+            {/* DETAIL MODAL */}
+            <Modal
+                isOpen={detailModal.isOpen}
+                onClose={detailModal.onClose}
+                size={{ base: "full", md: "4xl" }}
+                scrollBehavior="inside"
+            >
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader borderBottomWidth="1px">
+                        <Flex justify="space-between" align="center">
+                            <VStack align="start" spacing={1}>
+                                <Text>Invoice tafsilotlari</Text>
+                                {selectedInvoice && (
+                                    <Text fontSize="sm" fontWeight="normal" color="gray.500">
+                                        {selectedInvoice.invNumber}
+                                    </Text>
+                                )}
+                            </VStack>
+
+                            {!isLoadingDetail && selectedInvoice && (
+                                <HStack spacing={2}>
+                                    <Badge colorScheme={TYPE_COLORS[selectedInvoice.type]}>
+                                        {TYPE_LABELS[selectedInvoice.type]}
+                                    </Badge>
+                                    <Badge colorScheme={STATUS_COLORS[selectedInvoice.status]}>
+                                        {STATUS_LABELS[selectedInvoice.status]}
+                                    </Badge>
+                                </HStack>
+                            )}
+                        </Flex>
+                    </ModalHeader>
+
+                    <ModalCloseButton />
+
+                    <ModalBody py={6}>
+                        {isLoadingDetail ? (
+                            <Stack spacing={4}>
+                                <SkeletonText noOfLines={4} spacing="4" />
+                                <SkeletonText noOfLines={4} spacing="4" />
+                            </Stack>
+                        ) : selectedInvoice ? (
+                            <VStack align="stretch" spacing={4}>
+                                {/* INFO CARDS */}
+                                <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={4}>
+                                    <Card variant="outline">
+                                        <CardBody>
+                                            <VStack align="start" spacing={2}>
+                                                <Text fontSize="xs" color="gray.500">Sana va vaqt</Text>
+                                                <Text fontWeight="medium">{formatDateTime(selectedInvoice.createdAt)}</Text>
+                                            </VStack>
+                                        </CardBody>
+                                    </Card>
+
+                                    <Card variant="outline">
+                                        <CardBody>
+                                            <VStack align="start" spacing={2}>
+                                                <Text fontSize="xs" color="gray.500">To'lov holati</Text>
+                                                <Badge colorScheme={PAYMENT_COLORS[selectedInvoice.paymentStatus]}>
+                                                    {PAYMENT_LABELS[selectedInvoice.paymentStatus]}
+                                                </Badge>
+                                            </VStack>
+                                        </CardBody>
+                                    </Card>
+
+                                    <Card variant="outline">
+                                        <CardBody>
+                                            <VStack align="start" spacing={2}>
+                                                <Text fontSize="xs" color="gray.500">Jo'natuvchi</Text>
+                                                <Text fontWeight="medium">{selectedInvoice.sender?.name || "—"}</Text>
+                                            </VStack>
+                                        </CardBody>
+                                    </Card>
+
+                                    <Card variant="outline">
+                                        <CardBody>
+                                            <VStack align="start" spacing={2}>
+                                                <Text fontSize="xs" color="gray.500">Qabul qiluvchi</Text>
+                                                <Text fontWeight="medium">{selectedInvoice.receiver?.name || "—"}</Text>
+                                            </VStack>
+                                        </CardBody>
+                                    </Card>
+                                </Grid>
+
+                                {selectedInvoice.note && (
+                                    <Card variant="outline">
+                                        <CardBody>
+                                            <VStack align="start" spacing={2}>
+                                                <Text fontSize="xs" color="gray.500">Izoh</Text>
+                                                <Text>{selectedInvoice.note}</Text>
+                                            </VStack>
+                                        </CardBody>
+                                    </Card>
+                                )}
+
+                                <Divider />
+
+                                {/* ITEMS TABLE */}
+                                <Box>
+                                    <Text fontWeight="bold" mb={3}>Mahsulotlar</Text>
+                                    <Box overflowX="auto">
+                                        <Table size="sm" variant="simple">
+                                            <Thead>
+                                                <Tr>
+                                                    <Th>#</Th>
+                                                    <Th>Mahsulot</Th>
+                                                    <Th>Partiya</Th>
+                                                    <Th isNumeric>Narx</Th>
+                                                    {detailCalculations?.hasDiscount && <Th isNumeric>Chegirma</Th>}
+                                                    <Th isNumeric>Miqdor</Th>
+                                                    <Th isNumeric>Jami</Th>
+                                                </Tr>
+                                            </Thead>
+                                            <Tbody>
+                                                {selectedInvoice.invoiceItems?.map((item, index) => {
+
+                                                    const itemPrice = parseFloat(selectedInvoice.type === "incoming" ? item.purchasePrice : item.salePrice);
+                                                    const itemQty = parseFloat(item.quantity);
+                                                    const discount = parseFloat(item.discount) || 0;
+                                                    const subtotal = itemPrice * itemQty;
+                                                    const discountAmount = subtotal * (discount / 100);
+                                                    const total = subtotal - discountAmount;
+
+                                                    return (
+                                                        <Tr key={item.id}>
+                                                            <Td>{index + 1}</Td>
+                                                            <Td>
+                                                                <VStack align="start" spacing={0}>
+                                                                    <Text fontWeight="medium">{item.product.name}</Text>
+                                                                    <Text fontSize="xs" color="gray.500">{item.product.unit}</Text>
+                                                                </VStack>
+                                                            </Td>
+                                                            <Td>
+                                                                <Badge colorScheme="purple" fontSize="xs">
+                                                                    {item.batch}
+                                                                </Badge>
+                                                            </Td>
+                                                            <Td isNumeric>{formatNumber(itemPrice)}</Td>
+                                                            {detailCalculations?.hasDiscount && (
+                                                                <Td isNumeric>
+                                                                    {discount > 0 ? (
+                                                                        <VStack align="end" spacing={0}>
+                                                                            <Text>{discount}%</Text>
+                                                                            <Text fontSize="xs" color="orange.500">
+                                                                                -{formatNumber(discountAmount)}
+                                                                            </Text>
+                                                                        </VStack>
+                                                                    ) : (
+                                                                        "—"
+                                                                    )}
+                                                                </Td>
+                                                            )}
+                                                            <Td isNumeric>{itemQty}</Td>
+                                                            <Td isNumeric fontWeight="bold">
+                                                                {formatNumber(total)}
+                                                            </Td>
+                                                        </Tr>
+                                                    );
+                                                })}
+                                            </Tbody>
+                                        </Table>
+                                    </Box>
+                                </Box>
+
+                                <Divider />
+
+                                {/* SUMMARY */}
+                                <Card variant="outline" bg={useColorModeValue("blue.50", "blue.900")}>
+                                    <CardBody>
+                                        <VStack align="stretch" spacing={2}>
+                                            {detailCalculations?.hasDiscount && (
+                                                <Flex justify="space-between">
+                                                    <Text>Oraliq jami:</Text>
+                                                    <Text fontWeight="medium">
+                                                        {formatNumber(detailCalculations?.subtotal || 0)} so'm
+                                                    </Text>
+                                                </Flex>)}
+
+                                            {detailCalculations?.hasDiscount && (
+                                                <Flex justify="space-between" color="orange.600">
+                                                    <Text>Chegirma:</Text>
+                                                    <Text fontWeight="medium">
+                                                        -{formatNumber(detailCalculations.totalDiscount)} so'm
+                                                    </Text>
+                                                </Flex>
+                                            )}
+                                            {detailCalculations?.hasDiscount && (
+                                                <Divider />)}
+
+                                            <Flex justify="space-between" fontSize="lg">
+                                                <Text fontWeight="bold">Jami:</Text>
+                                                <Text fontWeight="bold" color="blue.600">
+                                                    {/* {formatNumber(detailCalculations?.grandTotal || selectedInvoice.totalSum)} so'm */}
+                                                    {selectedInvoice?.totalSum} so'm
+                                                </Text>
+                                            </Flex>
+                                        </VStack>
+                                    </CardBody>
+                                </Card>
+                            </VStack>
+                        ) : null}
+                    </ModalBody>
+
+                    <ModalFooter borderTopWidth="1px">
+                        <HStack spacing={3}>
+                            <Button variant="ghost" onClick={detailModal.onClose}>
+                                Yopish
+                            </Button>
+                            <Button
+                                variant="outline"
+                                onClick={() => window.print()}
+                            >
+                                Chop etish
+                            </Button>
+                        </HStack>
+                    </ModalFooter>
                 </ModalContent>
             </Modal>
         </Box>
