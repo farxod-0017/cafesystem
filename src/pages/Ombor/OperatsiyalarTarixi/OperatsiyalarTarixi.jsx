@@ -834,7 +834,7 @@ export default function OperatsiyalarTarixi() {
                                     <CustomDatePicker
                                         selected={startDate}
                                         onChange={(date) => handleFilterChange(setStartDate)(date)}
-                                        maxDate={endDate}
+                                        // maxDate={endDate}
                                         placeholder="Tanlang..."
                                     />
                                 </FormControl>
@@ -847,8 +847,8 @@ export default function OperatsiyalarTarixi() {
                                     <CustomDatePicker
                                         selected={endDate}
                                         onChange={(date) => handleFilterChange(setEndDate)(date)}
-                                        minDate={startDate}
-                                        maxDate={getToday()}
+                                        // minDate={startDate}
+                                        // maxDate={getToday()}
                                         placeholder="Tanlang..."
                                     />
                                 </FormControl>
