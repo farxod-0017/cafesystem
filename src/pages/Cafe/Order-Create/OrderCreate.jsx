@@ -37,11 +37,9 @@ import { useWarehouseStore } from "../../../store/useWarehouseStore";
 
 export default function OrderCreate() {
 
-    const [cashs, setCashs] = useState([]);
-    const [payMethods, setPayMethods] = useState([]);
+    
     const [orderItems, setOrderItems] = useState([]);
-    const [selectedCash, setSelectedCash] = useState("");
-    const [selectedPayMethod, setSelectedPayMethod] = useState("");
+    
     const [orderType, setOrderType] = useState("sale");
     const [loading, setLoading] = useState(false);
     const [paymentData, setPaymentData] = useState(null);
@@ -69,46 +67,7 @@ export default function OrderCreate() {
     const accentColor = useColorModeValue("blue.600", "blue.300");
     const inputBg = useColorModeValue("white", "gray.700");
 
-    // ─── API calls ───
-    // ─── API calls ───
-    const GetCash = async () => {
-        try {
-            const response = await apiCashs.getAll();
-            const allCashs = response.data || response;
-
-            // Фильтрация по locationId
-            const filteredCashs = allCashs.filter(
-                (cash) => cash.locationId === cafeWarehouseId
-            );
-
-            setCashs(filteredCashs);
-            setSelectedCash(filteredCashs[0]?.id || ""); // Автоматически выбирать первую кассу
-        } catch (error) {
-        }
-    };
-
-    const GetPaymentMethod = async () => {
-        try {
-            const response = await apiPayMethods.getAll();
-            const allPayMethods = response.data?.payMethods || response.payMethods || [];
-
-            // Фильтрация по locationId
-            const filteredPayMethods = allPayMethods.filter(
-                (method) => method.locationId === cafeWarehouseId
-            );
-
-            setPayMethods(filteredPayMethods);
-            setSelectedPayMethod(filteredPayMethods[1]?.id || ""); // Автоматически выбирать первый метод оплаты
-        }finally{}
-    };
-
-    useEffect(() => {
-        // Запускать только если cafeWarehouseId определен
-        if (cafeWarehouseId) {
-            GetCash();
-            GetPaymentMethod();
-        }
-    }, [cafeWarehouseId]); // Добавить cafeWarehouseId в зависимости
+    
     // ─── Mahsulotni buyurtmaga qo'shish ───
     const addItem = (product) => {
         setOrderItems((prev) => {
@@ -141,9 +100,9 @@ export default function OrderCreate() {
     };
 
     // ─── Summani tahrirlash ───
-    const handleEditSum = async (paymentId, sum) => {
+    const handleEditSum = async (paymentId, data) => {
         try {
-            const data = { receivedSum: sum };
+            // const data = { receivedSum: sum };
             const response = await apiPayment.EditSum(paymentId, data);
 
             // Yangilangan payment ma'lumotlarini saqlash
@@ -183,18 +142,18 @@ export default function OrderCreate() {
 
     // ─── Buyurtma yaratish ───
     const createOrder = async () => {
-        if (!selectedCash) {
-            toast({ title: "Kassani tanlang", status: "warning", duration: 2000 });
-            return;
-        }
-        if (!selectedPayMethod) {
-            toast({
-                title: "To'lov usulini tanlang",
-                status: "warning",
-                duration: 2000,
-            });
-            return;
-        }
+        // if (!selectedCash) {
+        //     toast({ title: "Kassani tanlang", status: "warning", duration: 2000 });
+        //     return;
+        // }
+        // if (!selectedPayMethod) {
+        //     toast({
+        //         title: "To'lov usulini tanlang",
+        //         status: "warning",
+        //         duration: 2000,
+        //     });
+        //     return;
+        // }
         if (orderItems.length === 0) {
             toast({
                 title: "Kamida bitta mahsulot qo'shing",
@@ -207,8 +166,8 @@ export default function OrderCreate() {
         const orderData = {
             type: orderType,
             locationId: cafeWarehouseId,
-            cashId: selectedCash,
-            payMethodId: selectedPayMethod,
+            // cashId: selectedCash,
+            // payMethodId: selectedPayMethod,
             orderStatus: "completed",
             createdBy: Cookies.get("user_id"),
             items: orderItems.map((item) => ({
@@ -295,7 +254,7 @@ export default function OrderCreate() {
             </Box>
 
             {/* META MA'LUMOTLAR */}
-            <Stack direction={{ base: "column", md: "row" }} spacing={4} mb={6}>
+            {/* <Stack direction={{ base: "column", md: "row" }} spacing={4} mb={6}>
                 <Select
                     placeholder="Kassani tanlang"
                     maxW="300px"
@@ -337,7 +296,7 @@ export default function OrderCreate() {
                     color={textPrimary}
                     isReadOnly
                 />
-            </Stack>
+            </Stack> */}
 
             {/* BUYURTMA JADVALI */}
             <Box
@@ -518,6 +477,7 @@ export default function OrderCreate() {
 
             {/* SUMMANI TAHRIRLASH MODAL */}
             <Editsummodal
+                cafeWarehouseId={cafeWarehouseId}
                 isOpen={editSumModal.isOpen}
                 onClose={editSumModal.onClose}
                 paymentId={currentPaymentId}

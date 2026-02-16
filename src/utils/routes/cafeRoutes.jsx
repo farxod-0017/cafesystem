@@ -2,7 +2,7 @@ import CafeChiqim from "../../pages/Cafe/CafeChiqim/CafeChiqim";
 import CafeClientDetail from "../../pages/Cafe/CafeClientDetail/CafeClientDetail";
 import CafedagiTovarlar from "../../pages/Cafe/CafedagiTovarlar/CafedagiTovarlar";
 import CafePartnerDetail from "../../pages/Cafe/CafePartnerDetail/CafePartnerDetail";
-import Home from "../../pages/Cafe/Home/Home";
+import CafeStatisticsPage from "../../pages/Cafe/Home/Home";
 import CafeKirim from "../../pages/Cafe/Kirim/CafeKirim";
 import CafeClients from "../../pages/Cafe/Klientlar/CafeClients";
 import OperatsiyalarTarixi from "../../pages/Cafe/OperatsiyalarTarixi/OperatsiyalarTarixi";
@@ -15,7 +15,7 @@ const cafeRoutes = [
     {
         name: "cf home",
         path: "",
-        element: <Home />
+        element: <CafeStatisticsPage/>
     },
     {
         name: "cf order create",

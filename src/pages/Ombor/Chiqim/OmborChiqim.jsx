@@ -470,7 +470,7 @@ export default function OmborChiqim() {
                 items: selectedItems.map((item) => ({
                     productId: item.id,
                     quantity: item.quantity,
-                    salePrice: item.salePrice,
+                    salePrice: selectedClient === 'disposal' ? item.purchasePrice : item.salePrice,
                     purchasePrice: item.purchasePrice, // Stock dan, UI da ko'rinmaydi
                     discount: isDiscountEnabled ? item.discount : 0,
                     batch: item.batch,
@@ -630,22 +630,22 @@ export default function OmborChiqim() {
                 </FormControl>
                 {/* DISCOUNT TOGGLE */}
                 {selectedClient !== "disposal" && (
-                <FormControl display="flex" alignItems="center">
-                    <FormLabel htmlFor="discount-toggle" mb="0" fontSize="sm" fontWeight="medium">
-                        Chegirma qo'llash
-                    </FormLabel>
-                    <Switch
-                        id="discount-toggle"
-                        colorScheme="blue"
-                        isChecked={isDiscountEnabled}
-                        onChange={(e) => setIsDiscountEnabled(e.target.checked)}
-                    />
-                    {isDiscountEnabled && (
-                        <FormHelperText ml={3} mt={0} fontSize="xs" color="blue.500">
-                            Har bir mahsulot uchun chegirma kiritish mumkin
-                        </FormHelperText>
-                    )}
-                </FormControl>)}
+                    <FormControl display="flex" alignItems="center">
+                        <FormLabel htmlFor="discount-toggle" mb="0" fontSize="sm" fontWeight="medium">
+                            Chegirma qo'llash
+                        </FormLabel>
+                        <Switch
+                            id="discount-toggle"
+                            colorScheme="blue"
+                            isChecked={isDiscountEnabled}
+                            onChange={(e) => setIsDiscountEnabled(e.target.checked)}
+                        />
+                        {isDiscountEnabled && (
+                            <FormHelperText ml={3} mt={0} fontSize="xs" color="blue.500">
+                                Har bir mahsulot uchun chegirma kiritish mumkin
+                            </FormHelperText>
+                        )}
+                    </FormControl>)}
             </Stack>
 
             {/* SEARCH */}
@@ -835,7 +835,7 @@ export default function OmborChiqim() {
                                     <Th>Nomlanishi</Th>
                                     <Th>Partiya</Th>
                                     <Th>Omborda</Th>
-                                    <Th>Sotuv narxi (so'm)</Th>
+                                    <Th>{selectedClient === "disposal" ? "Xarid" : "Sotuv"} narxi (so'm)</Th>
                                     {isDiscountEnabled && <Th>Chegirma (%)</Th>}
                                     <Th>Miqdor</Th>
                                     <Th>Birlik</Th>
@@ -881,22 +881,27 @@ export default function OmborChiqim() {
 
                                             {/* SALE PRICE */}
                                             <Td>
-                                                <Input
-                                                    type="number"
-                                                    value={item.salePrice || ""}
-                                                    onChange={(e) =>
-                                                        updateSalePrice(item.id, item.batch, e.target.value)
-                                                    }
-                                                    placeholder="0"
-                                                    size="sm"
-                                                    maxW="120px"
-                                                    bg={inputBg}
-                                                    borderColor={borderColor}
-                                                    _focus={{
-                                                        borderColor: "blue.500",
-                                                        boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)",
-                                                    }}
-                                                />
+                                                {selectedClient === 'disposal' ?
+                                                    <Text>{item?.purchasePrice}</Text> :
+
+                                                    <Input
+                                                        type="number"
+                                                        value={item.salePrice || ""}
+                                                        onChange={(e) =>
+                                                            updateSalePrice(item.id, item.batch, e.target.value)
+                                                        }
+                                                        placeholder="0"
+                                                        size="sm"
+                                                        maxW="120px"
+                                                        bg={inputBg}
+                                                        borderColor={borderColor}
+                                                        _focus={{
+                                                            borderColor: "blue.500",
+                                                            boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)",
+                                                        }}
+                                                    />
+                                                }
+
                                             </Td>
 
                                             {/* DISCOUNT (if enabled) */}

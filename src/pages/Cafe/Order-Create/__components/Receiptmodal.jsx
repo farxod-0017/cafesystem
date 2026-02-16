@@ -98,14 +98,14 @@ export default function ReceiptModal({
                         <Divider borderColor={borderColor} />
 
                         {/* To'lov turi va status */}
-                        <HStack justify="space-between">
+                        {/* <HStack justify="space-between">
                             <Text color={textMuted}>To'lov turi:</Text>
                             <Text fontWeight="semibold" color={textPrimary}>
                                 {paymentData.type === "sale" ? "Naqd pul" : "Nasiya"}
                             </Text>
-                        </HStack>
+                        </HStack> */}
 
-                        <HStack justify="space-between">
+                        {/* <HStack justify="space-between">
                             <Text color={textMuted}>Status:</Text>
                             <Text
                                 fontWeight="semibold"
@@ -117,9 +117,9 @@ export default function ReceiptModal({
                             >
                                 {paymentData.orderStatus === "pending" ? "Kutilmoqda" : "To'langan"}
                             </Text>
-                        </HStack>
+                        </HStack> */}
 
-                        <Divider borderColor={borderColor} />
+                        {/* <Divider borderColor={borderColor} /> */}
 
                         {/* Mahsulotlar ro'yxati */}
                         <Box>

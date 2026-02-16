@@ -18,15 +18,21 @@ import {
     Box,
     Grid,
     Flex,
+    Select,
+    IconButton,
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
+import { apiCashs } from "../../../../utils/Controllers/apiCashs";
+import { apiPayMethods } from "../../../../utils/Controllers/apiPayMethods";
+import { CreditCard, Wallet2 } from "lucide-react";
 
 export default function OrderPayment({
     isOpen,
     onClose,
     paymentId,
     orderData,
-    onSumUpdated
+    onSumUpdated,
+    cafeWarehouseId
 }) {
     const [sum, setSum] = useState("");
     const [loading, setLoading] = useState(false);
@@ -39,6 +45,57 @@ export default function OrderPayment({
     const buttonBg = useColorModeValue("gray.100", "gray.700");
     const buttonHoverBg = useColorModeValue("gray.200", "gray.600");
     const buttonActiveBg = useColorModeValue("gray.300", "gray.500");
+    const inputBg = useColorModeValue("white", "gray.700");
+
+
+    const [cashs, setCashs] = useState([]);
+    const [payMethods, setPayMethods] = useState([]);
+    const [selectedCash, setSelectedCash] = useState("");
+    const [selectedPayMethod, setSelectedPayMethod] = useState("");
+
+    // ─── API calls ───
+    const GetCash = async () => {
+        try {
+            const response = await apiCashs.getAll();
+            const allCashs = response.data || response;
+
+            // Фильтрация по locationId
+            const filteredCashs = allCashs.filter(
+                (cash) => cash.locationId === cafeWarehouseId
+            );
+
+            setCashs(filteredCashs);
+            setSelectedCash(filteredCashs[0]?.id || ""); // Автоматически выбирать первую кассу
+        } catch (error) {
+        }
+    };
+
+    const GetPaymentMethod = async () => {
+        try {
+            const response = await apiPayMethods.getAll();
+            const allPayMethods = response.data?.payMethods || response.payMethods || [];
+
+            // Фильтрация по locationId
+            const filteredPayMethods = allPayMethods.filter(
+                (method) => method.locationId === cafeWarehouseId
+            );
+            setPayMethods(filteredPayMethods);
+            const findNaqt = filteredPayMethods?.find((e) => e?.name?.toLowerCase().includes("naq"));
+            if (findNaqt) {
+                setSelectedPayMethod(findNaqt?.id)
+            } else {
+                setSelectedPayMethod(filteredPayMethods?.[1]?.id || ""); // Автоматически выбирать первый метод оплаты
+            }
+        } finally { }
+    };
+
+    useEffect(() => {
+        // Запускать только если cafeWarehouseId определен
+        if (cafeWarehouseId) {
+            GetCash();
+            GetPaymentMethod();
+        }
+    }, [cafeWarehouseId]); // Добавить cafeWarehouseId в зависимости
 
     // Автоматически заполняем сумму заказа
     useEffect(() => {
@@ -97,10 +154,24 @@ export default function OrderPayment({
             });
             return;
         }
+        if (parseFloat(sum) < orderData?.totalSum) {
+            toast({
+                title: "Summa yetarli emas",
+                status: "warning",
+                duration: 2000,
+                isClosable: true,
+            });
+            return;
+        }
 
         setLoading(true);
         try {
-            await onSumUpdated(paymentId, parseFloat(sum));
+            const data = {
+                receivedSum: parseFloat(sum),
+                cashId: selectedCash,
+                payMethodId: selectedPayMethod,
+            }
+            await onSumUpdated(paymentId, data);
 
             toast({
                 title: "Muvaffaqiyatli!",
@@ -169,6 +240,48 @@ export default function OrderPayment({
 
                 <ModalBody py={2} px={4}>
                     <VStack spacing={3} align="stretch">
+                        <Box>
+                            <HStack alignItems={"center"} mb={"8px"}
+                            >
+                                <Select
+                                    placeholder="Kassani tanlang"
+                                    maxW="300px"
+                                    bg={inputBg}
+                                    borderColor={borderColor}
+                                    color={textPrimary}
+                                    value={selectedCash}
+                                    onChange={(e) => setSelectedCash(e.target.value)}
+                                >
+                                    {cashs.map((cash) => (
+                                        <option key={cash.id} value={cash.id}>
+                                            {cash.name}
+                                        </option>
+                                    ))}
+                                </Select>
+                                <IconButton icon={<Wallet2 />} />
+                            </HStack>
+
+                            <HStack>
+
+                                <Select
+                                    placeholder="To'lov usuli"
+                                    maxW="300px"
+                                    bg={inputBg}
+                                    borderColor={borderColor}
+                                    color={textPrimary}
+                                    value={selectedPayMethod}
+                                    onChange={(e) => setSelectedPayMethod(e.target.value)}
+                                >
+                                    {payMethods.map((method) => (
+                                        <option key={method.id} value={method.id}>
+                                            {method.name}
+                                        </option>
+                                    ))}
+                                </Select>
+                                <IconButton icon={<CreditCard />} />
+                            </HStack>
+
+                        </Box>
                         {/* Buyurtma ma'lumotlari - компактная версия */}
                         <Box
                             p={2}
@@ -297,7 +410,7 @@ export default function OrderPayment({
                             >
                                 <HStack justify="space-between" align="center">
                                     <Text fontSize="sm" fontWeight="medium" color={textPrimary}>
-                                        Qaytim:
+                                        {parseFloat(sum) < orderData?.totalSum ? "Kam:" : "Qaytim:"}
                                     </Text>
                                     <Text
                                         fontSize="lg"
