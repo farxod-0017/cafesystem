@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Box,
     Flex,
@@ -12,6 +12,7 @@ import {
     VStack,
     Stack,
     Skeleton,
+    SkeletonText,
     Icon,
     IconButton,
     Badge,
@@ -23,12 +24,7 @@ import {
     StatHelpText,
     Wrap,
     WrapItem,
-    Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
+    Tooltip,
 } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
 import {
@@ -43,11 +39,9 @@ import {
     Trash2,
     RefreshCw,
     Calendar,
+    DollarSign,
     MinusCircle,
     PlusCircle,
-    ShoppingCart,
-    RotateCcw,
-    CreditCard,
 } from 'lucide-react';
 import { apiStatistics } from '../../../utils/Controllers/apiStatistics';
 import { apiCashs } from '../../../utils/Controllers/apiCashs';
@@ -56,9 +50,9 @@ import { useWarehouseStore } from '../../../store/useWarehouseStore';
 const MotionBox = motion(Box);
 const MotionCard = motion(Card);
 
-const CafeStatisticsPage = () => {
+const StatisticsPage = () => {
     const toast = useToast();
-    const { cafeWarehouseId, locationName } = useWarehouseStore();
+    const { mainWarehouseId, locationName } = useWarehouseStore();
 
     // Date filters
     const todayDef = new Date().toISOString().split('T')[0];
@@ -76,14 +70,21 @@ const CafeStatisticsPage = () => {
     const [loadingCashboxes, setLoadingCashboxes] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
+    // Set default date to today
+    // useEffect(() => {
+    //     const today = new Date().toISOString().split('T')[0];
+    //     setStartDate(today);
+    //     setEndDate(today);
+    // }, []);
+
     // Fetch balance data
     const fetchBalance = async () => {
-        if (!cafeWarehouseId) return;
+        if (!mainWarehouseId) return;
 
         setLoadingBalance(true);
         try {
             const res = await apiStatistics.getBalance(
-                cafeWarehouseId,
+                mainWarehouseId,
                 startDate || 'all',
                 endDate || 'all'
             );
@@ -106,11 +107,11 @@ const CafeStatisticsPage = () => {
 
     // Fetch statistics
     const fetchStatistics = async () => {
-        if (!cafeWarehouseId) return;
+        if (!mainWarehouseId) return;
 
         setLoadingStats(true);
         try {
-            const res = await apiStatistics.getStatistics(cafeWarehouseId);
+            const res = await apiStatistics.getStatistics(mainWarehouseId);
             if (res.data) {
                 setStatsData(res.data);
             }
@@ -130,14 +131,14 @@ const CafeStatisticsPage = () => {
 
     // Fetch cashboxes
     const fetchCashboxes = async () => {
-        if (!cafeWarehouseId) return;
+        if (!mainWarehouseId) return;
 
         setLoadingCashboxes(true);
         try {
             const res = await apiCashs.getAll();
             if (res.data) {
                 const filtered = res.data.filter(
-                    (cash) => cash.locationId === cafeWarehouseId
+                    (cash) => cash.locationId === mainWarehouseId
                 );
                 setCashboxes(filtered);
             }
@@ -157,17 +158,16 @@ const CafeStatisticsPage = () => {
 
     // Initial load
     useEffect(() => {
-        if (cafeWarehouseId && startDate !== null && endDate !== null) {
+        if (mainWarehouseId && startDate !== null && endDate !== null) {
             fetchBalance();
         }
-    }, [cafeWarehouseId, startDate, endDate]);
-
+    }, [mainWarehouseId, startDate, endDate]);
     useEffect(() => {
-        if (cafeWarehouseId) {
+        if (mainWarehouseId) {
             fetchStatistics();
             fetchCashboxes();
         }
-    }, [cafeWarehouseId]);
+    }, [mainWarehouseId])
 
     // Refresh all data
     const handleRefresh = async () => {
@@ -195,9 +195,12 @@ const CafeStatisticsPage = () => {
                 break;
             case 'week':
                 const weekStart = new Date(today);
+
                 const day = today.getDay();
                 const diff = day === 0 ? -6 : 1 - day;
                 weekStart.setDate(today.getDate() + diff);
+
+                // weekStart.setDate(today.getDate() - today.getDay() + 1);
                 start = weekStart.toISOString().split('T')[0];
                 // end = today.toISOString().split('T')[0];
                 end = ''
@@ -266,24 +269,23 @@ const CafeStatisticsPage = () => {
         },
     };
 
-    // Helper calculations
+    const isLoading = loadingBalance || loadingStats || loadingCashboxes;
+
+    // Helper hisob-kitoblar (render ichida yoki yuqorida)
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
 
+    // WEEK hisoblash (dushanbadan boshlab)
     const weekStart = new Date(today);
     const day = today.getDay();
     const diff = day === 0 ? -6 : 1 - day;
     weekStart.setDate(today.getDate() + diff);
     const weekStartStr = weekStart.toISOString().split('T')[0];
 
+    // MONTH hisoblash
     const monthStart = new Date(today.getFullYear(), today.getMonth(), 2);
     const monthStartStr = monthStart.toISOString().split('T')[0];
 
-    const PROFIT = useMemo(() => {
-        const plus = +balanceData?.outgoing?.sum + +balanceData?.sale?.sum;
-        const minus = +balanceData?.incoming?.sum + +balanceData?.disposal?.sum + +balanceData?.disposalOut?.sum;
-        return plus - minus
-    }, [balanceData]);
 
     return (
         <Box minH="100vh" bg="bg" pb={6}>
@@ -292,7 +294,7 @@ const CafeStatisticsPage = () => {
                 <Flex justify="space-between" align="center" wrap="wrap" gap={4}>
                     <VStack align="start" spacing={1}>
                         <Heading size="lg" color="text">
-                            Cafe Statistika
+                            Statistika
                         </Heading>
                         {locationName && (
                             <Text fontSize="sm" color="textSecondary">
@@ -331,7 +333,8 @@ const CafeStatisticsPage = () => {
                                     <Button
                                         size="sm"
                                         variant={
-                                            startDate === todayStr && endDate === ''
+                                            startDate === new Date().toISOString().split('T')[0] &&
+                                                endDate === ''
                                                 ? 'solid'
                                                 : 'outline'
                                         }
@@ -345,7 +348,8 @@ const CafeStatisticsPage = () => {
                                     <Button
                                         size="sm"
                                         variant={
-                                            startDate === weekStartStr && endDate === ''
+                                            startDate === weekStartStr &&
+                                                endDate === ''
                                                 ? 'solid'
                                                 : 'outline'
                                         }
@@ -359,7 +363,8 @@ const CafeStatisticsPage = () => {
                                     <Button
                                         size="sm"
                                         variant={
-                                            startDate === monthStartStr && endDate === ''
+                                            startDate === monthStartStr &&
+                                                endDate === ''
                                                 ? 'solid'
                                                 : 'outline'
                                         }
@@ -429,7 +434,11 @@ const CafeStatisticsPage = () => {
 
             {/* Main Content */}
             <Box px={6}>
-                <MotionBox variants={containerVariants} initial="hidden" animate="visible">
+                <MotionBox
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                >
                     {/* Quick Stats */}
                     <MotionBox variants={itemVariants} mb={6}>
                         <SimpleGrid columns={{ base: 1, sm: 2, lg: 4 }} spacing={4}>
@@ -521,25 +530,31 @@ const CafeStatisticsPage = () => {
                                                         Foyda
                                                     </StatLabel>
                                                     <StatNumber
-                                                        color={getBalanceColor(PROFIT || 0)}
+                                                        color={getBalanceColor(balanceData?.profit || 0)}
                                                         fontSize="3xl"
                                                     >
-                                                        {PROFIT >= 0 ? '' : '-'}
-                                                        {formatLargeNumber(PROFIT || 0)}
+                                                        {balanceData?.profit >= 0 ? "" : "-"}{formatLargeNumber(balanceData?.profit || 0)}
                                                     </StatNumber>
                                                     <StatHelpText fontSize="xs" color="textSecondary">
-                                                        {PROFIT >= 0 ? '' : '-'}
-                                                        {formatCurrency(PROFIT || 0)} so'm
+                                                        {balanceData?.profit >= 0 ? "" : "-"}{formatCurrency(balanceData?.profit || 0)} so'm
                                                     </StatHelpText>
                                                 </Box>
                                                 <Box
                                                     p={3}
-                                                    bg={PROFIT >= 0 ? 'successBg' : 'dangerBg'}
+                                                    bg={
+                                                        balanceData?.profit >= 0 ? 'successBg' : 'dangerBg'
+                                                    }
                                                     borderRadius="lg"
                                                 >
                                                     <Icon
-                                                        as={PROFIT >= 0 ? TrendingUp : TrendingDown}
-                                                        color={PROFIT >= 0 ? 'success' : 'danger'}
+                                                        as={
+                                                            balanceData?.profit >= 0
+                                                                ? TrendingUp
+                                                                : TrendingDown
+                                                        }
+                                                        color={
+                                                            balanceData?.profit >= 0 ? 'success' : 'danger'
+                                                        }
                                                         boxSize={6}
                                                     />
                                                 </Box>
@@ -550,169 +565,6 @@ const CafeStatisticsPage = () => {
                             </MotionCard>
                         </SimpleGrid>
                     </MotionBox>
-
-                    {/* Zakazlar (Sale, Return, Disposal) */}
-                    <MotionBox variants={itemVariants} mb={6}>
-                        <Heading size="md" color="text" mb={4}>
-                            Zakazlar
-                        </Heading>
-                        <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
-                            {/* Sale */}
-                            <Card>
-                                <CardBody>
-                                    {loadingBalance ? (
-                                        <Skeleton height="100px" />
-                                    ) : (
-                                        <VStack align="stretch" spacing={3}>
-                                            <Flex justify="space-between" align="center">
-                                                <HStack>
-                                                    <Icon as={ShoppingCart} color="success" boxSize={6} />
-                                                    <Text fontWeight="semibold" color="text">
-                                                        Sotilgan
-                                                    </Text>
-                                                </HStack>
-                                                <Badge colorScheme="green">
-                                                    {balanceData?.sale?.count || 0} ta
-                                                </Badge>
-                                            </Flex>
-                                            <Text fontSize="2xl" fontWeight="bold" color="success">
-                                                {formatCurrency(balanceData?.sale?.sum || 0)} so'm
-                                            </Text>
-                                        </VStack>
-                                    )}
-                                </CardBody>
-                            </Card>
-
-                            {/* Return */}
-                            <Card>
-                                <CardBody>
-                                    {loadingBalance ? (
-                                        <Skeleton height="100px" />
-                                    ) : (
-                                        <VStack align="stretch" spacing={3}>
-                                            <Flex justify="space-between" align="center">
-                                                <HStack>
-                                                    <Icon as={RotateCcw} color="danger" boxSize={6} />
-                                                    <Text fontWeight="semibold" color="text">
-                                                        Qaytarilgan
-                                                    </Text>
-                                                </HStack>
-                                                <Badge colorScheme="red">
-                                                    {balanceData?.return?.count || 0} ta
-                                                </Badge>
-                                            </Flex>
-                                            <Text fontSize="2xl" fontWeight="bold" color="danger">
-                                                {balanceData?.return?.sum >= 0 ? '' : '-'}
-                                                {formatCurrency(balanceData?.return?.sum || 0)} so'm
-                                            </Text>
-                                        </VStack>
-                                    )}
-                                </CardBody>
-                            </Card>
-
-                            {/* Disposal */}
-                            <Card>
-                                <CardBody>
-                                    {loadingBalance ? (
-                                        <Skeleton height="100px" />
-                                    ) : (
-                                        <VStack align="stretch" spacing={3}>
-                                            <Flex justify="space-between" align="center">
-                                                <HStack>
-                                                    <Icon as={Trash2} color="warning" boxSize={6} />
-                                                    <Text fontWeight="semibold" color="text">
-                                                        Utilizatsiya
-                                                    </Text>
-                                                </HStack>
-                                                <Badge colorScheme="orange">
-                                                    {balanceData?.disposal?.count || 0} ta
-                                                </Badge>
-                                            </Flex>
-                                            <Text fontSize="2xl" fontWeight="bold" color="warning">
-                                                {formatCurrency(balanceData?.disposal?.sum || 0)} so'm
-                                            </Text>
-                                        </VStack>
-                                    )}
-                                </CardBody>
-                            </Card>
-                        </SimpleGrid>
-                    </MotionBox>
-
-                    {/* To'lov usullari bo'yicha */}
-                    {balanceData?.payMethods && balanceData.payMethods.length > 0 && (
-                        <MotionBox variants={itemVariants} mb={6}>
-                            <Heading size="md" color="text" mb={4}>
-                                To'lov usullari bo'yicha
-                            </Heading>
-                            <Card>
-                                <CardBody>
-                                    <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
-                                        {balanceData.payMethods.map((method) => (
-                                            <Box
-                                                key={method.payMethodId}
-                                                p={4}
-                                                bg="mutedBg"
-                                                borderRadius="lg"
-                                            >
-                                                <VStack align="stretch" spacing={2}>
-                                                    <HStack justify="space-between">
-                                                        <HStack>
-                                                            <Icon as={CreditCard} color="primary" boxSize={5} />
-                                                            <Text fontWeight="semibold" color="text">
-                                                                {method['payMethod.name']}
-                                                            </Text>
-                                                        </HStack>
-                                                        <Badge colorScheme="blue">{method.count} ta</Badge>
-                                                    </HStack>
-                                                    <Text fontSize="xl" fontWeight="bold" color="primary">
-                                                        {formatCurrency(method.sum)} so'm
-                                                    </Text>
-                                                </VStack>
-                                            </Box>
-                                        ))}
-                                    </SimpleGrid>
-                                </CardBody>
-                            </Card>
-                        </MotionBox>
-                    )}
-
-                    {/* Kassalar bo'yicha zakazlar */}
-                    {balanceData?.cash && balanceData.cash.length > 0 && (
-                        <MotionBox variants={itemVariants} mb={6}>
-                            <Heading size="md" color="text" mb={4}>
-                                Kassalar bo'yicha zakazlar
-                            </Heading>
-                            <Card>
-                                <CardBody>
-                                    <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                                        {balanceData.cash.map((cash) => (
-                                            <Box
-                                                key={cash.cashId}
-                                                p={4}
-                                                bg="infoBg"
-                                                borderRadius="lg"
-                                            >
-                                                <VStack align="stretch" spacing={2}>
-                                                    <HStack justify="space-between">
-                                                        <HStack>
-                                                            <Icon as={Wallet} color="info" boxSize={5} />
-                                                            <Text fontWeight="semibold" color="text">
-                                                                {cash['cash.name']}
-                                                            </Text>
-                                                        </HStack>
-                                                        <Badge colorScheme="blue">{cash.count} ta</Badge>
-                                                    </HStack>
-                                                    <Text fontSize="xl" fontWeight="bold" color="info">
-                                                        {formatCurrency(cash.sum)} so'm
-                                                    </Text>
-                                                </VStack>
-                                            </Box>
-                                        ))}
-                                    </SimpleGrid>
-                                </CardBody>
-                            </Card>
-                        </MotionBox>
-                    )}
 
                     {/* Kassalar */}
                     {cashboxes.length > 1 && (
@@ -739,11 +591,7 @@ const CafeStatisticsPage = () => {
                                                 <Flex justify="space-between" align="start">
                                                     <VStack align="start" spacing={1}>
                                                         <HStack>
-                                                            <Icon
-                                                                as={Wallet}
-                                                                color="primary"
-                                                                boxSize={5}
-                                                            />
+                                                            <Icon as={Wallet} color="primary" boxSize={5} />
                                                             <Text fontWeight="semibold" color="text">
                                                                 {cash.name}
                                                             </Text>
@@ -755,8 +603,7 @@ const CafeStatisticsPage = () => {
                                                                 Number(cash.balance) || 0
                                                             )}
                                                         >
-                                                            {cash.balance >= 0 ? '' : '-'}
-                                                            {formatCurrency(cash.balance)} so'm
+                                                            {cash.balance >= 0 ? "" : "-"}{formatCurrency(cash.balance)} so'm
                                                         </Text>
                                                     </VStack>
                                                 </Flex>
@@ -788,8 +635,7 @@ const CafeStatisticsPage = () => {
                                                         Number(cashboxes[0].balance) || 0
                                                     )}
                                                 >
-                                                    {cashboxes[0].balance >= 0 ? '' : '-'}
-                                                    {formatCurrency(cashboxes[0].balance)} so'm
+                                                    {cashboxes[0].balance >= 0 ? "" : "-"}{formatCurrency(cashboxes[0].balance)} so'm
                                                 </Text>
                                             </VStack>
                                         </HStack>
@@ -827,7 +673,11 @@ const CafeStatisticsPage = () => {
                                                     {balanceData?.incoming?.count || 0} ta
                                                 </Badge>
                                             </Flex>
-                                            <Text fontSize="2xl" fontWeight="bold" color="chartIncoming">
+                                            <Text
+                                                fontSize="2xl"
+                                                fontWeight="bold"
+                                                color="chartIncoming"
+                                            >
                                                 {formatCurrency(balanceData?.incoming?.sum || 0)} so'm
                                             </Text>
                                         </VStack>
@@ -857,7 +707,11 @@ const CafeStatisticsPage = () => {
                                                     {balanceData?.outgoing?.count || 0} ta
                                                 </Badge>
                                             </Flex>
-                                            <Text fontSize="2xl" fontWeight="bold" color="chartOutgoing">
+                                            <Text
+                                                fontSize="2xl"
+                                                fontWeight="bold"
+                                                color="chartOutgoing"
+                                            >
                                                 {formatCurrency(balanceData?.outgoing?.sum || 0)} so'm
                                             </Text>
                                         </VStack>
@@ -865,7 +719,7 @@ const CafeStatisticsPage = () => {
                                 </CardBody>
                             </Card>
 
-                            {/* Disposal Out */}
+                            {/* Disposal */}
                             <Card>
                                 <CardBody>
                                     {loadingBalance ? (
@@ -887,8 +741,13 @@ const CafeStatisticsPage = () => {
                                                     {balanceData?.disposalOut?.count || 0} ta
                                                 </Badge>
                                             </Flex>
-                                            <Text fontSize="2xl" fontWeight="bold" color="chartDisposal">
-                                                {formatCurrency(balanceData?.disposalOut?.sum || 0)} so'm
+                                            <Text
+                                                fontSize="2xl"
+                                                fontWeight="bold"
+                                                color="chartDisposal"
+                                            >
+                                                {formatCurrency(balanceData?.disposalOut?.sum || 0)}{' '}
+                                                so'm
                                             </Text>
                                         </VStack>
                                     )}
@@ -974,7 +833,8 @@ const CafeStatisticsPage = () => {
                                                         </Text>
                                                     </HStack>
                                                     <Text fontSize="xl" fontWeight="bold" color="danger">
-                                                        {formatCurrency(balanceData?.partnerMinus || 0)} so'm
+                                                        {formatCurrency(balanceData?.partnerMinus || 0)}{' '}
+                                                        so'm
                                                     </Text>
                                                 </VStack>
 
@@ -983,10 +843,15 @@ const CafeStatisticsPage = () => {
                                                         <Text fontSize="sm" color="textSecondary">
                                                             Bizning qarzimiz
                                                         </Text>
-                                                        <Icon as={PlusCircle} color="success" boxSize={4} />
+                                                        <Icon
+                                                            as={PlusCircle}
+                                                            color="success"
+                                                            boxSize={4}
+                                                        />
                                                     </HStack>
                                                     <Text fontSize="xl" fontWeight="bold" color="success">
-                                                        {formatCurrency(balanceData?.partnerPlus || 0)} so'm
+                                                        {formatCurrency(balanceData?.partnerPlus || 0)}{' '}
+                                                        so'm
                                                     </Text>
                                                 </VStack>
                                             </HStack>
@@ -1002,4 +867,4 @@ const CafeStatisticsPage = () => {
     );
 };
 
-export default CafeStatisticsPage;
+export default StatisticsPage;

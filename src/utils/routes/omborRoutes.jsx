@@ -6,6 +6,7 @@ import OmborKirim from "../../pages/Ombor/Kirim/OmborKirim";
 import OmbordagiTovarlar from "../../pages/Ombor/OmbordagiTovarlar/OmbordagiTovarlar";
 import OperatsiyalarTarixi from "../../pages/Ombor/OperatsiyalarTarixi/OperatsiyalarTarixi";
 import PartnerDetailPage from "../../pages/Ombor/PartnerAccount/PartnerAccount";
+import StatisticsPage from "../../pages/Ombor/StatisticsPage/StatisticsPage";
 import TaminotchilarPage from "../../pages/Ombor/TaminotchilarPage/TaminotchilarPage";
 
 const omborRoutes = [
@@ -53,6 +54,11 @@ const omborRoutes = [
         name:"ombor client detail",
         path:"klientlar/:partnerId",
         element:<ClientDetailPage/>
+    },
+    {
+        name:"ombor hisobot",
+        path:'statistics',
+        element:<StatisticsPage/>,
     }
 ];
 export default omborRoutes;

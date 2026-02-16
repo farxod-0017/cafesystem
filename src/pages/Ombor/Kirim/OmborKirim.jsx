@@ -376,11 +376,6 @@ export default function OmborKirim() {
 
     const totalItems = selectedItems.length;
 
-    const averagePrice = useMemo(() => {
-        if (totalItems === 0) return 0;
-        return totalAmount / totalItems;
-    }, [totalAmount, totalItems]);
-
     // ==============================
     // VALIDATION
     // ==============================

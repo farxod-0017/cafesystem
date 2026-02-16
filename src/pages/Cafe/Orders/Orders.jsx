@@ -1,4 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
+import Cookies from "js-cookie";
+
 import {
     Box,
     Flex,
@@ -24,14 +26,17 @@ import {
     Tooltip,
     Select,
     Stack,
+    Icon,
 } from "@chakra-ui/react";
 import { SearchIcon, ViewIcon, ChevronDownIcon } from "@chakra-ui/icons";
 import { apiPayment } from "../../../utils/Controllers/apiPayment";
 import OrderDetailModal from "./__components/OrderDetailModal";
-import { ReceiptRussianRuble, Undo2, Wallet } from "lucide-react";
+import { Ban, ReceiptRussianRuble, RotateCcw, Trash2, Undo2, Wallet } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import OrderStatusMenu from "./__components/OrderStatusModal";
 import OrderPayment from "./__components/OrderPayment";
+import { useWarehouseStore } from "../../../store/useWarehouseStore";
+import ReturnModal from "./__components/ReturnModal";
 
 // ─── Helpers ───
 const formatPrice = (price) =>
@@ -78,13 +83,13 @@ const TypeBadge = ({ type }) => (
 
 const PaymentSt = ({ status }) => (
     <Badge
-        colorScheme={status === "unpaid" ? "red" : "green"}
+        colorScheme={status === "paid" ? "green" : "red"}
         borderRadius="md"
         px={2}
         py={0.5}
         fontSize="xs"
     >
-        {status === "unpaid" ? "To'lanmagan" : "To'langan"}
+        {status === "paid" ? "To'langan" : "To'lanmagan"}
     </Badge>
 );
 
@@ -92,6 +97,9 @@ const PaymentSt = ({ status }) => (
 // MAIN COMPONENT
 // ══════════════════════════════════
 export default function Orders() {
+    const {
+        cafeWarehouseId,
+    } = useWarehouseStore();
     const [payments, setPayments] = useState([]);
     const [page, setPage] = useState(1);
     const [hasNext, setHasNext] = useState(false);
@@ -103,9 +111,14 @@ export default function Orders() {
     const [orderForPayment, setOrderForPayment] = useState(null);
     const [paymentStatusFilter, setPaymentStatusFilter] = useState("");
     const [typeFilter, setTypeFilter] = useState("");
+    const [returningOrder, setReturningOrder] = useState('');
+    const [returning, setReturning] = useState(false);
+    const [reason, setReason] = useState("")
+
 
     const detailModal = useDisclosure();
     const paymentModal = useDisclosure();
+    const returnModal = useDisclosure();
     const toast = useToast();
     const LIMIT = 20;
 
@@ -215,9 +228,9 @@ export default function Orders() {
     };
 
     // ─── Summani yangilash ───
-    const handleEditSum = async (paymentId, sum) => {
+    const handleEditSum = async (paymentId, data) => {
         try {
-            const data = { receivedSum: sum };
+            // const data = { receivedSum: sum };
             const response = await apiPayment.EditSum(paymentId, data);
 
             toast({
@@ -236,8 +249,44 @@ export default function Orders() {
         }
     };
 
+    const openReturnModal = (order) => {
+        if (order) setReturningOrder(order);
+        returnModal.onOpen();
+    };
+
+    const returnOrder = async () => {
+        if (!returningOrder) return;
+        const returnData = {
+            originalPaymentId: returningOrder?.id,
+            createdBy: Cookies.get("user_id"),
+            reason: reason || "Customer changed mind",
+            items: returningOrder.items.map((item) => ({
+                productId: item.product?.id,
+                count: parseFloat(item.count),
+                price: parseFloat(item.price),
+            })),
+        };
+        try {
+            setReturning(true);
+            const response = await apiPayment.CreateReturn(returnData); // Yangi endpoint kerak bo'ladi
+
+            toast({
+                title: "Qaytarish bajarildi!",
+                status: "success",
+                duration: 3000,
+            });
+
+            // Tozalash
+            setReturningOrder('')
+            setReason("");
+            GetAllPayment(page, false)
+        } finally {
+            setReturning(false);
+        }
+    }
+
     return (
-        <Box bg={bgPage} minH="100vh" p={{ base: 4, md: 6 }}>
+        <Box bg={bgPage} minH="100vh" p={{ base: 3, md: 4 }}>
             {/* HEADER */}
             <Flex justify="space-between" align="center" mb={6} flexWrap="wrap" gap={3}>
                 <HStack spacing={3}>
@@ -341,7 +390,7 @@ export default function Orders() {
                             {/* Skeleton loading */}
                             {loading &&
                                 payments.length === 0 &&
-                                Array.from({ length: 5 }).map((_, i) => (
+                                Array.from({ length: 10 }).map((_, i) => (
                                     <Tr key={`skel-${i}`}>
                                         {Array.from({ length: 8 }).map((_, j) => (
                                             <Td key={j}>
@@ -394,7 +443,7 @@ export default function Orders() {
                                     </Td>
                                     <Td onClick={(e) => e.stopPropagation()}>
                                         <HStack spacing={1}>
-                                            <Tooltip label="Batafsil" hasArrow>
+                                            {/* <Tooltip label="Batafsil" hasArrow>
                                                 <IconButton
                                                     size="sm"
                                                     icon={<ViewIcon />}
@@ -403,30 +452,47 @@ export default function Orders() {
                                                     aria-label="Batafsil"
                                                     onClick={() => openDetail(order)}
                                                 />
-                                            </Tooltip>
-                                            <NavLink to={`/cafe/return/${order?.id}`}>
-                                                <Tooltip label="Utilizatsiya qilish" hasArrow>
+                                            </Tooltip> */}
+                                            {/* <NavLink to={`/cafe/return/${order?.id}`}> */}
+                                            <Tooltip label={order?.type === 'sale' ? "Zakazni qaytarish" : (order?.type === 'return' || order?.orderStatus === 'cancelled') ? 'Qaytarilgan' : 'Utilizatsiya qilingan'} hasArrow>
+                                                {order?.type === "sale" ?
                                                     <IconButton
+                                                        onClick={() => {
+                                                            if (order?.orderStatus === 'cancelled') {
+                                                                toast({
+                                                                    title: "Allaqachon qaytarilgan !",
+                                                                    status: "warning",
+                                                                    duration: 3000,
+                                                                });
+                                                                return
+                                                            }
+                                                            openReturnModal(order)
+                                                        }}
                                                         size="sm"
                                                         icon={<Undo2 />}
                                                         variant="ghost"
                                                         colorScheme="orange"
-                                                        aria-label="Utilizatsiya qilish"
-                                                    />
-                                                </Tooltip>
-                                            </NavLink>
-                                            {order?.paymentStatus === 'unpaid' && (
-                                                <Tooltip label="To'lov qilish" hasArrow>
-                                                    <IconButton
-                                                        size="sm"
-                                                        icon={<Wallet />}
-                                                        variant="ghost"
-                                                        colorScheme="green"
-                                                        aria-label="To'lov qilish"
-                                                        onClick={() => openPaymentModal(order)}
-                                                    />
-                                                </Tooltip>
-                                            )}
+                                                        aria-label="Qaytarish"
+                                                        cursor={order?.orderStatus === 'cancelled' ? 'not-allowed' : 'pointer'}
+                                                        opacity={order?.orderStatus === 'cancelled' ? '0.5' : '1'}
+                                                    /> : order?.type === 'return' ?
+                                                        <Icon m={1} as={RotateCcw} color="danger" boxSize={6} cursor={'not-allowed'} opacity={'0.5'} />
+                                                        : <Icon m={1} as={Ban} color="warning" boxSize={6} cursor={'not-allowed'} opacity={'0.5'} />
+                                                }
+                                            </Tooltip>
+                                            {/* </NavLink> */}
+                                            <Tooltip label={(order?.type === 'sale' && order?.paymentStatus !== 'paid') ? "To'lov qilish" : "Sotuv va to'lanmagan zakazlarga to'lov qilinadi"} hasArrow>
+                                                <IconButton
+                                                    cursor={(order?.type === 'sale' && order?.paymentStatus !== 'paid') ? 'pointer' : 'not-allowed'}
+                                                    opacity={(order?.type === 'sale' && order?.paymentStatus !== 'paid') ? '1' : '0.5'}
+                                                    size="sm"
+                                                    icon={<Wallet />}
+                                                    variant="ghost"
+                                                    colorScheme="green"
+                                                    aria-label="To'lov qilish"
+                                                    onClick={() => openPaymentModal(order)}
+                                                />
+                                            </Tooltip>
                                         </HStack>
                                     </Td>
                                 </Tr>
@@ -473,6 +539,17 @@ export default function Orders() {
                 paymentId={orderForPayment?.id}
                 orderData={orderForPayment}
                 onSumUpdated={handleEditSum}
+                cafeWarehouseId={cafeWarehouseId}
+            />
+            {/* Return Modal */}
+            <ReturnModal
+                isOpen={returnModal.isOpen}
+                onClose={returnModal.onClose}
+                order={returningOrder}
+                returning={returning}
+                returnOrder={returnOrder}
+                reason={reason}
+                setReason={(e) => setReason(e.target.value)}
             />
         </Box>
     );
