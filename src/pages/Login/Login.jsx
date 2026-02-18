@@ -100,7 +100,7 @@ export default function Login() {
     };
 
     return (
-        <Flex minH="100vh" align="center" justify="center" bg="bg" px={4}>
+        <Flex minH="100vh" align="center" justify="center" bg="bg" px={4} py={4}>
             {/* Dark/Light toggle button */}
             {/* <Button
                 position="absolute"
