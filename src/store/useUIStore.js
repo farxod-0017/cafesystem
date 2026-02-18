@@ -6,6 +6,6 @@ export const useUIStore = create((set) => ({
         set((state) => {
             const next = !state.collapsed;
             localStorage.setItem("collapsed", next);
-            return {collapsed : next}
+            return { collapsed: next }
         }),
 }));
