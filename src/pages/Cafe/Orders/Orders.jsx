@@ -31,8 +31,8 @@ import {
 import { SearchIcon, ViewIcon, ChevronDownIcon } from "@chakra-ui/icons";
 import { apiPayment } from "../../../utils/Controllers/apiPayment";
 import OrderDetailModal from "./__components/OrderDetailModal";
-import { Ban, ReceiptRussianRuble, RotateCcw, Trash2, Undo2, Wallet } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { Ban, CirclePlus, ReceiptRussianRuble, RotateCcw, Trash2, Undo2, Wallet } from "lucide-react";
+import { NavLink, useNavigate } from "react-router-dom";
 import OrderStatusMenu from "./__components/OrderStatusModal";
 import OrderPayment from "./__components/OrderPayment";
 import { useWarehouseStore } from "../../../store/useWarehouseStore";
@@ -100,6 +100,8 @@ export default function Orders() {
     const {
         cafeWarehouseId,
     } = useWarehouseStore();
+    const navigate = useNavigate()
+
     const [payments, setPayments] = useState([]);
     const [page, setPage] = useState(1);
     const [hasNext, setHasNext] = useState(false);
@@ -283,6 +285,26 @@ export default function Orders() {
         } finally {
             setReturning(false);
         }
+    };
+
+    // handle pus button, edit zakaz
+    const handlePlusButton = (order) => {
+        if (order.type !== 'sale') {
+            toast({
+                title: "Faqat sotuv zakazlar tahrirlanadi !",
+                status: "warning",
+                duration: 3000,
+            });
+            return
+        } else if (order.paymentStatus !== 'unpaid') {
+            toast({
+                title: "Faqat to'lanmagan zakazlar tahrirlanadi !",
+                status: "warning",
+                duration: 3000,
+            });
+            return
+        };
+        navigate(`/cafe/tahrir/${order?.id}`)
     }
 
     return (
@@ -490,7 +512,26 @@ export default function Orders() {
                                                     variant="ghost"
                                                     colorScheme="green"
                                                     aria-label="To'lov qilish"
-                                                    onClick={() => openPaymentModal(order)}
+                                                    onClick={() => {
+                                                        if (order?.type === 'sale' && order?.paymentStatus !== 'paid') {
+                                                            openPaymentModal(order)
+                                                        } else {
+                                                            toast({
+                                                                title: "Sotuv va to'lanmagan zakazlarga to'lov qilinadi !",
+                                                                status: "warning",
+                                                                duration: 3000,
+                                                            });
+                                                        }
+                                                    }}
+                                                />
+                                            </Tooltip>
+                                            <Tooltip label="Masulot qo'shish">
+                                                <IconButton
+                                                    onClick={() => handlePlusButton(order)}
+                                                    opacity={(order?.paymentStatus !== 'paid' && order.type === 'sale') ? '1' : '0.5'}
+                                                    icon={<CirclePlus />}
+                                                    variant={'ghost'}
+                                                    colorScheme="blue"
                                                 />
                                             </Tooltip>
                                         </HStack>

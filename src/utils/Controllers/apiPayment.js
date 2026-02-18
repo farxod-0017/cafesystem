@@ -34,6 +34,10 @@ class apiPayment {
         const response = await $api.get(url);
         return response;
     }
+    static GetById = async (id) => {
+        const response = await $api.get(`${BASE_URL}/payments/${id}`);
+        return response
+    }
 }
 
 export { apiPayment };

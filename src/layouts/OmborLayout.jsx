@@ -5,6 +5,7 @@ import { Box } from "@chakra-ui/react";
 import { useUIStore } from "../store/useUIStore";
 import { Package, PackagePlus, PackageMinus, Handshake, Move, Users, LineChart } from "lucide-react";
 import WarehouseGuard from "../auth/WarehouseGuard";
+import Header from "../components/common/Header";
 
 const links = [
     { label: "Ombor", to: "/ombor", icon: Package, end: true },
@@ -22,6 +23,7 @@ export default function OmborLayout() {
     return (
         <WarehouseGuard isCafe={false}>
             <Box>
+                <Header/>
                 <Sidebar
                     collapsed={collapsed}
                     links={links}
@@ -29,7 +31,8 @@ export default function OmborLayout() {
                     end={true}
                 />
                 <Box
-                    pl={collapsed ? "70px" : "230px"}
+                    pl={{base: 0, md:collapsed ? "70px" : "230px"}}
+                    pt={{base:'42px', md:'0'}}
                     transition="0.25s ease"
                     minH="100vh"
                 >

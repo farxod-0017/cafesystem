@@ -21,20 +21,33 @@ import {
     NumberInput,
     NumberInputField,
     useColorModeValue,
+    Tooltip,
+    Modal,
+    ModalBody,
+    ModalOverlay,
+    Center,
+    ModalContent,
 } from "@chakra-ui/react";
 import { AddIcon, DeleteIcon, MinusIcon } from "@chakra-ui/icons";
 import { apiPayment } from "../../../utils/Controllers/apiPayment";
 import Cookies from "js-cookie";
 import ProductModal from "./__components/ProductModal";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
+import { ArrowLeft } from "lucide-react";
+import { NavLink } from "react-router-dom";
+import { apiPaymentItems } from "../../../utils/Controllers/apiPaymentItems";
+import TableSkeleton from "../../../components/ui/TableSkeleton";
 
 export default function OrderCreate() {
+    const navigate = useNavigate()
     const [orderItems, setOrderItems] = useState([]);
+    const [editingOrder, setEditingOrder] = useState({})
     const [loading, setLoading] = useState(false);
-    const [originalPaymentId, setOriginalPaymentId] = useState("");
-    const [reason, setReason] = useState("");
-    const {id} = useParams()
+    const [fetching, setFetching] = useState(false)
+    const { id } = useParams();
     const sidebar = useDisclosure();
+    const blockModal = useDisclosure();
+
     const toast = useToast();
 
     // ─── Dark mode ranglar ───
@@ -47,6 +60,8 @@ export default function OrderCreate() {
     const accentColor = useColorModeValue("blue.600", "blue.300");
     const inputBg = useColorModeValue("white", "gray.700");
 
+
+
     // ─── Mahsulotni buyurtmaga qo'shish ───
     const addItem = (product) => {
         setOrderItems((prev) => {
@@ -57,7 +72,7 @@ export default function OrderCreate() {
                         ? { ...item, count: item.count + 1 }
                         : item
                 );
-            }
+            };
             return [
                 ...prev,
                 {
@@ -104,8 +119,23 @@ export default function OrderCreate() {
         0
     );
 
+    // FETCh editing ORDER
+    const fetchOrder = async (id) => {
+        setFetching(true)
+        try {
+            const res = await apiPayment.GetById(id);
+            setEditingOrder(res.data);
+        } finally {
+            setFetching(false)
+        }
+    };
+    useEffect(() => {
+        if (id) {
+            fetchOrder(id)
+        }
+    }, [id])
     // ─── Qaytarish yaratish ───
-    const createReturn = async () => {
+    const createAdditionalItems = async () => {
         if (orderItems.length === 0) {
             toast({
                 title: "Kamida bitta mahsulot qo'shing",
@@ -116,9 +146,9 @@ export default function OrderCreate() {
         }
 
         const returnData = {
-            originalPaymentId: id,
-            createdBy: Cookies.get("user_id"),
-            reason: reason || "Customer changed mind",
+            paymentId: id,
+            // createdBy: Cookies.get("user_id"),
+            // reason: reason || "Customer changed mind",
             items: orderItems.map((item) => ({
                 productId: item.productId,
                 count: item.count,
@@ -128,7 +158,8 @@ export default function OrderCreate() {
 
         try {
             setLoading(true);
-            const response = await apiPayment.CreateReturn(returnData); // Yangi endpoint kerak bo'ladi
+            const response = await apiPaymentItems.Create(returnData);
+            fetchOrder(id)
 
             toast({
                 title: "Qaytarish yaratildi!",
@@ -156,13 +187,24 @@ export default function OrderCreate() {
     const formatPrice = (price) =>
         Number(price).toLocaleString("uz-UZ") + " so'm";
 
+
+
     return (
         <Box bg={bgPage} minH="100vh" p={{ base: 4, md: 6 }}>
             {/* HEADER */}
             <Flex justify="space-between" align="center" mb={6}>
-                <Heading size="lg" color={textPrimary}>
-                    Buyurtmani qaytarish
-                </Heading>
+                <Flex gap={2}>
+                    <Tooltip label='Ortga'>
+                        <IconButton
+                            onClick={() => navigate(-1)}
+                            icon={<ArrowLeft />}
+                        />
+                    </Tooltip>
+                    <Heading size="lg" color={textPrimary}>
+                        Buyurtmani tahrirlash
+                    </Heading>
+                </Flex>
+
                 <Button
                     colorScheme="blue"
                     onClick={sidebar.onOpen}
@@ -171,33 +213,63 @@ export default function OrderCreate() {
                     Mahsulotlar
                 </Button>
             </Flex>
+            {/* ESKI BUYURMALAR */}
+            <Heading size={'md'} mb={3}>Buyurmada bor</Heading>
+            {fetching ?
+                <Box>
+                    <Table size="sm" variant="simple">
+                        <Thead bg={bgTableHead}>
+                            <Tr>
+                                <Th color={textMuted}>#</Th>
+                                <Th color={textMuted}>Mahsulot</Th>
+                                <Th color={textMuted} isNumeric>Narx</Th>
+                                <Th color={textMuted} isNumeric>Soni</Th>
+                                <Th color={textMuted} isNumeric>Jami</Th>
+                            </Tr>
+                        </Thead>
+                        <Tbody>
+                            <TableSkeleton rows={4} columns={5} />
+                        </Tbody>
+                    </Table>
 
-            {/* PAYMENT ID VA SABAB */}
-            <Box
-                bg={bgCard}
-                borderRadius="xl"
-                border="1px solid"
-                borderColor={borderColor}
-                p={5}
-                mb={6}
-            >
-                <VStack spacing={4} align="stretch">
-                    <Box>
-                        <Text mb={2} color={textMuted} fontSize="sm">
-                            Sabab (ixtiyoriy)
-                        </Text>
-                        <Input
-                            placeholder="Customer changed mind"
-                            value={reason}
-                            onChange={(e) => setReason(e.target.value)}
-                            bg={inputBg}
-                            borderColor={borderColor}
-                        />
-                    </Box>
-                </VStack>
-            </Box>
+                </Box> :
+                <Box>
+                    <Table size="sm" variant="simple">
+                        <Thead bg={bgTableHead}>
+                            <Tr>
+                                <Th color={textMuted}>#</Th>
+                                <Th color={textMuted}>Mahsulot</Th>
+                                <Th color={textMuted} isNumeric>Narx</Th>
+                                <Th color={textMuted} isNumeric>Soni</Th>
+                                <Th color={textMuted} isNumeric>Jami</Th>
+                            </Tr>
+                        </Thead>
+                        <Tbody>
+                            {editingOrder.items?.map((item, idx) => (
+                                <Tr key={item.id}>
+                                    <Td color={textPrimary} fontSize="sm">{idx + 1}</Td>
+                                    <Td color={textPrimary} fontSize="xs" fontFamily="mono">
+                                        {item?.product?.name}
+                                    </Td>
+                                    <Td isNumeric color={textPrimary} fontSize="sm">
+                                        {formatPrice(item.price)}
+                                    </Td>
+                                    <Td isNumeric color={textPrimary} fontSize="sm">
+                                        {item.count}
+                                    </Td>
+                                    <Td isNumeric fontWeight="semibold" color={accentColor} fontSize="sm">
+                                        {formatPrice(item.price * item.count)}
+                                    </Td>
+                                </Tr>
+                            ))}
+                        </Tbody>
+                    </Table>
+                </Box>
+            }
+
 
             {/* BUYURTMA JADVALI */}
+            <Heading size={'md'} mb={3} mt={8}>Buyurtmaga qo'shilmoqda</Heading>
             <Box
                 bg={bgCard}
                 borderRadius="xl"
@@ -318,7 +390,7 @@ export default function OrderCreate() {
                 >
                     <VStack align="flex-start" spacing={0}>
                         <Text color={textMuted} fontSize="sm">
-                            Qaytarish summasi
+                            Qo'shilayotgan jami summa
                         </Text>
                         <Heading size="md" color={accentColor}>
                             {formatPrice(totalSum)}
@@ -327,22 +399,22 @@ export default function OrderCreate() {
 
                     <HStack spacing={3} flexWrap="wrap">
                         <Badge
-                            colorScheme="red"
+                            colorScheme="blue"
                             fontSize="sm"
                             px={3}
                             py={1}
                             borderRadius="md"
                         >
-                            {orderItems.length} ta mahsulot qaytarilmoqda
+                            {orderItems.length} ta mahsulot qo'shilmoqda
                         </Badge>
                         <Button
-                            colorScheme="red"
+                            colorScheme="blue"
                             size="lg"
-                            onClick={createReturn}
+                            onClick={createAdditionalItems}
                             isLoading={loading}
                             loadingText="Qaytarilmoqda..."
                         >
-                            Qaytarishni tasdiqlash
+                            Qo'shish
                         </Button>
                     </HStack>
                 </Flex>
@@ -355,6 +427,25 @@ export default function OrderCreate() {
                 orderItems={orderItems}
                 addItem={addItem}
             />
+
+            {/* BLOCK MODAL */}
+            <Modal isOpen={blockModal.isOpen} isCentered>
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalBody p={8}>
+                        <VStack>
+                            <Heading size={'md'} color={'danger'} textAlign={'center'}>
+                                Ushbu buyurtmani tahrirlab bo'lmaydi(sotuv buyurtma va to'lov qilinmagan bo'lishi shart)
+                            </Heading>
+                            <NavLink to={'/cafe/orders'}>
+                                <Button mt={4} >
+                                    Buyurtmalarga qaytish
+                                </Button>
+                            </NavLink>
+                        </VStack>
+                    </ModalBody>
+                </ModalContent>
+            </Modal>
         </Box>
     );
 }

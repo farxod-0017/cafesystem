@@ -29,7 +29,7 @@ const cafeRoutes = [
     },
     {
         name: "cf orders return",
-        path: "return/:id",
+        path: "tahrir/:id",
         element: <Return />
     },
     {

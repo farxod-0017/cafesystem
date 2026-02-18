@@ -26,13 +26,16 @@ import {
     AlertDialogHeader,
     AlertDialogOverlay,
     Badge,
-    FormLabel
+    FormLabel,
+    VStack,
+    ModalCloseButton,
+    Grid
 } from "@chakra-ui/react";
 import { EditIcon, DeleteIcon, AddIcon } from "@chakra-ui/icons";
 import { useEffect, useRef, useState } from "react";
 import { apiCashs } from "../../../utils/Controllers/apiCashs";
 import { apiLocations } from "../../../utils/Controllers/apiLocations";
-import { Banknote, Plus, Wallet2 } from "lucide-react";
+import { Banknote, Minus, Plus, Wallet2 } from "lucide-react";
 import { apiPaymentCash } from "../../../utils/Controllers/apiPaymentCash";
 import Cookies from "js-cookie";
 
@@ -45,6 +48,7 @@ import Cookies from "js-cookie";
 // axios.delete(`/pay-methods/${id}`)
 
 export default function CashsPage() {
+    
     const [selectedLocation, setSelectedLocation] = useState(null);
     const [locations, setLocations] = useState([])
     // -------------------- PAGE STATE --------------------
@@ -58,12 +62,19 @@ export default function CashsPage() {
         onOpen: onFillOpen,
         onClose: onFillClose
     } = useDisclosure();
+    const {
+        isOpen: isTakeOpen,
+        onOpen: onTakeOpen,
+        onClose: onTakeClose
+    } = useDisclosure();
+    
     const [submitting, setSubmitting] = useState(false);
     const [editingItem, setEditingItem] = useState(null); // { id, name }
     const [name, setName] = useState("");
     const [pul, setPul] = useState("");
     const [pulNote, setPulNote] = useState("");
     const [fillingCash, setFillingCash] = useState(null);
+    const [takingCash, setTakingCash] = useState(null)
 
     // -------------------- DELETE --------------------
     const {
@@ -162,6 +173,22 @@ export default function CashsPage() {
         }
     };
 
+    // -------------------- FILL CASH --------------------
+    const handleTakeCash = async () => {
+        if (!pul) return;
+        try {
+            setSubmitting(true);
+            await apiPaymentCash.Add({ amount: parseFloat(pul), cashId: takingCash?.id, type: "withdraw", createdBy: Cookies.get("user_id"), note: pulNote });
+            setPul("");
+            setPulNote("");
+            onTakeClose();
+            fetchPayMethods();
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+
     return (
         <Box p={6}>
             <Flex justify="space-between" align="center" mb={6}>
@@ -198,7 +225,7 @@ export default function CashsPage() {
             ) : items.length === 0 ? (
                 <Text color="neutral.500">Kassalar mavjud emas</Text>
             ) : (
-                <SimpleGrid columns={{ base: 1, md:2}} spacing={4}>
+                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                     {items.map((item) => (
                         <Card
                             key={item.id}
@@ -222,36 +249,51 @@ export default function CashsPage() {
                                         _groupHover={{ opacity: 1 }}
                                         transition="0.2s"
                                     >
-                                        {selectedLocation?.isCafe && (
-                                        <IconButton
-                                            size="sm"
-                                            aria-label="edit"
-                                            icon={<Plus />}
-                                            onClick={() => {
-                                                setFillingCash(item);
-                                                onFillOpen();
-                                                setPul("");
-                                            }}
-                                        />)}
-                                        <IconButton
-                                            size="sm"
-                                            aria-label="edit"
-                                            icon={<EditIcon />}
-                                            onClick={() => {
-                                                setEditingItem(item);
-                                                setName(item.name);
-                                                onOpen();
-                                            }}
-                                        />
-                                        <IconButton
-                                            size="sm"
-                                            aria-label="delete"
-                                            icon={<DeleteIcon />}
-                                            onClick={() => {
-                                                setDeleteTarget(item);
-                                                onDeleteOpen();
-                                            }}
-                                        />
+                                        <VStack>
+                                            <IconButton
+                                                size='sm'
+                                                icon={<Minus />}
+                                                onClick={() => {
+                                                    setTakingCash(item);
+                                                    onTakeOpen();
+                                                    setPul("");
+                                                    setPulNote('')
+                                                }}
+                                            />
+                                            {selectedLocation?.isCafe && (
+                                                <IconButton
+                                                    size="sm"
+                                                    aria-label="fill cash"
+                                                    icon={<Plus />}
+                                                    onClick={() => {
+                                                        setFillingCash(item);
+                                                        onFillOpen();
+                                                        setPul("");
+                                                        setPulNote('')
+                                                    }}
+                                                />)}
+                                        </VStack>
+                                        <VStack>
+                                            <IconButton
+                                                size="sm"
+                                                aria-label="edit"
+                                                icon={<EditIcon />}
+                                                onClick={() => {
+                                                    setEditingItem(item);
+                                                    setName(item.name);
+                                                    onOpen();
+                                                }}
+                                            />
+                                            <IconButton
+                                                size="sm"
+                                                aria-label="delete"
+                                                icon={<DeleteIcon />}
+                                                onClick={() => {
+                                                    setDeleteTarget(item);
+                                                    onDeleteOpen();
+                                                }}
+                                            />
+                                        </VStack>
                                     </Flex>
                                 </Flex>
                             </CardBody>
@@ -284,6 +326,7 @@ export default function CashsPage() {
                     </ModalFooter>
                 </ModalContent>
             </Modal>
+
             {/* Kassani t'ldirish modal */}
             <Modal isOpen={isFillOpen} onClose={onFillClose} isCentered>
                 <ModalOverlay />
@@ -311,6 +354,39 @@ export default function CashsPage() {
                             Bekor qilish
                         </Button>
                         <Button loadingText="Saqlanmoqda..." onClick={handleFillCash} isLoading={submitting}>
+                            Saqlash
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+
+            {/* Foydani yechish modal */}
+            <Modal isOpen={isTakeOpen} onClose={onTakeClose} isCentered>
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader>
+                        Kassadan pul yechish
+                    </ModalHeader>
+                    <ModalBody>
+                        <FormLabel>{takingCash?.name} - kassadan yechish uchun miqdor</FormLabel>
+                        <Input
+                            mb={2}
+                            type="number"
+                            placeholder="summa kiriting"
+                            value={pul}
+                            onChange={(e) => setPul(e.target.value)}
+                        />
+                        <Input
+                            placeholder="Izoh"
+                            value={pulNote}
+                            onChange={(e) => setPulNote(e.target.value)}
+                        />
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button mr={3} variant="ghost" onClick={onTakeClose}>
+                            Bekor qilish
+                        </Button>
+                        <Button loadingText="Saqlanmoqda..." onClick={handleTakeCash} isLoading={submitting}>
                             Saqlash
                         </Button>
                     </ModalFooter>
