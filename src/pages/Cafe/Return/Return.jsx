@@ -172,12 +172,6 @@ export default function OrderCreate() {
             setOriginalPaymentId("");
             setReason("");
 
-        } catch (error) {
-            toast({
-                title: "Xatolik yuz berdi",
-                status: "error",
-                duration: 3000
-            });
         } finally {
             setLoading(false);
         }
