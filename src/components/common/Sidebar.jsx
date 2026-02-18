@@ -39,6 +39,7 @@ export default function Sidebar({ collapsed, links = [], role, end = false }) {
     const navigate = useNavigate()
     return (
         <Flex
+            display={{ base: "none", md: "flex" }}
             position="fixed"
             w={collapsed ? "70px" : "220px"}
             minH="100vh"

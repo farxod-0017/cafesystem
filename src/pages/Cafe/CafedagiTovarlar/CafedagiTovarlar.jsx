@@ -778,7 +778,7 @@ export default function CafedagiTovarlar() {
                                                 <Text
                                                     fontSize="sm"
                                                     fontWeight="medium"
-                                                    color={isLowStock ? "red.500" : "gray.600"}
+                                                    color={isLowStock ? "red.500" : "text"}
                                                 >
                                                     {stock.quantity}
                                                 </Text>

@@ -28,13 +28,17 @@ import {
     AlertDialogOverlay,
     Select,
     Image,
-    Badge
+    Badge,
+    ModalCloseButton,
+    Grid,
+    Spinner
 } from "@chakra-ui/react";
 import { EditIcon, DeleteIcon, AddIcon } from "@chakra-ui/icons";
 import { useEffect, useRef, useState } from "react";
 import { apiCategories } from "../../../utils/Controllers/apiCategories";
 import { BASE_URL } from "../../../utils/api/axios";
 import { IMAGE_URL } from "../../../constants/imageUrl";
+import { Move } from "lucide-react";
 
 // ==================================================
 // Axios so‘rovlarini bu joyga ulaysiz
@@ -45,6 +49,13 @@ import { IMAGE_URL } from "../../../constants/imageUrl";
 // axios.delete(`/categories/${id}`)
 
 export default function CategoriesPage() {
+    const [COUNT, setCOUNT] = useState(1)
+    const bg = useColorModeValue("white", "gray.800");
+    const modalBg = useColorModeValue("white", "gray.900");
+    const borderColor = useColorModeValue("gray.200", "gray.700");
+    const [selected, setSelected] = useState(null);
+    const [indexing, setIndexing] = useState(false);
+
     const toast = useToast();
     const cardBg = useColorModeValue("surface", "surface");
     const [detailedImage, setDetailedImage] = useState(null);
@@ -72,6 +83,11 @@ export default function CategoriesPage() {
         onOpen: onDeleteOpen,
         onClose: onDeleteClose
     } = useDisclosure();
+    const {
+        isOpen: isSortOpen,
+        onOpen: onSortOpen,
+        onClose: onSortClose
+    } = useDisclosure();
     const cancelRef = useRef();
     const [deleting, setDeleting] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState(null);
@@ -83,7 +99,8 @@ export default function CategoriesPage() {
             // const res = await axios.get('/categories');
             // setItems(res.data);
             const res = await apiCategories.All();
-            setItems(res.data.categories)
+            setItems(res.data.categories);
+            setCOUNT(res.data.categories?.length)
         } finally {
             setPageLoading(false);
         }
@@ -155,6 +172,22 @@ export default function CategoriesPage() {
             setDeleting(false);
         }
     };
+
+    const handleIndexNumber = async (newSortIndex) => {
+        setIndexing(true);
+        try {
+            const data = {
+                sort: String(newSortIndex)
+            }
+            const res = await apiCategories.Update(data, selected?.id);
+            fetchCategories();
+            const newSelected = res.data?.category;
+            setSelected(newSelected)
+
+        } finally {
+            setIndexing(false);
+        }
+    }
 
     return (
         <Box p={6}>
@@ -241,6 +274,15 @@ export default function CategoriesPage() {
                                             onDeleteOpen();
                                         }}
                                     />
+                                    <IconButton
+                                        size="sm"
+                                        aria-label="delete"
+                                        icon={<Move />}
+                                        onClick={() => {
+                                            setSelected(item);
+                                            onSortOpen()
+                                        }}
+                                    />
                                 </Flex>
                             </Box>
 
@@ -299,6 +341,26 @@ export default function CategoriesPage() {
                                     )}
                                 </Box>
                             </CardBody>
+                            <Box
+                                position='absolute'
+                                bottom='12px'
+                                right='12px'
+                                zIndex={2}
+
+                            >
+                                <Badge
+                                    display={'flex'}
+                                    alignItems={'center'}
+                                    justifyContent={'center'}
+                                    colorScheme="blue"
+                                    borderRadius={"50%"}
+                                    w='30px'
+                                    h='30px'
+                                    p={"10px"}
+                                >
+                                    {item.sort ? item.sort : "?"}
+                                </Badge>
+                            </Box>
                         </Card>
 
                     ))}
@@ -382,6 +444,58 @@ export default function CategoriesPage() {
                     <Flex maxW={"92vw"} maxH={"92vh"} alignItems={"center"} justifyContent={"center"} boxSizing="border-box">
                         <Image maxW={"92vw"} maxH={"92vh"} src={IMAGE_URL + detailedImage} />
                     </Flex>
+                </ModalContent>
+            </Modal>
+
+            {/* SORT INDEX TANLASH MODAL */}
+            <Modal isOpen={isSortOpen} onClose={onSortClose} isCentered size="6xl">
+                <ModalOverlay backdropFilter="blur(6px)" />
+                <ModalContent
+                    bg={modalBg}
+                    maxW={{ base: "95vw", md: "85vw", xl: "75vw" }}
+                    h={{ base: "90vh", md: "85vh" }}
+                    borderRadius="2xl"
+                    boxShadow="2xl"
+                >
+                    <ModalHeader fontSize="xl" fontWeight="semibold">
+                        {selected?.name} - kategoriyasi uchun yani raqam tanlang
+                    </ModalHeader>
+
+                    <ModalCloseButton />
+
+                    <ModalBody overflowY="auto">
+                        <Grid
+                            templateColumns={{
+                                base: "repeat(auto-fill, minmax(60px, 1fr))",
+                                md: "repeat(auto-fill, minmax(70px, 1fr))",
+                            }}
+                            gap={4}
+                        >
+                            {Array.from({ length: COUNT }, (_, i) => (
+                                <Button
+                                    key={i}
+                                    h="60px"
+                                    borderRadius="xl"
+                                    fontWeight="600"
+                                    fontSize="md"
+                                    transition="all 0.2s ease"
+                                    bg={
+                                        +selected?.sort === i + 1
+                                            ? "blue.500"
+                                            : borderColor
+                                    }
+                                    color={selected === i + 1 ? "white" : "inherit"}
+                                    _hover={{
+                                        transform: "translateY(-2px)",
+                                        shadow: "md",
+                                    }}
+                                    onClick={() => handleIndexNumber(i + 1)}
+                                >
+                                    {(+selected?.sort === i + 1 && indexing) ? <Spinner /> : i + 1}
+                                </Button>
+                            ))}
+                        </Grid>
+                    </ModalBody>
                 </ModalContent>
             </Modal>
         </Box>
