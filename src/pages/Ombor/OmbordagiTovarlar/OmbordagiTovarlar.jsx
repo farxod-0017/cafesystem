@@ -817,7 +817,7 @@ export default function OmbordagiTovarlar() {
                             return (
                                 <Card
                                     key={`${stock.productId}-${stock.batch}-${index}`}
-                                    bg={isLowStock ? "red.50" : cardBg}
+                                    bg={isLowStock ? "dangerBg" : cardBg}
                                     borderColor={isLowStock ? "red.200" : borderColor}
                                 >
                                     <CardBody>
@@ -949,6 +949,7 @@ export default function OmbordagiTovarlar() {
                                 {/* PAGE NAVIGATION */}
                                 <HStack spacing={2}>
                                     <Button
+                                        display={{ base: 'none', md: 'block' }}
                                         size="sm"
                                         onClick={() => setCurrentPage(1)}
                                         isDisabled={currentPage === 1}
@@ -973,6 +974,7 @@ export default function OmbordagiTovarlar() {
                                         Keyingi
                                     </Button>
                                     <Button
+                                        display={{ base: 'none', md: 'block' }}
                                         size="sm"
                                         onClick={() => setCurrentPage(totalPages)}
                                         isDisabled={currentPage === totalPages}

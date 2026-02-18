@@ -20,6 +20,9 @@ import { useNavigate } from "react-router";
 export default function Login() {
     const { login } = useAuth();
     const navigate = useNavigate();
+    const fullWidth = window.innerWidth;
+    console.log(fullWidth);
+
     // UI states
     const [loading, setLoading] = useState(false)
 
@@ -73,8 +76,13 @@ export default function Login() {
                     user: data.user
                 }
                 );
+
                 if (data.user.role === "ADMIN") {
-                    navigate("/")
+                    if (fullWidth < 670) {
+                        navigate('/ombor')
+                    }else {
+                        navigate("/")
+                    }
                     toastService.success("Successfully");
                 } else if (data.user.role === "SUPER_ADMIN") {
                     navigate("/superadmin/admins");
