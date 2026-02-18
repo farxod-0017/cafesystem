@@ -621,7 +621,7 @@ const StatisticsPage = () => {
                                 <CardBody>
                                     <Flex justify="space-between" align="center" wrap="wrap">
                                         <HStack spacing={3}>
-                                            <Box p={3} bg="infoBg" borderRadius="lg">
+                                            <Box display={{base:"none", md:"block"}} p={3} bg="infoBg" borderRadius="lg">
                                                 <Icon as={Wallet} color="info" boxSize={8} />
                                             </Box>
                                             <VStack align="start" spacing={0}>
