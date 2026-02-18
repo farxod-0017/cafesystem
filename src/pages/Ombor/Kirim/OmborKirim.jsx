@@ -267,7 +267,7 @@ export default function OmborKirim() {
             isNewBatch: !product.isStock,
             // Disable checkbox for products
             canToggleBatch: product.isStock,
-            quantity:1
+            quantity: 1
         };
 
         setSelectedItems((prev) => [...prev, newItem]);
@@ -386,7 +386,7 @@ export default function OmborKirim() {
                 title: "Xatolik",
                 description: "Jo'natuvchini tanlang",
                 status: "error",
-                duration: 3000,
+                duration: 30000,
                 isClosable: true,
                 position: "top",
             });
@@ -532,7 +532,7 @@ export default function OmborKirim() {
                 flexDir={{ base: "column", sm: "row" }}
                 gap={4}
             >
-                <Heading size={{ base: "md", md: "lg" }}>
+                <Heading size={{ base: "sm", md: "lg" }}>
                     Omborga kirim
                 </Heading>
                 <Button
@@ -540,6 +540,7 @@ export default function OmborKirim() {
                     colorScheme="blue"
                     onClick={handleOpenDrawer}
                     size={{ base: "sm", md: "md" }}
+                    p={{ base: "3px", md: 'auto' }}
                 >
                     Mahsulotlar
                 </Button>
@@ -660,14 +661,16 @@ export default function OmborKirim() {
                             <Flex
                                 key={product.id}
                                 p={3}
+                                gap={{ base: '2px' }}
                                 justify="space-between"
-                                align="center"
+                                align={{ base: "start", md: "center" }}
                                 borderBottom={index < 9 ? "1px solid" : "none"}
                                 borderColor={borderColor}
                                 cursor="pointer"
                                 _hover={{ bg: hoverBg }}
                                 onClick={() => addProduct(product)}
                                 transition="background 0.2s"
+                                direction={{ base: 'column', md: 'row' }}
                             >
                                 <VStack align="start" spacing={0}>
                                     <Text fontWeight="medium">{product.name}</Text>
@@ -785,7 +788,7 @@ export default function OmborKirim() {
                         <Table size="sm">
                             <Thead>
                                 <Tr>
-                                    <Th>Partiya</Th>
+                                    {/* <Th>Partiya</Th> */}
                                     <Th>Nomlanishi</Th>
                                     <Th>Birlik</Th>
                                     <Th>Narx (so'm)</Th>
@@ -804,7 +807,7 @@ export default function OmborKirim() {
                                     return (
                                         <Tr key={item.id}>
                                             {/* BATCH CHECKBOX */}
-                                            <Td>
+                                            {/* <Td>
                                                 <Tooltip
                                                     label={
                                                         item.isNewBatch
@@ -829,7 +832,7 @@ export default function OmborKirim() {
                                                         {item.batch}
                                                     </Text>
                                                 )}
-                                            </Td>
+                                            </Td> */}
 
                                             {/* NAME */}
                                             <Td>
@@ -988,7 +991,7 @@ export default function OmborKirim() {
                                         <Divider mb={3} />
 
                                         {/* BATCH */}
-                                        <FormControl mb={3}>
+                                        {/* <FormControl mb={3}>
                                             <FormLabel fontSize="sm">Partiya</FormLabel>
                                             <HStack>
                                                 <Checkbox
@@ -1000,7 +1003,7 @@ export default function OmborKirim() {
                                                     {item.isNewBatch ? "Yangi partiya" : item.batch || "Mavjud"}
                                                 </Checkbox>
                                             </HStack>
-                                        </FormControl>
+                                        </FormControl> */}
 
                                         {/* PURCHASE PRICE */}
                                         <FormControl mb={3}>
@@ -1075,7 +1078,7 @@ export default function OmborKirim() {
                 <Flex justify="flex-end" mt={6} gap={3}>
                     <Button
                         colorScheme="blue"
-                        size="lg"
+                        size={{ base: 'sm', md: "lg" }}
                         onClick={() => {
                             if (validateForm()) {
                                 modal.onOpen();
@@ -1126,7 +1129,7 @@ export default function OmborKirim() {
                                 {products.map((product, index) => (
                                     <Flex
                                         key={product.id}
-                                        p={4}
+                                        p={{ base: 1, md: 4 }}
                                         borderBottom={index < products.length - 1 ? "1px solid" : "none"}
                                         borderColor={"border"}
                                         cursor="pointer"
@@ -1170,15 +1173,15 @@ export default function OmborKirim() {
             >
                 <ModalOverlay />
                 <ModalContent>
-                    <ModalHeader borderBottomWidth="1px">
-                        Hujjatni tasdiqlash
+                    <ModalHeader borderBottomWidth="1px" >
+                        <Text fontSize={{ base: 'sm', md: 'md' }}>Hujjatni tasdiqlash</Text>
                     </ModalHeader>
-                    <ModalBody py={6}>
+                    <ModalBody py={{ base: 2, md: 4 }}>
                         <VStack align="stretch" spacing={4}>
                             {/* DOCUMENT INFO */}
-                            <Card bg={cardBg} borderColor={borderColor}>
-                                <CardBody>
-                                    <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                            <Card py={{ base: 2, md: 4 }} bg={cardBg} borderColor={borderColor}>
+                                <CardBody py={{ base: 2, md: 4 }}>
+                                    <Grid templateColumns={{ base: "repeat(1, 1fr)", md: "repeat(2, 1fr)" }} gap={4}>
                                         <Box>
                                             <Text fontSize="sm" color="gray.500" mb={1}>
                                                 Hujjat
@@ -1225,7 +1228,7 @@ export default function OmborKirim() {
                             </Card>
 
                             {/* SUMMARY */}
-                            <Grid templateColumns="repeat(3, 1fr)" gap={4}>
+                            <Grid templateColumns={{ base: "repeat(1, 1fr)", md: "repeat(2, 1fr)" }} gap={4}>
                                 <Card bg={cardBg} borderColor={borderColor}>
                                     <CardBody textAlign="center">
                                         <Text fontSize="sm" color="gray.500" mb={1}>
@@ -1323,6 +1326,7 @@ export default function OmborKirim() {
                             </Button>
 
                             <Button
+                                display={{ base: 'none', md: 'block' }}
                                 variant="outline"
                                 onClick={() => window.print()}
                                 isDisabled={isSubmitting}

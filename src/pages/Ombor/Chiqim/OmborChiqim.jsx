@@ -547,7 +547,7 @@ export default function OmborChiqim() {
                 flexDir={{ base: "column", sm: "row" }}
                 gap={4}
             >
-                <Heading size={{ base: "md", md: "lg" }}>
+                <Heading size={{ base: "sm", md: "lg" }}>
                     Ombordan chiqim
                 </Heading>
                 <Button
@@ -1133,7 +1133,7 @@ export default function OmborChiqim() {
                 <Flex justify="flex-end" mt={6} gap={3}>
                     <Button
                         colorScheme="blue"
-                        size="lg"
+                        size={{base:"sm", md:"lg"}}
                         onClick={() => {
                             if (validateForm()) {
                                 modal.onOpen();
@@ -1184,7 +1184,7 @@ export default function OmborChiqim() {
                                 {stocks.map((stock, index) => (
                                     <Flex
                                         key={`${stock.id}-${stock.batch}`}
-                                        p={4}
+                                        p={{base:2, md:4}}
                                         borderBottom={index < stocks.length - 1 ? "1px solid" : "none"}
                                         borderColor={borderColor}
                                         cursor="pointer"
@@ -1232,7 +1232,7 @@ export default function OmborChiqim() {
                             {/* DOCUMENT INFO */}
                             <Card bg={cardBg} borderColor={borderColor}>
                                 <CardBody>
-                                    <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                                    <Grid templateColumns={{base:"repeat(1, 1fr)", md:"repeat(2, 1fr)"}} gap={4}>
                                         <Box>
                                             <Text fontSize="sm" color="gray.500" mb={1}>
                                                 Hujjat
@@ -1279,7 +1279,7 @@ export default function OmborChiqim() {
                             </Card>
 
                             {/* SUMMARY */}
-                            <Grid templateColumns={isDiscountEnabled && totalDiscount > 0 ? "repeat(4, 1fr)" : "repeat(3, 1fr)"} gap={4}>
+                            <Grid templateColumns={{base:isDiscountEnabled && totalDiscount > 0 ? "repeat(1, 1fr)" : "repeat(1, 1fr)", md:isDiscountEnabled && totalDiscount > 0 ? "repeat(4, 1fr)" : "repeat(3, 1fr)"}} gap={4}>
                                 <Card bg={cardBg} borderColor={borderColor}>
                                     <CardBody textAlign="center">
                                         <Text fontSize="sm" color="gray.500" mb={1}>
@@ -1406,6 +1406,7 @@ export default function OmborChiqim() {
                             </Button>
 
                             <Button
+                                display={{base:"none", md:"block"}}
                                 variant="outline"
                                 onClick={() => window.print()}
                                 isDisabled={isSubmitting}

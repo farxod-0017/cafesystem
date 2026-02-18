@@ -11,7 +11,7 @@ const links = [
     { label: "Ombor", to: "/ombor", icon: Package, end: true },
     { label: "Kirim", to: "/ombor/kirim", icon: PackagePlus },
     { label: "Chiqim", to: "/ombor/chiqim", icon: PackageMinus },
-    { label: "Operatsiyalar tarixi", to: "/ombor/operatsiyalar-tarixi", icon: Move },
+    { label: "Operatsiyalar", to: "/ombor/operatsiyalar-tarixi", icon: Move },
     { label: "Ta'minotchilar", to: "/ombor/taminotchilar", icon: Handshake },
     { label: "Klientlar", to: "/ombor/klientlar", icon: Users },
     { label: "Hisobotlar", to: "/ombor/statistics", icon: LineChart },
@@ -23,7 +23,7 @@ export default function OmborLayout() {
     return (
         <WarehouseGuard isCafe={false}>
             <Box>
-                <Header/>
+                <Header links={links}/>
                 <Sidebar
                     collapsed={collapsed}
                     links={links}
