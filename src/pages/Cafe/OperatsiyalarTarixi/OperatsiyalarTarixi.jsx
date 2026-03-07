@@ -303,6 +303,7 @@ export default function OperatsiyalarTarixi() {
     // ==============================
 
     const fetchInvoices = useCallback(async () => {
+        if(!cafeWarehouseId) return
         setIsLoading(true);
         try {
             const response = await apiInvoices.getFilteredInvoices(

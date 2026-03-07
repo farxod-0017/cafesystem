@@ -1,10 +1,10 @@
 import { $api } from "../api/axios";
 import { BASE_URL } from "../api/axios";
 class apiPaymentCash {
-    // static getAll = async () => {
-    //     const response = await $api.get(`${BASE_URL}/cash`)
-    //     return response;
-    // }
+    static getPage = async (cashId, page, limit) => {
+        const response = await $api.get(`${BASE_URL}/payment-cash/pagination?cashId=${cashId}&page=${page}&limit=${limit}`)
+        return response;
+    }
     static Add = async (data) => {
         const response = await $api.post(`${BASE_URL}/payment-cash`, data, { showSuccessToast: "Summa hisoblandi" })
         return response;

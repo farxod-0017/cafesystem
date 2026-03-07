@@ -21,16 +21,24 @@ export default function Header({ role, links }) {
         <Flex
             display={{ base: "flex", md: "none" }}
             bg={'surfBlur'}
-            backdropFilter={"blur(5px)"}
+            backdropFilter={"blur(10px)"}
             position={'fixed'}
             justifyContent={'space-between'}
             alignItems={'center'}
-            px={'8px'}
+            px={'16px'}
             w={'100vw'}
-            h={'34px'}
+            h={'48px'}
             zIndex={1000}
         >
-            <Icon onClick={onOpen} as={MenuIcon} />
+            <Box
+                p="10px"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                cursor="pointer"
+            >
+                <Icon onClick={onOpen} as={MenuIcon} />
+            </Box>
             <Flex>
                 <Box
                     align="center"
@@ -39,16 +47,16 @@ export default function Header({ role, links }) {
                     onClick={() => toggleColorMode()}
                     cursor="pointer"
                 >
-                    <SunMoon size={20} />
+                    <SunMoon size={22} />
                 </Box>
                 <Menu>
                     <MenuButton>
-                        <Avatar w={'24px'} h={"24px"} name={user?.full_name} size={'sm'} color={'white'} bg={'blue.500'} />
+                        <Avatar boxSize={'32px'} name={user?.full_name} size={'sm'} color={'white'} bg={'blue.500'} />
                     </MenuButton>
-                    <MenuList w={'50vw'} maxW={'50vw'} minW={'50vw'} p={1}>
-                        <MenuItem p={1}>
+                    <MenuList w={'54vw'} maxW={'54vw'} minW={'54vw'} p={1}>
+                        <MenuItem px={'12px'} py={'8px'}>
                             <Flex
-                                alignItems={'center'} gap={'4px'} fontSize={'small'}
+                                alignItems={'center'} gap={'8px'} fontSize={'small'}
                                 onClick={() => {
                                     const path = role === "admin" ? "/account" : role === "seller" ? "/cafe/account" : "/ombor/account"
                                     navigate(path)
@@ -58,9 +66,9 @@ export default function Header({ role, links }) {
                                 <Text>Account</Text>
                             </Flex>
                         </MenuItem>
-                        <MenuItem p={1}>
+                        <MenuItem px={'12px'} py={'8px'}>
                             <Flex
-                                alignItems={'center'} gap={'4px'} color={'red.500'} fontSize={'small'}
+                                alignItems={'center'} gap={'8px'} color={'red.500'} fontSize={'small'}
                                 onClick={handleLogout}
                             >
                                 <Icon as={LucideLogOut} color={'red.500'} />
@@ -71,7 +79,7 @@ export default function Header({ role, links }) {
                 </Menu>
             </Flex>
 
-            <AppSidebar isOpen={isOpen} onClose={onClose} links={links} role={role}/>
+            <AppSidebar isOpen={isOpen} onClose={onClose} links={links} role={role} />
         </Flex>
     )
 }

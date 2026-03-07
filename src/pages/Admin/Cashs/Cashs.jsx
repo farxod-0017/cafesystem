@@ -29,7 +29,8 @@ import {
     FormLabel,
     VStack,
     ModalCloseButton,
-    Grid
+    Grid,
+    Tooltip
 } from "@chakra-ui/react";
 import { EditIcon, DeleteIcon, AddIcon } from "@chakra-ui/icons";
 import { useEffect, useRef, useState } from "react";
@@ -38,6 +39,7 @@ import { apiLocations } from "../../../utils/Controllers/apiLocations";
 import { Banknote, Minus, Plus, Wallet2 } from "lucide-react";
 import { apiPaymentCash } from "../../../utils/Controllers/apiPaymentCash";
 import Cookies from "js-cookie";
+import CashHistory from "./components/CashHistory";
 
 // ==================================================
 // Axios so‘rovlarini bu joyga ulaysiz
@@ -48,7 +50,7 @@ import Cookies from "js-cookie";
 // axios.delete(`/pay-methods/${id}`)
 
 export default function CashsPage() {
-    
+
     const [selectedLocation, setSelectedLocation] = useState(null);
     const [locations, setLocations] = useState([])
     // -------------------- PAGE STATE --------------------
@@ -67,7 +69,7 @@ export default function CashsPage() {
         onOpen: onTakeOpen,
         onClose: onTakeClose
     } = useDisclosure();
-    
+
     const [submitting, setSubmitting] = useState(false);
     const [editingItem, setEditingItem] = useState(null); // { id, name }
     const [name, setName] = useState("");
@@ -250,17 +252,19 @@ export default function CashsPage() {
                                         transition="0.2s"
                                     >
                                         <VStack>
-                                            <IconButton
-                                                size='sm'
-                                                icon={<Minus />}
-                                                onClick={() => {
-                                                    setTakingCash(item);
-                                                    onTakeOpen();
-                                                    setPul("");
-                                                    setPulNote('')
-                                                }}
-                                            />
-                                            {selectedLocation?.isCafe && (
+                                            <Tooltip label="Pul yechish" placement="top">
+                                                <IconButton
+                                                    size='sm'
+                                                    icon={<Minus />}
+                                                    onClick={() => {
+                                                        setTakingCash(item);
+                                                        onTakeOpen();
+                                                        setPul("");
+                                                        setPulNote('')
+                                                    }}
+                                                />
+                                            </Tooltip>
+                                            <Tooltip label="Pul qo‘yish" placement="bottom">
                                                 <IconButton
                                                     size="sm"
                                                     aria-label="fill cash"
@@ -271,7 +275,8 @@ export default function CashsPage() {
                                                         setPul("");
                                                         setPulNote('')
                                                     }}
-                                                />)}
+                                                />
+                                            </Tooltip>
                                         </VStack>
                                         <VStack>
                                             <IconButton
@@ -301,6 +306,7 @@ export default function CashsPage() {
                     ))}
                 </SimpleGrid>
             )}
+            <CashHistory items={items}/>
 
             {/* -------------------- CREATE / EDIT MODAL -------------------- */}
             <Modal isOpen={isOpen} onClose={onClose} isCentered>

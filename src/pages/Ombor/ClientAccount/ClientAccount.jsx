@@ -225,7 +225,7 @@ const ClientDetailPage = () => {
         setLoadingInvoices(true);
         try {
             const res = await apiInvoices.getFilteredInvoices(
-                mainWarehouseId,
+                partnerId,
                 invoiceStartDate || 'all',
                 invoiceEndDate || 'all',
                 'outgoing',

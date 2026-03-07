@@ -21,7 +21,6 @@ export default function Login() {
     const { login } = useAuth();
     const navigate = useNavigate();
     const fullWidth = window.innerWidth;
-    console.log(fullWidth);
 
     // UI states
     const [loading, setLoading] = useState(false)

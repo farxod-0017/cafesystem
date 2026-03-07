@@ -301,6 +301,7 @@ export default function OperatsiyalarTarixi() {
     // ==============================
 
     const fetchInvoices = useCallback(async () => {
+        if(!mainWarehouseId) return
         setIsLoading(true);
         try {
             const response = await apiInvoices.getFilteredInvoices(

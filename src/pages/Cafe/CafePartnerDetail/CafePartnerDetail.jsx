@@ -165,7 +165,7 @@ const CafePartnerDetail = () => {
         setLoadingInvoices(true);
         try {
             const res = await apiInvoices.getFilteredInvoices(
-                cafeWarehouseId,
+                partnerId,
                 invoiceStartDate || 'all',
                 invoiceEndDate || 'all',
                 'incoming',
