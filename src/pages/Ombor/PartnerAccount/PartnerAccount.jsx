@@ -75,7 +75,7 @@ const PartnerDetailPage = () => {
     const navigate = useNavigate();
     const toast = useToast();
     const { colorMode } = useColorMode();
-    const { mainWarehouseId } = useWarehouseStore()
+    const { mainWarehouseId } = useWarehouseStore();
     const userId = Cookies.get('user_id');
     const [formLoading, setFormLoading] = useState({
         generalPay: false,
@@ -163,7 +163,7 @@ const PartnerDetailPage = () => {
         setLoadingInvoices(true);
         try {
             const res = await apiInvoices.getFilteredInvoices(
-                mainWarehouseId,
+                partnerId,
                 invoiceStartDate || 'all',
                 invoiceEndDate || 'all',
                 'incoming',

@@ -4,9 +4,10 @@ import { Box } from "@chakra-ui/react";
 import { useUIStore } from "../store/useUIStore";
 import { Home, BringToFront, Logs, Layers, Handshake, PackagePlus, Package, Move, PackageMinus, Users } from "lucide-react";
 import WarehouseGuard from "../auth/WarehouseGuard";
+import Header from "../components/common/Header";
 
 const links = [
-    { label: "Home", to: "/cafe", icon: Home, end:true },
+    { label: "Home", to: "/cafe", icon: Home, end: true },
     { label: "Zakaz yaratish", to: "/cafe/order-create", icon: BringToFront },
     { label: "Zakazlar", to: "/cafe/orders", icon: Logs },
     { label: "Cafedagi tovarlar", to: "/cafe/cafedagi-tovarlar", icon: Package },
@@ -22,9 +23,11 @@ export default function CafeLayout() {
     return (
         <WarehouseGuard isCafe={true}>
             <Box>
+                <Header links={links} />
                 <Sidebar collapsed={collapsed} links={links} role={"seller"} end={true} />
                 <Box
-                    pl={collapsed ? "70px" : "230px"}
+                    pl={{ base: 0, md: collapsed ? "70px" : "230px" }}
+                    pt={{ base: '42px', md: '0' }}
                     transition="0.25s ease"
                     minH="100vh"
                 >

@@ -72,7 +72,6 @@ import { useWarehouseStore } from '../../../store/useWarehouseStore';
 
 const CafeClientDetail = () => {
     const { partnerId } = useParams();
-    console.log(partnerId);
 
     const navigate = useNavigate();
     const toast = useToast();
@@ -160,7 +159,7 @@ const CafeClientDetail = () => {
         setLoadingInvoices(true);
         try {
             const res = await apiInvoices.getFilteredInvoices(
-                cafeWarehouseId,
+                partnerId,
                 invoiceStartDate || 'all',
                 invoiceEndDate || 'all',
                 'outgoing',
