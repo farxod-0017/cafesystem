@@ -358,7 +358,8 @@ const ClientDetailPage = () => {
     // Open general payment modal
     const openGeneralPayment = async () => {
         setPaymentData({
-            amount: partner?.balance < 0 ? Math.abs(partner?.balance) : '',
+            // amount: partner?.balance < 0 ? Math.abs(partner?.balance) : '',
+            amount:  '',
             methodId: '',
             cashId: '',
             note: ''
