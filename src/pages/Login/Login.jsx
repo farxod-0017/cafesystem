@@ -86,8 +86,8 @@ export default function Login() {
                 } else if (data.user.role === "SUPER_ADMIN") {
                     navigate("/superadmin/admins");
                     toastService.success("Successfully, Welocome Boss !")
-                } else if (data.user.role === "seller") {
-                    navigate('/cafe');
+                } else if (data.user.role === "SELLER") {
+                    navigate('/seller/order-create');
                     toastService.success("Successfully")
                 }
                 else {
