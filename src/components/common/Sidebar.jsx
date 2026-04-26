@@ -100,7 +100,7 @@ export default function Sidebar({ collapsed, links = [], role, end = false }) {
             <VStack align="stretch">
                 <VStack spacing={1} py={3} align="stretch">
                     {/* Language Switch */}
-                    {(role !== "SUPER_ADMIN") &&
+                    {(role !== "SUPER_ADMIN" && role !== "SELLER") &&
                         <Menu>
                             <MenuButton
                                 color={"text"}

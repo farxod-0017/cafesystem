@@ -24,7 +24,7 @@ export default function SellerLayout() {
         <WarehouseGuard isCafe={true}>
             <Box>
                 <Header links={links} />
-                <Sidebar collapsed={collapsed} links={links} role={"seller"} end={true} />
+                <Sidebar collapsed={collapsed} links={links} role={"SELLER"} end={true} />
                 <Box
                     pl={{ base: 0, md: collapsed ? "70px" : "230px" }}
                     pt={{ base: '42px', md: '0' }}
