@@ -22,6 +22,9 @@ import {
     ModalFooter,
     ModalCloseButton,
 } from "@chakra-ui/react";
+import { Printer } from "lucide-react";
+import { apiPrinter } from "../../../../utils/Controllers/apiPrinter";
+import { useState } from "react";
 
 // ─── Helpers ───
 const formatPrice = (price) =>
@@ -112,6 +115,17 @@ export default function OrderDetailModal({ isOpen, onClose, order }) {
 
     if (!order) return null;
 
+    const [printing, setPrinting] = useState(false);
+
+    const handlePrint = async (id) => {
+        setPrinting(true);
+        try {
+            const res = await apiPrinter.printPayment(id);
+        } finally {
+            setPrinting(false);
+        }
+    };
+
     return (
         <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
             <ModalOverlay bg="blackAlpha.600" />
@@ -194,6 +208,15 @@ export default function OrderDetailModal({ isOpen, onClose, order }) {
                 </ModalBody>
 
                 <ModalFooter borderTopWidth="1px" borderColor={borderColor}>
+                    <Button
+                        isLoading={printing}
+                        loadingText="Chop etilmoqda..."
+                        leftIcon={<Printer size={16} />}
+                        colorScheme="blue"
+                        onClick={() => handlePrint(order?.id)}
+                    >
+                        Chek chiqarish
+                    </Button>
                     <Button onClick={onClose} variant="ghost" color={textPrimary}>
                         Yopish
                     </Button>

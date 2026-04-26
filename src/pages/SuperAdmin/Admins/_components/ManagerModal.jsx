@@ -120,7 +120,7 @@ export default function ManagerModal({ isOpen, onClose, initialData, reload }) {
                         >
                             <option value="" disabled>role tanlang</option>
                             <option value="ADMIN">Admin</option>
-                            {/* <option value="seller">Sotuvchi</option> */}
+                            <option value="SELLER">Sotuvchi</option>
                         </Select>
 
                     </FormControl> }

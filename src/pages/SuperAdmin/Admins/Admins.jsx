@@ -1,4 +1,4 @@
-import { Box, Button, Code, Heading, Spinner, Table, Tbody, Td, Th, Thead, Tr, useDisclosure } from "@chakra-ui/react";
+import { Box, Button, Code, Flex, Heading, Icon, Spinner, Table, Tbody, Td, Th, Thead, Tr, useDisclosure } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 import TableSkeleton from "../../../components/ui/TableSkeleton";
 import { apiManagers } from "../../../utils/Controllers/Managers";
@@ -7,6 +7,7 @@ import ConfirmDelModal from "../../../components/common/ConfirmDelModal";
 import ResetPassModal from "../../../components/common/ResetPassModal";
 import CopyUsername from "../../../components/common/CopyUsername";
 import { formatDateTime } from "../../../utils/tools/formatDateTime";
+import { ChefHatIcon, CrownIcon, Shield, ShieldCheck } from "lucide-react";
 
 export default function SPmanagers() {
     const formModal = useDisclosure();
@@ -87,6 +88,29 @@ export default function SPmanagers() {
         }, delay);
     };
 
+    // Return role statement with JSX
+    const renderRole = (role) => {
+        switch (role) {
+            case "ADMIN":
+                return <Flex alignItems="center">
+                    <Icon as={ShieldCheck} mr={2} />
+                    <Code colorScheme="blue" mr={2}>Admin</Code>
+                </Flex>;
+            case "SUPER_ADMIN":
+                return <Flex alignItems="center">
+                    <Icon as={CrownIcon} mr={2} />
+                    <Code colorScheme="green" mr={2}>Super Admin</Code>
+                </Flex>;
+            case "SELLER":
+                return <Flex alignItems="center">
+                    <Icon as={ChefHatIcon} mr={2} />
+                    <Code colorScheme="orange" mr={2}>Sotuvchi</Code>
+                </Flex>;
+        }
+    };
+
+    // ... rest of the component (rendering, modals, etc.)
+
     return (
         <Box p={6} maxW="1500px" mx="auto" bg={"bg"} color={"text"}>
             <Box display="flex" justifyContent="space-between" mb={6}>
@@ -116,6 +140,7 @@ export default function SPmanagers() {
                             <Thead bg={"surface"}>
                                 <Tr>
                                     <Th>#</Th>
+                                    <Th>Role</Th>
                                     <Th>F.I.O</Th>
                                     <Th>Login</Th>
                                     <Th>Yaratilgan vaqti</Th>
@@ -134,6 +159,7 @@ export default function SPmanagers() {
                         <Thead>
                             <Tr>
                                 <Th>#</Th>
+                                <Th>Role</Th>
                                 <Th>F.I.O</Th>
                                 <Th>Login</Th>
                                 <Th>Yaratilgan vaqti</Th>
@@ -146,6 +172,7 @@ export default function SPmanagers() {
                             {managers.map((item, index) => (
                                 <Tr key={item.id}>
                                     <Td>{index + 1}</Td>
+                                    <Td>{renderRole(item.role)}</Td>
                                     <Td>{item.full_name}</Td>
                                     <Td><CopyUsername username={item.username} /></Td>
                                     <Td>{formatDateTime(item.createdAt, 'uz-UZ', {

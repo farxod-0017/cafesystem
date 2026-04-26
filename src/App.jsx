@@ -12,6 +12,8 @@ import SuperAdminLayout from './layouts/SuperAdminLayout'
 import superAdminRoutes from './utils/routes/superAdminRoutes'
 import CafeLayout from './layouts/CafeLayout'
 import cafeRoutes from './utils/routes/cafeRoutes'
+import sellerRoutes from './utils/routes/sellerRoutes'
+import SellerLayout from './layouts/SellerLayout'
 
 function App() {
   return (
@@ -45,9 +47,18 @@ function App() {
             })}
           </Route>
         </Route>
-         <Route element={<RequireAuth role={"ADMIN"} />}>
+        <Route element={<RequireAuth role={"ADMIN"} />}>
           <Route path='/cafe' element={<CafeLayout />}>
             {cafeRoutes.map((r) => {
+              return (
+                <Route key={r.name} path={r.path} element={r.element} />
+              )
+            })}
+          </Route>
+        </Route>
+        <Route element={<RequireAuth role={"SELLER"} />}>
+          <Route path='/seller' element={<SellerLayout />}>
+            {sellerRoutes.map((r) => {
               return (
                 <Route key={r.name} path={r.path} element={r.element} />
               )

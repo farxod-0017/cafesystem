@@ -2,7 +2,7 @@ import { Outlet } from "react-router";
 import Sidebar from "../components/common/Sidebar";
 import { Box } from "@chakra-ui/react";
 import { useUIStore } from "../store/useUIStore";
-import { BanknoteArrowDown, BanknoteIcon, CreditCard, Home,  LayoutGridIcon, Menu, Package } from "lucide-react";
+import { BanknoteArrowDown, BanknoteIcon, CreditCard, Home,  LayoutGridIcon, Menu, Package, Users2Icon } from "lucide-react";
 
 const links = [
     { label: "Home", to: "/", icon: Home },
@@ -11,6 +11,7 @@ const links = [
     { label: "Mahsulotlar", to: "/mahsulotlar", icon: Package },
     { label: "Kategoriyalar", to: "/kategoriyalar", icon: LayoutGridIcon },
     { label: "Menu", to: "/menu", icon: Menu },
+    // { label: "Xodimlar", to: "/xodimlar", icon: Users2Icon },
 ]
 
 export default function AdminLayout() {
