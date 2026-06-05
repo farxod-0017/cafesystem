@@ -152,15 +152,15 @@ export default function OrderPayment({
             });
             return;
         }
-        if (parseFloat(sum) < orderData?.totalSum) {
-            toast({
-                title: "Summa yetarli emas",
-                status: "warning",
-                duration: 2000,
-                isClosable: true,
-            });
-            return;
-        }
+        // if (parseFloat(sum) < orderData?.totalSum) {
+        //     toast({
+        //         title: "Summa yetarli emas",
+        //         status: "warning",
+        //         duration: 2000,
+        //         isClosable: true,
+        //     });
+        //     return;
+        // }
 
         setLoading(true);
         try {
