@@ -1,4 +1,3 @@
-// src/auth/RequireAuth.jsx
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
 
