@@ -24,6 +24,7 @@ import {
   NumberInputField,
   useColorModeValue,
   ButtonGroup,
+  Textarea,
 } from "@chakra-ui/react";
 import { AddIcon, DeleteIcon, MinusIcon } from "@chakra-ui/icons";
 import { apiCashs } from "../../../utils/Controllers/apiCashs";
@@ -43,7 +44,8 @@ export default function OrderCreate() {
   const [paymentData, setPaymentData] = useState(null);
   const [savedOrderItems, setSavedOrderItems] = useState([]);
   const [currentPaymentId, setCurrentPaymentId] = useState(null);
-  const [tableNumber, setTableNumber] = useState(""); // ─── Stol raqami (ixtiyoriy) ───
+  const [tableNumber, setTableNumber] = useState("");
+  const [orderNote, setOrderNote] = useState("");
   const { cafeWarehouseId } = useWarehouseStore();
 
   const [orderData, setOrder] = useState();
@@ -137,8 +139,8 @@ export default function OrderCreate() {
     0,
   );
 
-  // ─── Stol raqami kiritilganmi tekshirish (ixtiyoriy, faqat payload uchun) ───
-  const isTableNumberValid = tableNumber !== "" && Number(tableNumber) > 0;
+  // ─── Stol raqami endi harf+raqam bo'lishi mumkin ───
+  const isTableNumberValid = tableNumber.trim() !== "";
 
   // ─── Buyurtma yaratish ───
   const createOrder = async () => {
@@ -170,8 +172,8 @@ export default function OrderCreate() {
       // payMethodId: selectedPayMethod,
       orderStatus: "completed",
       createdBy: Cookies.get("user_id"),
-      // stol raqami kiritilmasa, umuman jo'natilmaydi
-      ...(isTableNumberValid ? { tableNumber: Number(tableNumber) } : {}),
+      ...(isTableNumberValid ? { tableNumber: tableNumber.trim() } : {}),
+      ...(orderNote.trim() ? { note: orderNote.trim() } : {}),
       items: orderItems.map((item) => ({
         productId: item.productId,
         count: item.count,
@@ -201,6 +203,7 @@ export default function OrderCreate() {
       setOrderItems([]);
       setOrderType("sale");
       setTableNumber("");
+      setOrderNote("");
 
       // Chekni ochish
       receipt.onOpen();
@@ -405,67 +408,91 @@ export default function OrderCreate() {
 
       {/* JAMI VA TASDIQLASH */}
       {orderItems.length > 0 && (
-        <Flex
-          justify="space-between"
-          align="center"
-          bg={bgCard}
-          p={5}
-          borderRadius="xl"
-          border="1px solid"
-          borderColor={borderColor}
-          flexWrap="wrap"
-          gap={3}
-        >
-          <VStack align="flex-start" spacing={0}>
-            <Text color={textMuted} fontSize="sm">
-              Umumiy summa
-            </Text>
-            <Heading size="md" color={accentColor}>
-              {formatPrice(totalSum)}
-            </Heading>
-          </VStack>
-
-          <HStack spacing={3} flexWrap="wrap" align="flex-end">
-            <Badge
-              colorScheme={orderType === "sale" ? "blue" : "orange"}
-              fontSize="sm"
-              px={3}
-              py={1}
-              borderRadius="md"
-            >
-              {orderType === "sale" ? "Sotuv" : "Utilizatsiya"}
-            </Badge>
-            <Badge
-              colorScheme="gray"
-              fontSize="sm"
-              px={3}
-              py={1}
-              borderRadius="md"
-            >
-              {orderItems.length} ta mahsulot
-            </Badge>
-
-            {/* ─── Stol raqami input (ixtiyoriy) ─── */}
-            <VStack align="flex-start" spacing={1}>
-              <Text fontSize="sm" color={textMuted}>
-                Stol raqamini kiriting
+        <VStack align="stretch" spacing={3}>
+          <Flex
+            justify="space-between"
+            align="flex-start"
+            bg={bgCard}
+            p={5}
+            borderRadius="xl"
+            border="1px solid"
+            borderColor={borderColor}
+            flexWrap="wrap"
+            gap={3}
+          >
+            <VStack align="flex-start" spacing={0}>
+              <Text color={textMuted} fontSize="sm">
+                Umumiy summa
               </Text>
-              <NumberInput
-                size="md"
-                maxW="160px"
-                min={1}
-                value={tableNumber}
-                onChange={(valueString) => setTableNumber(valueString)}
+              <Heading size="md" color={accentColor}>
+                {formatPrice(totalSum)}
+              </Heading>
+            </VStack>
+
+            {/* O'ng tomon: badge'lar + inputlar */}
+            <HStack
+              spacing={3}
+              flexWrap="wrap"
+              align="flex-end"
+              justify="flex-end"
+            >
+              <Badge
+                colorScheme={orderType === "sale" ? "blue" : "orange"}
+                fontSize="sm"
+                px={3}
+                py={1}
+                borderRadius="md"
               >
-                <NumberInputField
+                {orderType === "sale" ? "Sotuv" : "Utilizatsiya"}
+              </Badge>
+              <Badge
+                colorScheme="gray"
+                fontSize="sm"
+                px={3}
+                py={1}
+                borderRadius="md"
+              >
+                {orderItems.length} ta mahsulot
+              </Badge>
+
+              <VStack align="flex-start" spacing={1}>
+                <Text fontSize="sm" color={textMuted}>
+                  Stol raqamini kiriting
+                </Text>
+                <Input
+                  size="md"
+                  maxW="160px"
+                  value={tableNumber}
+                  onChange={(e) => setTableNumber(e.target.value)}
                   placeholder="Stol raqami"
                   bg={inputBg}
                   color={textPrimary}
                   borderColor={borderColor}
                 />
-              </NumberInput>
-            </VStack>
+              </VStack>
 
+              <VStack align="flex-start" spacing={1}>
+                <Text fontSize="sm" color={textMuted}>
+                  Izoh
+                </Text>
+                <Textarea
+                  value={orderNote}
+                  onChange={(e) => setOrderNote(e.target.value)}
+                  placeholder="Izoh (ixtiyoriy)"
+                  bg={inputBg}
+                  color={textPrimary}
+                  borderColor={borderColor}
+                  minW={{ base: "full", md: "220px" }}
+                  maxW="320px"
+                  rows={1}
+                  resize="vertical"
+                />
+              </VStack>
+            </HStack>
+          </Flex>
+
+          {/* Tugma card'dan tashqarida, o'ng tomonda */}
+          <Flex justify="flex-end">
             <Button
               colorScheme="blue"
               size="lg"
@@ -475,11 +502,10 @@ export default function OrderCreate() {
             >
               Buyurtmani tasdiqlash
             </Button>
-          </HStack>
-        </Flex>
+          </Flex>
+        </VStack>
       )}
 
-      {/* MAHSULOTLAR MODAL */}
       <ProductModal
         isOpen={sidebar.isOpen}
         onClose={sidebar.onClose}
@@ -487,10 +513,9 @@ export default function OrderCreate() {
         addItem={addItem}
       />
 
-      {/* CHEK MODAL */}
       <Receiptmodal
         isOpen={receipt.isOpen}
-        onClose={receipt.onClose} // Просто закрываем без открытия другого модала
+        onClose={receipt.onClose}
         paymentData={paymentData}
         orderItems={savedOrderItems}
         onPaymentClick={editSumModal.onOpen} // Передаем функцию открытия Editsummodal

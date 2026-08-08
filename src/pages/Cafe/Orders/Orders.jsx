@@ -18,6 +18,7 @@ import {
   InputGroup,
   InputLeftElement,
   HStack,
+  VStack,
   useDisclosure,
   useColorModeValue,
   useToast,
@@ -27,21 +28,13 @@ import {
   Select,
   Stack,
   Icon,
+  Divider,
 } from "@chakra-ui/react";
-import { SearchIcon, ViewIcon, ChevronDownIcon } from "@chakra-ui/icons";
+import { SearchIcon, ChevronDownIcon } from "@chakra-ui/icons";
 import { apiPayment } from "../../../utils/Controllers/apiPayment";
 import OrderDetailModal from "./__components/OrderDetailModal";
-import {
-  Ban,
-  CirclePlus,
-  ReceiptRussianRuble,
-  RotateCcw,
-  Trash2,
-  Undo2,
-  Wallet,
-} from "lucide-react";
-import { NavLink, useNavigate } from "react-router-dom";
-import OrderStatusMenu from "./__components/OrderStatusModal";
+import { Ban, CirclePlus, RotateCcw, Undo2, Wallet } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import OrderPayment from "./__components/OrderPayment";
 import { useWarehouseStore } from "../../../store/useWarehouseStore";
 import ReturnModal from "./__components/ReturnModal";
@@ -112,6 +105,57 @@ const PaymentSt = ({ status }) => (
   </Badge>
 );
 
+// ─── To'lov usuli uchun rang aniqlash ───
+// Naqd -> yashil, Karta -> ko'k, boshqalari -> kulrang
+const getPaymentMethodColor = (methodName = "") => {
+  const name = methodName.toLowerCase();
+  if (name.includes("naqd") || name.includes("cash")) return "green";
+  if (name.includes("karta") || name.includes("card")) return "blue";
+  return "gray";
+};
+
+// ─── To'lov usuli ustuni (endi background color bilan) ───
+const PaymentMethodCell = ({ order }) => {
+  const hasSplit =
+    Array.isArray(order?.methodSplits) && order.methodSplits.length > 0;
+
+  if (!hasSplit) {
+    const name = order?.payMethod?.name || "—";
+    return (
+      <Badge
+        colorScheme={getPaymentMethodColor(name)}
+        borderRadius="md"
+        px={2}
+        py={0.5}
+        fontSize="xs"
+      >
+        {name}
+      </Badge>
+    );
+  }
+
+  return (
+    <VStack align="start" spacing={1}>
+      {order.methodSplits.map((sp, i) => {
+        const name = sp.payMethod?.name || "—";
+        return (
+          <Badge
+            key={sp.id || i}
+            colorScheme={getPaymentMethodColor(name)}
+            borderRadius="md"
+            px={2}
+            py={0.5}
+            fontSize="xs"
+            whiteSpace="nowrap"
+          >
+            {name}
+          </Badge>
+        );
+      })}
+    </VStack>
+  );
+};
+
 // ══════════════════════════════════
 // MAIN COMPONENT
 // ══════════════════════════════════
@@ -157,23 +201,17 @@ export default function Orders() {
       try {
         append ? setLoadingMore(true) : setLoading(true);
 
-        // Собираем только непустые параметры
         const params = {
           page: pageNum,
           limit: LIMIT,
         };
 
-        // Добавляем поиск (если не пустой)
         if (search.trim()) {
           params.search = search.trim();
         }
-
-        // Добавляем фильтр по статусу оплаты (если выбран)
         if (paymentStatusFilter) {
           params.paymentStatus = paymentStatusFilter;
         }
-
-        // Добавляем фильтр по типу (если выбран)
         if (typeFilter) {
           params.type = typeFilter;
         }
@@ -247,19 +285,14 @@ export default function Orders() {
   // ─── Summani yangilash ───
   const handleEditSum = async (paymentId, data) => {
     try {
-      // const data = { receivedSum: sum };
       const response = await apiPayment.EditSum(paymentId, data);
-
       toast({
         title: "Muvaffaqiyatli",
         description: "To'lov summasi yangilandi",
         status: "success",
         duration: 2000,
       });
-
-      // Ro'yxatni yangilash
       GetAllPayment(page, false);
-
       return response;
     } catch (error) {
       throw error;
@@ -285,15 +318,12 @@ export default function Orders() {
     };
     try {
       setReturning(true);
-      const response = await apiPayment.CreateReturn(returnData); // Yangi endpoint kerak bo'ladi
-
+      const response = await apiPayment.CreateReturn(returnData);
       toast({
         title: "Qaytarish bajarildi!",
         status: "success",
         duration: 3000,
       });
-
-      // Tozalash
       setReturningOrder("");
       setReason("");
       GetAllPayment(page, false);
@@ -302,7 +332,6 @@ export default function Orders() {
     }
   };
 
-  // handle pus button, edit zakaz
   const handlePlusButton = (order) => {
     if (order.type !== "sale") {
       toast({
@@ -352,7 +381,6 @@ export default function Orders() {
 
       {/* FILTERS AND SEARCH */}
       <Stack spacing={4} mb={6}>
-        {/* SEARCH ROW */}
         <HStack mb={2} flexWrap="wrap" gap={2}>
           <InputGroup flex={1} minW="200px">
             <InputLeftElement pointerEvents="none">
@@ -379,7 +407,6 @@ export default function Orders() {
           )}
         </HStack>
 
-        {/* FILTER SELECTS */}
         <HStack spacing={3} flexWrap="wrap">
           <Select
             value={paymentStatusFilter}
@@ -427,7 +454,6 @@ export default function Orders() {
               <Tr>
                 <Th color={textMuted}>#</Th>
                 <Th color={textMuted}>Pay raqam</Th>
-                {/* <Th color={textMuted}>Turi</Th> */}
                 <Th color={textMuted}>Stol raqami</Th>
                 <Th color={textMuted}>To'lov usuli</Th>
                 <Th color={textMuted} isNumeric>
@@ -439,7 +465,6 @@ export default function Orders() {
               </Tr>
             </Thead>
             <Tbody>
-              {/* Skeleton loading */}
               {loading &&
                 payments.length === 0 &&
                 Array.from({ length: 10 }).map((_, i) => (
@@ -452,7 +477,6 @@ export default function Orders() {
                   </Tr>
                 ))}
 
-              {/* Bo'sh */}
               {!loading && payments.length === 0 && (
                 <Tr>
                   <Td colSpan={8} textAlign="center" py={12} color={textMuted}>
@@ -463,7 +487,6 @@ export default function Orders() {
                 </Tr>
               )}
 
-              {/* Data */}
               {payments.map((order, index) => (
                 <Tr
                   key={order.id}
@@ -478,14 +501,11 @@ export default function Orders() {
                   <Td fontWeight="semibold" color={accentColor} fontSize="sm">
                     {order.payNumber}
                   </Td>
-                  {/* <Td>
-                                        <TypeBadge type={order.type} />
-                                    </Td> */}
                   <Td color={textPrimary} fontSize="sm">
                     {order.tableNumber ?? "—"}
                   </Td>
-                  <Td color={textPrimary} fontSize="sm">
-                    {order.payMethod?.name || "—"}
+                  <Td>
+                    <PaymentMethodCell order={order} />
                   </Td>
                   <Td
                     isNumeric
@@ -503,17 +523,6 @@ export default function Orders() {
                   </Td>
                   <Td onClick={(e) => e.stopPropagation()}>
                     <HStack spacing={1}>
-                      {/* <Tooltip label="Batafsil" hasArrow>
-                                                <IconButton
-                                                    size="sm"
-                                                    icon={<ViewIcon />}
-                                                    variant="ghost"
-                                                    colorScheme="blue"
-                                                    aria-label="Batafsil"
-                                                    onClick={() => openDetail(order)}
-                                                />
-                                            </Tooltip> */}
-                      {/* <NavLink to={`/cafe/return/${order?.id}`}> */}
                       <Tooltip
                         label={
                           order?.type === "sale"
@@ -572,7 +581,6 @@ export default function Orders() {
                           />
                         )}
                       </Tooltip>
-                      {/* </NavLink> */}
                       <Tooltip
                         label={
                           order?.type === "sale" &&
@@ -640,7 +648,6 @@ export default function Orders() {
         </Box>
       </Box>
 
-      {/* KO'PROQ YUKLASH */}
       {hasNext && (
         <Flex justify="center" mb={6}>
           <Button
@@ -656,21 +663,18 @@ export default function Orders() {
         </Flex>
       )}
 
-      {/* Hammasi yuklangan */}
       {!hasNext && payments.length > 0 && !loading && (
         <Text textAlign="center" color={textMuted} fontSize="sm" mb={6}>
           Barcha buyurtmalar ko'rsatildi ({payments.length} ta)
         </Text>
       )}
 
-      {/* DETAIL MODAL */}
       <OrderDetailModal
         isOpen={detailModal.isOpen}
         onClose={detailModal.onClose}
         order={selectedOrder}
       />
 
-      {/* PAYMENT MODAL */}
       <OrderPayment
         isOpen={paymentModal.isOpen}
         onClose={paymentModal.onClose}
@@ -679,7 +683,7 @@ export default function Orders() {
         onSumUpdated={handleEditSum}
         cafeWarehouseId={cafeWarehouseId}
       />
-      {/* Return Modal */}
+
       <ReturnModal
         isOpen={returnModal.isOpen}
         onClose={returnModal.onClose}

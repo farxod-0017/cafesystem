@@ -8,7 +8,7 @@ import  handleApiError  from "./handleError";
 
 // export const BASE_URL = "https://dev.ithubs.uz/post/api/v1";
 export const BASE_URL = "https://dev.donercizomin.uz/api/v1"
-// export const BASE_URL = "http://192.168.137.129:3000/api/v1"
+// export const BASE_URL = "http://192.168.137.202:3000/api/v1"
 
 export const $api = axios.create({
     baseURL: `${BASE_URL}`,

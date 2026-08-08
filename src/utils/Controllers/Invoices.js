@@ -33,6 +33,12 @@ class apiInvoices {
         const response = await $api.delete(`${BASE_URL}/invoices/${id}`, {showSuccessToast:"Hisob o'chirildi"})
         return response;
     }
+       static getByInvoiceId = async (invoiceId, page = 1) => {
+        const response = await $api.get(
+            `${BASE_URL}/invoice-items/${invoiceId}/page?page=${page}`
+        );
+        return response;
+    };
 }
 
 export { apiInvoices };
