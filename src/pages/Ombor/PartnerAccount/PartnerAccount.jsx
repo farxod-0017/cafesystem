@@ -54,6 +54,8 @@ import {
   AlertIcon,
   AlertDescription,
   Icon,
+  Grid,
+  SkeletonText,
 } from "@chakra-ui/react";
 import {
   ArrowLeft,
@@ -75,6 +77,44 @@ import { apiPayMethods } from "../../../utils/Controllers/apiPayMethods";
 import { apiCashs } from "../../../utils/Controllers/apiCashs";
 import Cookies from "js-cookie";
 import { useWarehouseStore } from "../../../store/useWarehouseStore";
+
+const STATUS_LABELS = {
+  sent: "Yuborildi",
+  received: "Qabul qilindi",
+  cancelled: "Bekor qilindi",
+};
+
+const STATUS_COLORS = {
+  sent: "yellow",
+  received: "green",
+  cancelled: "red",
+};
+
+const PAYMENT_LABELS = {
+  paid: "To'langan",
+  unpaid: "To'lanmagan",
+  partially_paid: "Qisman to'langan",
+};
+
+const PAYMENT_COLORS = {
+  paid: "green",
+  unpaid: "red",
+  partially_paid: "orange",
+};
+
+const formatDateTime = (dateString) => {
+  if (!dateString) return "—";
+  const date = new Date(dateString);
+  return date.toLocaleString("uz-UZ", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const formatNumber = (num) => num?.toLocaleString("uz-UZ") || "0";
 
 const PartnerDetailPage = () => {
   const { partnerId } = useParams();
@@ -309,6 +349,13 @@ const PartnerDetailPage = () => {
       partially_paid: { colorScheme: "orange", text: "Qisman to'langan" },
     };
     return statusMap[status] || { colorScheme: "gray", text: status };
+  };
+
+  // Item ichidagi sotib olish narxini turli maydon nomlari bilan
+  // qo'llab-quvvatlash (purchasePrice asosiy, price fallback sifatida).
+  const getItemPurchasePrice = (item) => {
+    const val = item?.purchasePrice ?? item?.price;
+    return val !== undefined && val !== null ? Number(val) : null;
   };
 
   const toggleSelectionMode = () => {
@@ -1593,184 +1640,290 @@ const PartnerDetailPage = () => {
       <Modal
         isOpen={isDetailOpen}
         onClose={onDetailClose}
-        size={{ base: "full", md: "xl" }}
+        size={{ base: "full", md: "4xl" }}
         isCentered
         scrollBehavior="inside"
       >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>
-            Invoice tafsilotlari
-            {selectedInvoiceForDetail && (
-              <Text fontSize="sm" fontWeight="normal" color={textSecondary}>
-                {selectedInvoiceForDetail.invNumber}
-              </Text>
-            )}
+          <ModalHeader borderBottomWidth="1px">
+            <Flex justify="space-between" align="center" wrap="wrap" gap={2}>
+              <VStack align="start" spacing={1}>
+                <Text>Invoice tafsilotlari</Text>
+                {selectedInvoiceForDetail && (
+                  <Text fontSize="sm" fontWeight="normal" color={textSecondary}>
+                    {selectedInvoiceForDetail.invNumber}
+                  </Text>
+                )}
+              </VStack>
+              {selectedInvoiceForDetail && (
+                <HStack spacing={2}>
+                  <Badge colorScheme="blue">Kirim</Badge>
+                  <Badge
+                    colorScheme={
+                      STATUS_COLORS[selectedInvoiceForDetail.status] || "gray"
+                    }
+                  >
+                    {STATUS_LABELS[selectedInvoiceForDetail.status] ||
+                      selectedInvoiceForDetail.status}
+                  </Badge>
+                </HStack>
+              )}
+            </Flex>
           </ModalHeader>
           <ModalCloseButton />
-          <ModalBody>
-            {selectedInvoiceForDetail && (
-              <Flex
-                justify="space-between"
-                align="center"
-                mb={4}
-                p={3}
-                bg={bgAlt}
-                borderRadius="md"
-              >
+          <ModalBody py={6}>
+            {loadingInvoiceItems && invoiceItems.length === 0 ? (
+              <Stack spacing={4}>
+                <SkeletonText noOfLines={4} spacing="4" />
+                <SkeletonText noOfLines={4} spacing="4" />
+              </Stack>
+            ) : selectedInvoiceForDetail ? (
+              <VStack align="stretch" spacing={4}>
+                {/* INFO CARDS */}
+                <Grid
+                  templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}
+                  gap={4}
+                >
+                  <Card variant="outline">
+                    <CardBody>
+                      <VStack align="start" spacing={2}>
+                        <Text fontSize="xs" color={textSecondary}>
+                          Sana va vaqt
+                        </Text>
+                        <Text fontWeight="medium">
+                          {formatDateTime(selectedInvoiceForDetail.createdAt)}
+                        </Text>
+                      </VStack>
+                    </CardBody>
+                  </Card>
+
+                  <Card variant="outline">
+                    <CardBody>
+                      <VStack align="start" spacing={2}>
+                        <Text fontSize="xs" color={textSecondary}>
+                          To'lov holati
+                        </Text>
+                        <Badge
+                          colorScheme={
+                            PAYMENT_COLORS[
+                              selectedInvoiceForDetail.paymentStatus
+                            ] || "gray"
+                          }
+                        >
+                          {PAYMENT_LABELS[
+                            selectedInvoiceForDetail.paymentStatus
+                          ] || selectedInvoiceForDetail.paymentStatus}
+                        </Badge>
+                      </VStack>
+                    </CardBody>
+                  </Card>
+
+                  <Card variant="outline">
+                    <CardBody>
+                      <VStack align="start" spacing={2}>
+                        <Text fontSize="xs" color={textSecondary}>
+                          Jo'natuvchi
+                        </Text>
+                        <Text fontWeight="medium">{partner?.name || "—"}</Text>
+                      </VStack>
+                    </CardBody>
+                  </Card>
+
+                  <Card variant="outline">
+                    <CardBody>
+                      <VStack align="start" spacing={2}>
+                        <Text fontSize="xs" color={textSecondary}>
+                          Qabul qiluvchi
+                        </Text>
+                        <Text fontWeight="medium">Bizning ombor</Text>
+                      </VStack>
+                    </CardBody>
+                  </Card>
+                </Grid>
+
+                <Divider />
+
+                {/* ITEMS TABLE */}
                 <Box>
-                  <Text fontSize="sm" color={textSecondary}>
-                    Jami summa
+                  <Text fontWeight="bold" mb={3}>
+                    Mahsulotlar
                   </Text>
-                  <Text fontWeight="bold" fontSize="lg">
-                    {formatCurrency(selectedInvoiceForDetail.totalSum)}
-                  </Text>
-                </Box>
-                <Badge
-                  {...getPaymentStatusBadge(
-                    selectedInvoiceForDetail.paymentStatus,
-                  )}
-                >
-                  {
-                    getPaymentStatusBadge(
-                      selectedInvoiceForDetail.paymentStatus,
-                    ).text
-                  }
-                </Badge>
-              </Flex>
-            )}
 
-            {loadingInvoiceItems ? (
-              <Flex justify="center" py={12}>
-                <Spinner size="xl" color="blue.500" thickness="4px" />
-              </Flex>
-            ) : invoiceItems.length === 0 ? (
-              <VStack py={12} spacing={4}>
-                <Icon as={Package} boxSize={16} color="gray.400" />
-                <Text color={textSecondary}>Tovarlar topilmadi</Text>
-              </VStack>
-            ) : (
-              <>
-                {/* DESKTOP TABLE */}
-                <Box overflowX="auto" display={{ base: "none", md: "block" }}>
-                  <Table variant="simple" size="sm">
-                    <Thead>
-                      <Tr>
-                        <Th>Mahsulot</Th>
-                        <Th>Birlik</Th>
-                        <Th isNumeric>Miqdor</Th>
-                        {invoiceItems[0]?.price !== undefined && (
-                          <Th isNumeric>Narxi</Th>
-                        )}
-                        {invoiceItems[0]?.totalSum !== undefined && (
-                          <Th isNumeric>Summa</Th>
-                        )}
-                      </Tr>
-                    </Thead>
-                    <Tbody>
-                      {invoiceItems.map((item) => (
-                        <Tr key={item.id}>
-                          <Td fontWeight="medium">
-                            {item.product?.name || "-"}
-                          </Td>
-                          <Td>{item.product?.unit || "-"}</Td>
-                          <Td isNumeric>{item.quantity}</Td>
-                          {item.price !== undefined && (
-                            <Td isNumeric>{formatCurrency(item.price)}</Td>
-                          )}
-                          {item.totalSum !== undefined && (
-                            <Td isNumeric fontWeight="semibold">
-                              {formatCurrency(item.totalSum)}
-                            </Td>
-                          )}
-                        </Tr>
-                      ))}
-                    </Tbody>
-                  </Table>
-                </Box>
-
-                {/* MOBILE CARD LIST */}
-                <VStack
-                  spacing={2}
-                  align="stretch"
-                  display={{ base: "flex", md: "none" }}
-                >
-                  {invoiceItems.map((item) => (
-                    <Box
-                      key={item.id}
-                      p={3}
-                      borderRadius="md"
-                      border="1px solid"
-                      borderColor={mobileCardBorder}
-                    >
-                      <Text fontWeight="medium" fontSize="sm" mb={1}>
-                        {item.product?.name || "-"}
-                      </Text>
-                      <Flex
-                        justify="space-between"
-                        fontSize="sm"
-                        color={textSecondary}
+                  {invoiceItems.length === 0 ? (
+                    <VStack py={12} spacing={4}>
+                      <Icon as={Package} boxSize={16} color="gray.400" />
+                      <Text color={textSecondary}>Tovarlar topilmadi</Text>
+                    </VStack>
+                  ) : (
+                    <>
+                      {/* DESKTOP TABLE */}
+                      <Box
+                        overflowX="auto"
+                        display={{ base: "none", md: "block" }}
                       >
-                        <Text>Birlik: {item.product?.unit || "-"}</Text>
-                        <Text>Miqdor: {item.quantity}</Text>
-                      </Flex>
-                      {(item.price !== undefined ||
-                        item.totalSum !== undefined) && (
-                        <Flex justify="space-between" fontSize="sm" mt={1}>
-                          {item.price !== undefined && (
-                            <Text color={textSecondary}>
-                              Narxi: {formatCurrency(item.price)}
-                            </Text>
-                          )}
-                          {item.totalSum !== undefined && (
-                            <Text fontWeight="semibold">
-                              {formatCurrency(item.totalSum)}
-                            </Text>
-                          )}
-                        </Flex>
-                      )}
-                    </Box>
-                  ))}
-                </VStack>
-              </>
-            )}
+                        <Table size="sm" variant="simple">
+                          <Thead>
+                            <Tr>
+                              <Th>#</Th>
+                              <Th>Mahsulot</Th>
+                              <Th>Birlik</Th>
+                              <Th isNumeric>Narx</Th>
+                              <Th isNumeric>Miqdor</Th>
+                              <Th isNumeric>Jami</Th>
+                            </Tr>
+                          </Thead>
+                          <Tbody>
+                            {invoiceItems.map((item, index) => {
+                              const purchasePrice = getItemPurchasePrice(item);
+                              const rowTotal =
+                                purchasePrice !== null
+                                  ? purchasePrice * Number(item.quantity || 0)
+                                  : null;
+                              return (
+                                <Tr key={item.id}>
+                                  <Td>{index + 1}</Td>
+                                  <Td fontWeight="medium">
+                                    {item.product?.name || "-"}
+                                  </Td>
+                                  <Td>{item.product?.unit || "-"}</Td>
+                                  <Td isNumeric>
+                                    {purchasePrice !== null
+                                      ? formatNumber(purchasePrice)
+                                      : "-"}
+                                  </Td>
+                                  <Td isNumeric>{item.quantity}</Td>
+                                  <Td isNumeric fontWeight="bold">
+                                    {rowTotal !== null
+                                      ? formatNumber(rowTotal)
+                                      : "-"}
+                                  </Td>
+                                </Tr>
+                              );
+                            })}
+                          </Tbody>
+                        </Table>
+                      </Box>
 
-            {invoiceItemsPagination &&
-              invoiceItemsPagination.total_pages > 1 && (
-                <Flex mt={4} justify="space-between" align="center">
-                  <Text fontSize="sm" color={textSecondary}>
-                    Sahifa {invoiceItemsPagination.currentPage} /{" "}
-                    {invoiceItemsPagination.total_pages}
-                  </Text>
-                  <HStack spacing={2}>
-                    <IconButton
-                      aria-label="Previous"
-                      icon={<ChevronLeft size={20} />}
-                      onClick={() =>
-                        handleInvoiceItemsPageChange(invoiceItemsPage - 1)
-                      }
-                      isDisabled={invoiceItemsPagination.currentPage === 1}
-                      variant="outline"
-                      size="sm"
-                    />
-                    <IconButton
-                      aria-label="Next"
-                      icon={<ChevronRight size={20} />}
-                      onClick={() =>
-                        handleInvoiceItemsPageChange(invoiceItemsPage + 1)
-                      }
-                      isDisabled={
-                        invoiceItemsPagination.currentPage ===
-                        invoiceItemsPagination.total_pages
-                      }
-                      variant="outline"
-                      size="sm"
-                    />
-                  </HStack>
-                </Flex>
-              )}
+                      {/* MOBILE CARD LIST */}
+                      <VStack
+                        spacing={2}
+                        align="stretch"
+                        display={{ base: "flex", md: "none" }}
+                      >
+                        {invoiceItems.map((item, index) => {
+                          const purchasePrice = getItemPurchasePrice(item);
+                          const rowTotal =
+                            purchasePrice !== null
+                              ? purchasePrice * Number(item.quantity || 0)
+                              : null;
+                          return (
+                            <Box
+                              key={item.id}
+                              p={3}
+                              borderRadius="md"
+                              border="1px solid"
+                              borderColor={mobileCardBorder}
+                            >
+                              <Text fontWeight="medium" fontSize="sm" mb={1}>
+                                {index + 1}. {item.product?.name || "-"}
+                              </Text>
+                              <Flex
+                                justify="space-between"
+                                fontSize="sm"
+                                color={textSecondary}
+                                mb={1}
+                              >
+                                <Text>Birlik: {item.product?.unit || "-"}</Text>
+                                <Text>
+                                  Narxi:{" "}
+                                  {purchasePrice !== null
+                                    ? formatNumber(purchasePrice)
+                                    : "-"}
+                                </Text>
+                              </Flex>
+                              <Flex justify="space-between" fontSize="sm">
+                                <Text color={textSecondary}>
+                                  Miqdor: {item.quantity}
+                                </Text>
+                                <Text fontWeight="semibold">
+                                  Jami:{" "}
+                                  {rowTotal !== null
+                                    ? formatNumber(rowTotal)
+                                    : "-"}
+                                </Text>
+                              </Flex>
+                            </Box>
+                          );
+                        })}
+                      </VStack>
+                    </>
+                  )}
+
+                  {invoiceItemsPagination &&
+                    invoiceItemsPagination.total_pages > 1 && (
+                      <Flex mt={4} justify="space-between" align="center">
+                        <Text fontSize="sm" color={textSecondary}>
+                          Sahifa {invoiceItemsPagination.currentPage} /{" "}
+                          {invoiceItemsPagination.total_pages}
+                        </Text>
+                        <HStack spacing={2}>
+                          <IconButton
+                            aria-label="Previous"
+                            icon={<ChevronLeft size={20} />}
+                            onClick={() =>
+                              handleInvoiceItemsPageChange(invoiceItemsPage - 1)
+                            }
+                            isDisabled={
+                              invoiceItemsPagination.currentPage === 1
+                            }
+                            variant="outline"
+                            size="sm"
+                          />
+                          <IconButton
+                            aria-label="Next"
+                            icon={<ChevronRight size={20} />}
+                            onClick={() =>
+                              handleInvoiceItemsPageChange(invoiceItemsPage + 1)
+                            }
+                            isDisabled={
+                              invoiceItemsPagination.currentPage ===
+                              invoiceItemsPagination.total_pages
+                            }
+                            variant="outline"
+                            size="sm"
+                          />
+                        </HStack>
+                      </Flex>
+                    )}
+                </Box>
+
+                <Divider />
+
+                {/* SUMMARY */}
+                <Card variant="outline" bg={selectionBg}>
+                  <CardBody>
+                    <Flex justify="space-between" fontSize="lg">
+                      <Text fontWeight="bold">Jami:</Text>
+                      <Text fontWeight="bold" color="blue.500">
+                        {formatCurrency(selectedInvoiceForDetail.totalSum)}
+                      </Text>
+                    </Flex>
+                  </CardBody>
+                </Card>
+              </VStack>
+            ) : null}
           </ModalBody>
-          <ModalFooter></ModalFooter>
+          <ModalFooter borderTopWidth="1px">
+            <HStack spacing={3}>
+              <Button variant="ghost" onClick={onDetailClose}>
+                Yopish
+              </Button>
+              <Button variant="outline" onClick={() => window.print()}>
+                Chop etish
+              </Button>
+            </HStack>
+          </ModalFooter>
         </ModalContent>
       </Modal>
 
@@ -1954,9 +2107,7 @@ const PartnerDetailPage = () => {
               </>
             )}
           </ModalBody>
-          <ModalFooter>
-            
-          </ModalFooter>
+          <ModalFooter></ModalFooter>
         </ModalContent>
       </Modal>
     </Box>
