@@ -57,6 +57,7 @@ export default function ReceiptModal({
 
   // ─── To'lov uchun state'lar (OrderPayment.jsx dan) ───
   const [loading, setLoading] = useState(false);
+  const [loadingOptions, setLoadingOptions] = useState(false);
   const [cashs, setCashs] = useState([]);
   const [payMethods, setPayMethods] = useState([]);
   const [selectedCash, setSelectedCash] = useState("");
@@ -81,37 +82,89 @@ export default function ReceiptModal({
     });
   };
 
-  // ─── API: kassalar ───
-  const GetCash = async () => {
+  // ─── API: kassalar va to'lov usullarini birga yuklash ───
+  // Ikkalasini bitta funksiyada, Promise.all bilan yuklaymiz — shunda
+  // loading holatini aniq boshqarish va xatoликларни foydalanuvchiga
+  // ko'rsatish mumkin (avval xatolar jimgina yutilib, dropdown'lar
+  // bo'sh qolib ketardi).
+  const loadPaymentOptions = async () => {
+    setLoadingOptions(true);
     try {
-      const response = await apiCashs.getAll();
-      const allCashs = response.data || response;
+      const [cashRes, payMethodRes] = await Promise.all([
+        apiCashs.getAll(),
+        apiPayMethods.getAll(),
+      ]);
+
+      const allCashs = cashRes?.data || cashRes || [];
       const filteredCashs = allCashs.filter(
         (cash) => cash.locationId === cafeWarehouseId,
       );
       setCashs(filteredCashs);
-      setSelectedCash(filteredCashs[0]?.id || "");
-    } catch (error) {}
-  };
+      // Kassa avtomatik tanlanmaydi — foydalanuvchi o'zi tanlashi kerak.
 
-  // ─── API: to'lov usullari (avtomatik tanlash YO'Q — bo'sh boshlanadi) ───
-  const GetPaymentMethod = async () => {
-    try {
-      const response = await apiPayMethods.getAll();
       const allPayMethods =
-        response.data?.payMethods || response.payMethods || [];
-
+        payMethodRes?.data?.payMethods || payMethodRes?.payMethods || [];
       const filteredPayMethods = allPayMethods.filter(
         (method) => method.locationId === cafeWarehouseId,
       );
       setPayMethods(filteredPayMethods);
-    } catch (error) {}
+
+      // ─── Asosiy qatorga to'lov usulini avtomatik tanlash ───
+      // Avval nomi "naq" so'zini o'z ichiga olgan usul qidiriladi,
+      // topilmasa ro'yxatdagi 2-element (index 1) olinadi.
+      const findNaqt = filteredPayMethods?.find((e) =>
+        e?.name?.toLowerCase().includes("naq"),
+      );
+      const defaultMethodId = findNaqt
+        ? findNaqt.id
+        : filteredPayMethods?.[1]?.id || "";
+
+      setPayments((prev) => {
+        const updated = [...prev];
+        updated[0] = { ...updated[0], payMethodId: defaultMethodId };
+        return updated;
+      });
+
+      // Ma'lumot kelmasa (masalan shu joy uchun kassa/usul sozlanmagan),
+      // buni sukut saqlab yashirmasdan, kassirga ochiq aytamiz.
+      if (filteredCashs.length === 0 || filteredPayMethods.length === 0) {
+        toast({
+          title: "To'lov qilish uchun sozlamalar to'liq emas",
+          description:
+            filteredCashs.length === 0 && filteredPayMethods.length === 0
+              ? "Ushbu joy uchun kassa va to'lov usuli topilmadi. Administratordan so'rang."
+              : filteredCashs.length === 0
+                ? "Ushbu joy uchun kassa topilmadi. Administratordan so'rang."
+                : "Ushbu joy uchun to'lov usuli topilmadi. Administratordan so'rang.",
+          status: "warning",
+          duration: 5000,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
+      // Avval bu yerda xato butunlay yutilar edi — kassir hech narsa
+      // ko'rmay, bo'sh dropdown bilan qolardi. Endi aniq xabar beramiz.
+      toast({
+        title: "Kassa/to'lov usullarini yuklab bo'lmadi",
+        description:
+          error?.response?.data?.message ||
+          "Internet aloqasini tekshiring yoki qayta urinib ko'ring.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+      setCashs([]);
+      setPayMethods([]);
+    } finally {
+      setLoadingOptions(false);
+    }
   };
 
   // ─── To'lov formasini boshlang'ich holatga qaytarish ───
   const resetPaymentForm = () => {
     setPayments([{ id: "main", payMethodId: "", sum: "" }]);
     setActiveRowId("main");
+    setSelectedCash("");
   };
 
   // ─── "To'lov qilish" bosilganda ko'rinishni almashtirish ───
@@ -123,9 +176,9 @@ export default function ReceiptModal({
   // ─── Payment view ochilganda kassa/usullarni yuklash ───
   useEffect(() => {
     if (isOpen && view === "payment" && cafeWarehouseId) {
-      GetCash();
-      GetPaymentMethod();
+      loadPaymentOptions();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, view, cafeWarehouseId]);
 
   // ─── Modal yopilganda holatni tozalash ───
@@ -135,6 +188,20 @@ export default function ReceiptModal({
       resetPaymentForm();
     }
   }, [isOpen]);
+
+  // ─── Payment view ochilganda asosiy qatorga summani avtomatik joylash ───
+  useEffect(() => {
+    if (isOpen && view === "payment" && paymentData?.totalSum) {
+      setPayments((prev) => {
+        const updated = [...prev];
+        updated[0] = {
+          ...updated[0],
+          sum: paymentData.totalSum.toString(),
+        };
+        return updated;
+      });
+    }
+  }, [isOpen, view, paymentData]);
 
   // ─── Aktiv qatorning summasini yangilash helperi ───
   const updateActiveRowSum = (updater) => {
@@ -473,6 +540,7 @@ export default function ReceiptModal({
                     color={textPrimary}
                     value={selectedCash}
                     onChange={(e) => setSelectedCash(e.target.value)}
+                    isDisabled={loadingOptions}
                   >
                     {cashs.map((cash) => (
                       <option key={cash.id} value={cash.id}>
@@ -480,6 +548,12 @@ export default function ReceiptModal({
                       </option>
                     ))}
                   </Select>
+                  {!loadingOptions && cashs.length === 0 && (
+                    <Text fontSize="xs" color="red.500" mt={-1} mb={2}>
+                      Bu joy uchun kassa topilmadi. Administratordan so'rang
+                      yoki qayta urinib ko'ring.
+                    </Text>
+                  )}
 
                   {/* To'lov usuli qatorlari */}
                   {payments.map((item, index) => (
@@ -496,6 +570,7 @@ export default function ReceiptModal({
                         onChange={(e) =>
                           handleRowPayMethodChange(item.id, e.target.value)
                         }
+                        isDisabled={loadingOptions}
                       >
                         {payMethods.map((method) => (
                           <option key={method.id} value={method.id}>
@@ -547,6 +622,13 @@ export default function ReceiptModal({
                       )}
                     </HStack>
                   ))}
+
+                  {!loadingOptions && payMethods.length === 0 && (
+                    <Text fontSize="xs" color="red.500" mt={1}>
+                      Bu joy uchun to'lov usuli topilmadi. Administratordan
+                      so'rang yoki qayta urinib ko'ring.
+                    </Text>
+                  )}
 
                   {payments.length > 1 && (
                     <Text
@@ -735,6 +817,9 @@ export default function ReceiptModal({
                   isLoading={loading}
                   loadingText="To'lanmoqda..."
                   isDisabled={
+                    loadingOptions ||
+                    cashs.length === 0 ||
+                    payMethods.length === 0 ||
                     !payments.some(
                       (item) => item.payMethodId && parseFloat(item.sum) > 0,
                     )
