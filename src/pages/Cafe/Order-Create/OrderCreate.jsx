@@ -513,12 +513,21 @@ export default function OrderCreate() {
         addItem={addItem}
       />
 
+      {/* FIX: bu yerda avval paymentId, onSumUpdated va cafeWarehouseId
+          umuman uzatilmagan edi. Shu sabab "Yangi buyurtma" sahifasida
+          Receiptmodal'ning to'lov (payment) ko'rinishi cafeWarehouseId'ni
+          hech qachon olmas, kassa/to'lov usuli ro'yxatlari doim bo'sh
+          chiqardi va "Tasdiqlash" bossangiz ham onSumUpdated yo'qligi
+          sabab hech narsa yubormas edi. */}
       <Receiptmodal
         isOpen={receipt.isOpen}
         onClose={receipt.onClose}
         paymentData={paymentData}
         orderItems={savedOrderItems}
         onPaymentClick={editSumModal.onOpen} // Передаем функцию открытия Editsummodal
+        paymentId={currentPaymentId}
+        onSumUpdated={handleEditSum}
+        cafeWarehouseId={cafeWarehouseId}
       />
 
       {/* SUMMANI TAHRIRLASH MODAL */}

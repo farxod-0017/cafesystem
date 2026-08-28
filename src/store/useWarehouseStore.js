@@ -1,14 +1,14 @@
-// store/useWarehouseStore.js
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+
 export const useWarehouseStore = create(
-    // persist(
+    persist(
         (set) => ({
             mainWarehouseId: null,
             cafeWarehouseId: null,
             locationName: null,
-            
+
             setMainWarehouseId: (id) => set({ mainWarehouseId: id }),
             setCafeWarehouseId: (id) => set({ cafeWarehouseId: id }),
             setLocationName: (name) => set({ locationName: name }),
@@ -22,5 +22,5 @@ export const useWarehouseStore = create(
                 locationName: state.locationName,
             }),
         }
-    // )
+    )
 );
